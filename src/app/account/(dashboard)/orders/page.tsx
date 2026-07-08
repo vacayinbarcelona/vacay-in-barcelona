@@ -61,7 +61,15 @@ export default async function AccountOrdersPage({
       {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
 
       {orders.map((order) => {
-        const canCancel = order.status !== 'cancelled' && order.bookings.some((b) => b.bookingDate.getTime() >= Date.now());
+        // Compare by calendar day, not exact timestamp — bookingDate is
+        // stored as UTC midnight of the visit date, which can look
+        // "already passed" against the exact current instant even though
+        // the visit itself is later today. The 24h free-cancellation
+        // cutoff is a separate, stricter check applied at submit time in
+        // requestCancellation.
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const canCancel = order.status !== 'cancelled' && order.bookings.some((b) => b.bookingDate.getTime() >= startOfToday.getTime());
 
         return (
           <div key={order.id} className="border border-gray-200 rounded-2xl p-5">

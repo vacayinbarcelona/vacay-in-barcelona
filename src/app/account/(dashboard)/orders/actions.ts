@@ -49,7 +49,13 @@ export async function requestCancellation(orderId: string, formData: FormData) {
   const now = Date.now();
   const cutoffMs = FREE_CANCELLATION_CUTOFF_HOURS * 60 * 60 * 1000;
 
-  if (order.bookings.every((b) => b.bookingDate.getTime() < now)) {
+  // Day-level check here (matches the page's canCancel gate) — bookingDate
+  // is stored as UTC midnight of the visit date, so comparing it against
+  // the exact current instant would incorrectly block same-day visits.
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  if (order.bookings.every((b) => b.bookingDate.getTime() < startOfToday.getTime())) {
     redirect('/account/orders?error=past');
   }
 
