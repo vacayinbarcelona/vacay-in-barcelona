@@ -1,0 +1,281 @@
+// Prisma schema for Vacay in Barcelona
+// Postgres (e.g. a free Neon project) — required for deploying to Vercel
+// or any other serverless host, since SQLite's local file won't persist
+// there. Point DATABASE_URL at the same Postgres database for local dev
+// too, so there's one schema, one database, no drift between the two.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Attraction / tour / show — the core content type shown on the homepage
+// and on its own detail page at /attractions/[slug]
+// ---------------------------------------------------------------------------
+model Attraction {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  city        String  @default("Barcelona")
+  category    String  @default("attraction") // attraction | tour | show
+  categoryLabel String @default("") // display label, e.g. "Architecture & landmarks"
+  status      String  @default("published") // draft | published
+
+  badge String @default("") // card ribbon, e.g. "Best seller", "Recommended"
+
+  shortDescription String
+  longDescription  String // supports simple paragraphs separated by blank lines
+
+  heroImageUrl String
+  heroImageAlt String
+
+  rating      Float  @default(4.5)
+  reviewCount Int    @default(0)
+
+  priceFrom     Float  @default(0)
+  currency      String @default("EUR")
+
+  durationLabel String @default("") // e.g. "2-3 hours", "Flexible"
+  freeCancellation Boolean @default(true)
+  mobileTicket     Boolean @default(true)
+
+  // If true, checkout collects a first + last name for every traveler
+  // (matches the ID/passport shown at entry — e.g. Sagrada Família).
+  // If false, checkout only collects a single lead-traveler name.
+  requiresAllTravelerNames Boolean @default(false)
+
+  address   String @default("")
+  mapUrl    String @default("") // link to a map service, optional
+
+  featured Boolean @default(false) // shown in "Popular Barcelona Attractions"
+  popularTour Boolean @default(false) // shown in "Popular Tours & Experiences"
+  sortOrder   Int     @default(0)
+
+  metaTitle       String @default("")
+  metaDescription String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ticketOptions TicketOption[]
+  highlights    Highlight[]
+  includedItems IncludedItem[]
+  infoItems     ImportantInfoItem[]
+  faqs          FAQ[]
+  reviews       Review[]
+  images        AttractionImage[]
+}
+
+// A bookable ticket / tour option belonging to an attraction.
+// affiliateUrl is where "Book Now" sends the visitor today; provider/externalId
+// are placeholders for wiring up a live booking API later.
+model TicketOption {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  name        String // e.g. "Skip-the-Line Entry Ticket"
+  description String @default("")
+
+  price    Float
+  currency String @default("EUR")
+
+  durationLabel    String  @default("")
+  freeCancellation Boolean @default(true)
+  mobileTicket     Boolean @default(true)
+  instantConfirmation Boolean @default(true)
+  languages        String  @default("") // comma-separated, e.g. "English, Spanish"
+  groupType        String  @default("") // e.g. "Small group (max 15)"
+
+  badge String @default("") // e.g. "Best seller", "Likely to sell out"
+
+  affiliateUrl      String // external booking link (GetYourGuide/Viator/etc. or your own API later)
+  affiliateProvider String @default("") // e.g. "GetYourGuide", "Viator", "Direct API"
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Highlight {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  text         String
+  sortOrder    Int    @default(0)
+}
+
+model IncludedItem {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  text         String
+  included     Boolean @default(true) // true = "What's included", false = "Not included"
+  sortOrder    Int    @default(0)
+}
+
+model ImportantInfoItem {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  text         String
+  sortOrder    Int    @default(0)
+}
+
+model FAQ {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  question     String
+  answer       String
+  sortOrder    Int    @default(0)
+}
+
+model Review {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  authorName    String
+  authorCountry String   @default("")
+  rating        Int      @default(5)
+  title         String   @default("")
+  comment       String
+  visitDate     DateTime @default(now())
+  sortOrder     Int      @default(0)
+
+  createdAt DateTime @default(now())
+}
+
+model AttractionImage {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  url          String
+  altText      String @default("")
+  sortOrder    Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// A customer account. Optional — checkout still works as a guest without
+// signing in (Order.userId is nullable). When a signed-in customer checks
+// out, their order is linked here so it shows up in their order history;
+// orders placed as a guest with the same email also surface there (see
+// /account/orders) even without the userId link.
+// ---------------------------------------------------------------------------
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String? // null for accounts created via "Continue with Google" that never set a password
+  googleId     String? @unique // Google "sub" claim, set once they sign in with Google
+
+  firstName   String
+  lastName    String
+  phone       String    @default("")
+  dateOfBirth DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+// ---------------------------------------------------------------------------
+// An Order is one checkout — one payment, one confirmation email — that can
+// contain several Bookings (different attractions/tours/dates added to the
+// cart before paying once). This is the record the customer-facing
+// reference (e.g. "VIB-7K2P9Q") and the confirmation page are keyed on.
+// paymentIntentId is a placeholder for when a real payment provider (e.g.
+// Stripe) replaces the demo card fields in checkout.
+// ---------------------------------------------------------------------------
+model Order {
+  id        String @id @default(cuid())
+  reference String @unique // human-facing code shown to the customer, e.g. "VIB-7K2P9Q"
+
+  userId String? // set when a signed-in customer checked out; null for guest checkout
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  email         String
+  leadFirstName String
+  leadLastName  String
+  phone         String @default("")
+
+  totalPrice Float
+  currency   String @default("EUR")
+
+  status String @default("pending") // pending | confirmed | cancelled
+
+  paymentIntentId         String    @default("") // set once a real payment provider charge is created
+  confirmationEmailSentAt DateTime?
+
+  bookings Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// One line item within an Order — a single ticket/tour selection (one
+// attraction, one ticket option, one date/time). rezdyBookingId is a
+// placeholder for when real Rezdy availability/booking is connected —
+// until then, bookings here are not backed by a real reservation.
+model Booking {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  attractionSlug   String
+  attractionName   String
+  ticketOptionName String
+
+  bookingDate DateTime // the visit date selected
+  timeSlot    String // e.g. "12:30"
+  language    String @default("")
+
+  adults   Int @default(1)
+  children Int @default(0)
+
+  pricePerAdult Float
+  pricePerChild Float @default(0)
+  totalPrice    Float
+  currency      String @default("EUR")
+
+  status String @default("pending") // pending | confirmed | cancelled
+
+  rezdyBookingId String @default("") // set once a real Rezdy booking is created
+
+  travelers BookingTraveler[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// One row per traveler name, only populated when the attraction has
+// requiresAllTravelerNames = true (see Attraction model).
+model BookingTraveler {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  type      String @default("adult") // adult | child
+  sortOrder Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Simple key/value settings editable from the admin panel — currently used
+// for per-page SEO title/description overrides (homepage + the static legal
+// pages; attraction pages have their own metaTitle/metaDescription columns
+// on the Attraction model instead). Each row is looked up by `key`, e.g.
+// "seo.home.title" — `id` just needs to be a normal unique row id.
+// ---------------------------------------------------------------------------
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
