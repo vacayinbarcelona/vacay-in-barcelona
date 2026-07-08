@@ -279,3 +279,20 @@ model SiteSetting {
   key   String @unique
   value String
 }
+
+// ---------------------------------------------------------------------------
+// Admin-managed header/footer navigation links — editable from
+// /admin/nav-links instead of being hardcoded in the Header/Footer
+// components. `location` is "header" or "footer"; links within each are
+// shown in `sortOrder` order.
+// ---------------------------------------------------------------------------
+model NavLink {
+  id        String @id @default(cuid())
+  location  String // "header" | "footer"
+  label     String
+  href      String
+  sortOrder Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

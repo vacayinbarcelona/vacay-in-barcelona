@@ -7,6 +7,7 @@ const NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/attractions', label: 'Attractions & tours' },
   { href: '/admin/bookings', label: 'Bookings' },
+  { href: '/admin/nav-links', label: 'Header & footer links' },
   { href: '/admin/seo', label: 'SEO' }
 ];
 

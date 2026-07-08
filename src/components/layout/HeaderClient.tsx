@@ -6,16 +6,10 @@ import { usePathname } from 'next/navigation';
 import { IconCart } from '@/components/ui/Icons';
 import { useCart } from '@/components/cart/CartProvider';
 
-// Only pages that actually exist — keeps the header honest and uncluttered.
-const NAV_LINKS = [
-  { href: '/attractions/sagrada-familia', label: 'Sagrada Família' },
-  { href: '/attractions/park-guell', label: 'Park Güell' },
-  { href: '/attractions/flamenco-shows-barcelona', label: 'Flamenco Shows' }
-];
-
 type HeaderUser = { firstName: string } | null;
+type NavLink = { href: string; label: string };
 
-export function HeaderClient({ user }: { user: HeaderUser }) {
+export function HeaderClient({ user, navLinks }: { user: HeaderUser; navLinks: NavLink[] }) {
   // The admin panel (/admin/**) has its own sidebar chrome — it renders
   // under the same root layout as the public site, so the public
   // header/footer opt out here rather than requiring a second root layout.
@@ -34,7 +28,7 @@ export function HeaderClient({ user }: { user: HeaderUser }) {
         <div className="flex-1" />
 
         <nav className="hidden sm:flex items-center gap-5 text-sm text-gray-600 whitespace-nowrap">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-blue-700">
               {link.label}
             </Link>

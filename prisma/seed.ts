@@ -882,6 +882,28 @@ async function main() {
     console.log(`  ✔ ${a.name}`);
   }
 
+  // Default header/footer links — only seeded once (if the table is
+  // empty), so re-running this script doesn't wipe out links added or
+  // removed later from /admin/nav-links.
+  const navLinkCount = await prisma.navLink.count();
+  if (navLinkCount === 0) {
+    await prisma.navLink.createMany({
+      data: [
+        { location: 'header', label: 'Sagrada Família', href: '/attractions/sagrada-familia', sortOrder: 0 },
+        { location: 'header', label: 'Park Güell', href: '/attractions/park-guell', sortOrder: 1 },
+        { location: 'header', label: 'Flamenco Shows', href: '/attractions/flamenco-shows-barcelona', sortOrder: 2 },
+        { location: 'footer', label: 'Attractions', href: '/attractions', sortOrder: 0 },
+        { location: 'footer', label: 'Tours & tickets', href: '/tours', sortOrder: 1 },
+        { location: 'footer', label: 'About us', href: '/about-us', sortOrder: 2 },
+        { location: 'footer', label: 'Contact us', href: '/contact-us', sortOrder: 3 },
+        { location: 'footer', label: 'Privacy policy', href: '/privacy-policy', sortOrder: 4 },
+        { location: 'footer', label: 'Terms & conditions', href: '/terms-conditions', sortOrder: 5 },
+        { location: 'footer', label: 'Affiliate disclosure', href: '/affiliate-disclosure', sortOrder: 6 }
+      ]
+    });
+    console.log('  ✔ Default header/footer nav links');
+  }
+
   console.log('Seed complete.');
 }
 

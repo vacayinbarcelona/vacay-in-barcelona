@@ -1,39 +1,10 @@
-'use client';
+import { prisma } from '@/lib/db';
+import { FooterClient } from './FooterClient';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-
-const LEGAL_LINKS = [
-  { href: '/attractions', label: 'Attractions' },
-  { href: '/tours', label: 'Tours & tickets' },
-  { href: '/about-us', label: 'About us' },
-  { href: '/contact-us', label: 'Contact us' },
-  { href: '/privacy-policy', label: 'Privacy policy' },
-  { href: '/terms-conditions', label: 'Terms & conditions' },
-  { href: '/affiliate-disclosure', label: 'Affiliate disclosure' }
-];
-
-export function Footer() {
-  const pathname = usePathname();
-  if (pathname?.startsWith('/admin')) return null;
-
-  return (
-    <footer className="border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <p className="text-xs text-gray-500 leading-relaxed max-w-3xl mb-5">
-          Vacay in Barcelona is an independent ticket and tour marketplace. We are not affiliated with, endorsed
-          by, or the official website of any attraction listed. All bookings are processed securely on our own
-          site.
-        </p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-          {LEGAL_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-blue-700">
-              {link.label}
-            </Link>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 mt-6">&copy; {new Date().getFullYear()} Vacay in Barcelona. All rights reserved.</p>
-      </div>
-    </footer>
-  );
+// Server wrapper — fetches the admin-managed footer links (needs a DB
+// call, so it can't run in the 'use client' FooterClient) and passes them
+// down. The usePathname()-based admin opt-out stays in FooterClient.
+export async function Footer() {
+  const links = await prisma.navLink.findMany({ where: { location: 'footer' }, orderBy: { sortOrder: 'asc' } });
+  return <FooterClient links={links.map((link) => ({ href: link.href, label: link.label }))} />;
 }
