@@ -116,3 +116,67 @@ export function IconStar({ className = 'h-4 w-4' }: { className?: string }) {
     </svg>
   );
 }
+
+export function IconAward({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="8" r="5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 12.5L7 21l5-2.5 5 2.5-1.5-8.5" />
+    </svg>
+  );
+}
+
+export function IconShield({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+export function IconHeadset({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 13v-1a8 8 0 0116 0v1" />
+      <rect x="2.5" y="13" width="4" height="6" rx="1.5" />
+      <rect x="17.5" y="13" width="4" height="6" rx="1.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 19v1a2 2 0 01-2 2h-3" />
+    </svg>
+  );
+}
+
+export function IconColumn({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16M4 20h16M7 7v11M11 7v11M13 7v11M17 7v11" />
+    </svg>
+  );
+}
+
+export function IconLandmark({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M6 10v11M10 10v11M14 10v11M18 10v11" />
+    </svg>
+  );
+}
+
+export function IconUsers({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="9" cy="8" r="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 20a5.5 5.5 0 0111 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 8.5a2.5 2.5 0 110-5M17.5 20a5 5 0 00-3.7-6.6" />
+    </svg>
+  );
+}
+
+export function IconCameraIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}

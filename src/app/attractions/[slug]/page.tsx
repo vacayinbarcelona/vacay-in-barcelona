@@ -1,13 +1,11 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/db';
-import { Rating } from '@/components/ui/Rating';
-import { IconCheck, IconClock, IconMobile, IconPin } from '@/components/ui/Icons';
-import { Gallery } from '@/components/attraction/Gallery';
+import { IconCheck, IconClock, IconMobile } from '@/components/ui/Icons';
+import { AttractionHero } from '@/components/attraction/AttractionHero';
+import { QuickFactsStrip } from '@/components/attraction/QuickFactsStrip';
 import { TicketGrid } from '@/components/attraction/TicketGrid';
 import { BookingModalProvider } from '@/components/attraction/BookingModalProvider';
-import { CheckAvailabilityButton } from '@/components/attraction/CheckAvailabilityButton';
 import { StickyMobileBar } from '@/components/attraction/StickyMobileBar';
 import { Highlights, About, IncludedList, ImportantInfo, ReviewsSection, FaqSection } from '@/components/attraction/InfoSections';
 import { RelatedAttractions } from '@/components/attraction/RelatedAttractions';
@@ -28,7 +26,8 @@ async function getAttraction(slug: string) {
       infoItems: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
       reviews: { orderBy: { sortOrder: 'asc' } },
-      images: { orderBy: { sortOrder: 'asc' } }
+      images: { orderBy: { sortOrder: 'asc' } },
+      quickFacts: { orderBy: { sortOrder: 'asc' } }
     }
   });
 }
@@ -165,36 +164,22 @@ export default async function AttractionPage({ params }: { params: { slug: strin
       <JsonLd data={touristAttractionJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
       {faqJsonLd ? <JsonLd data={faqJsonLd} /> : null}
-      <div className="max-w-7xl mx-auto px-6 pt-6 pb-24 sm:pb-10">
-        <nav className="text-xs text-gray-400 mb-4">
-          <Link href="/" className="hover:text-gray-600">
-            Home
-          </Link>{' '}
-          / <Link href="/attractions" className="hover:text-gray-600">Attractions</Link> / <span className="text-gray-600">{attraction.name}</span>
-        </nav>
 
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold mb-2">{attraction.name}</h1>
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <Rating rating={attraction.rating} reviewCount={attraction.reviewCount} size="md" />
-              {attraction.address ? (
-                <span className="flex items-center gap-1 text-gray-500">
-                  <IconPin className="h-4 w-4" /> {attraction.address}
-                </span>
-              ) : null}
-            </div>
-          </div>
-          {defaultTicket ? (
-            <CheckAvailabilityButton
-              defaultTicket={defaultTicket}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-3 rounded-full whitespace-nowrap hidden sm:inline-block"
-            />
-          ) : null}
-        </div>
+      <AttractionHero
+        name={attraction.name}
+        tagline={attraction.tagline}
+        badgeLabel={attraction.badge ? attraction.badge.toUpperCase() : 'TOP RATED ATTRACTION IN BARCELONA'}
+        shortDescription={attraction.shortDescription}
+        rating={attraction.rating}
+        reviewCount={attraction.reviewCount}
+        address={attraction.address}
+        breadcrumbLabel={attraction.name}
+        images={galleryPhotos}
+      />
 
-        <Gallery images={galleryPhotos} />
+      <QuickFactsStrip facts={attraction.quickFacts} />
 
+      <div className="max-w-7xl mx-auto px-6 pt-2 pb-24 sm:pb-10">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-500 mb-8">
           {attraction.durationLabel ? (
             <span className="flex items-center gap-1">

@@ -58,6 +58,7 @@ export async function createAttraction(formData: FormData) {
       categoryLabel: str(formData, 'categoryLabel'),
       status: str(formData, 'status') || 'draft',
       badge: str(formData, 'badge'),
+      tagline: str(formData, 'tagline'),
       shortDescription: str(formData, 'shortDescription'),
       longDescription: str(formData, 'longDescription'),
       heroImageUrl: str(formData, 'heroImageUrl'),
@@ -99,6 +100,7 @@ export async function updateAttraction(id: string, currentSlug: string, formData
       categoryLabel: str(formData, 'categoryLabel'),
       status: str(formData, 'status') || 'draft',
       badge: str(formData, 'badge'),
+      tagline: str(formData, 'tagline'),
       shortDescription: str(formData, 'shortDescription'),
       longDescription: str(formData, 'longDescription'),
       heroImageUrl: str(formData, 'heroImageUrl'),
@@ -327,4 +329,31 @@ export async function deleteReview(id: string, slug: string) {
   await prisma.review.delete({ where: { id } });
   await revalidateAttraction(slug);
   redirect(`/admin/attractions/${slug}?saved=1#reviews`);
+}
+
+// ---------------------------------------------------------------------------
+// Quick facts — the dark stats strip below the detail page hero
+// ---------------------------------------------------------------------------
+
+export async function addQuickFact(attractionId: string, slug: string, formData: FormData) {
+  const title = str(formData, 'title');
+  if (!title) redirect(`/admin/attractions/${slug}#quick-facts`);
+
+  await prisma.quickFact.create({
+    data: {
+      attractionId,
+      icon: str(formData, 'icon') || 'landmark',
+      title,
+      subtitle: str(formData, 'subtitle'),
+      sortOrder: num(formData, 'sortOrder', 0)
+    }
+  });
+  await revalidateAttraction(slug);
+  redirect(`/admin/attractions/${slug}?saved=1#quick-facts`);
+}
+
+export async function deleteQuickFact(id: string, slug: string) {
+  await prisma.quickFact.delete({ where: { id } });
+  await revalidateAttraction(slug);
+  redirect(`/admin/attractions/${slug}?saved=1#quick-facts`);
 }

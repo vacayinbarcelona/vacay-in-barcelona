@@ -18,7 +18,9 @@ import {
   addImage,
   deleteImage,
   addReview,
-  deleteReview
+  deleteReview,
+  addQuickFact,
+  deleteQuickFact
 } from '../actions';
 
 async function getAttraction(slug: string) {
@@ -31,7 +33,8 @@ async function getAttraction(slug: string) {
       infoItems: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
       reviews: { orderBy: { sortOrder: 'asc' } },
-      images: { orderBy: { sortOrder: 'asc' } }
+      images: { orderBy: { sortOrder: 'asc' } },
+      quickFacts: { orderBy: { sortOrder: 'asc' } }
     }
   });
 }
@@ -55,6 +58,7 @@ export default async function EditAttractionPage({
   const boundAddFaq = addFaq.bind(null, attraction.id, attraction.slug);
   const boundAddImage = addImage.bind(null, attraction.id, attraction.slug);
   const boundAddReview = addReview.bind(null, attraction.id, attraction.slug);
+  const boundAddQuickFact = addQuickFact.bind(null, attraction.id, attraction.slug);
 
   const included = attraction.includedItems.filter((i) => i.included).map((i) => i.text);
   const notIncluded = attraction.includedItems.filter((i) => !i.included).map((i) => i.text);
@@ -110,6 +114,10 @@ export default async function EditAttractionPage({
               <input name="badge" defaultValue={attraction.badge} className="input" />
             </Field>
           </div>
+
+          <Field label="Tagline" hint="Short italic line under the title on the hero, e.g. “Gaudí's Masterpiece”. Leave blank to hide.">
+            <input name="tagline" defaultValue={attraction.tagline} className="input" />
+          </Field>
 
           <Field label="Short description">
             <textarea name="shortDescription" defaultValue={attraction.shortDescription} rows={2} className="input" required />
@@ -324,6 +332,46 @@ export default async function EditAttractionPage({
           </div>
           <button type="submit" className="btn-secondary">
             + Add photo
+          </button>
+        </form>
+      </SectionCard>
+
+      {/* ------------------------------------------------------------- */}
+      {/* Quick facts strip (dark bar below the hero)                   */}
+      {/* ------------------------------------------------------------- */}
+      <SectionCard id="quick-facts" title="Quick facts strip" hint="Up to 4 shown in the dark bar below the hero, e.g. “Built over 140 years / Still under construction”">
+        <div className="space-y-2 mb-4">
+          {attraction.quickFacts.map((fact) => (
+            <div key={fact.id} className="flex items-center gap-3 border border-gray-200 rounded-lg p-3">
+              <div className="flex-1 min-w-0 grid grid-cols-2 gap-2">
+                <p className="text-sm text-gray-700 truncate">{fact.title}</p>
+                <p className="text-xs text-gray-400 truncate">{fact.subtitle}</p>
+              </div>
+              <span className="text-[11px] text-gray-400 flex-shrink-0">{fact.icon}</span>
+              <form action={deleteQuickFact.bind(null, fact.id, attraction.slug)}>
+                <DeleteButton />
+              </form>
+            </div>
+          ))}
+          {attraction.quickFacts.length === 0 ? <p className="text-sm text-gray-400">No quick facts yet — the strip is hidden until you add some.</p> : null}
+        </div>
+
+        <form action={boundAddQuickFact} className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <input name="title" placeholder="Title, e.g. Built over 140 years" required className="input" />
+            <input name="subtitle" placeholder="Subtitle, e.g. Still under construction" className="input" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <select name="icon" defaultValue="landmark" className="input">
+              <option value="landmark">Landmark / building</option>
+              <option value="column">Column</option>
+              <option value="people">People</option>
+              <option value="camera">Camera</option>
+            </select>
+            <input name="sortOrder" type="number" placeholder="Sort order" className="input" />
+          </div>
+          <button type="submit" className="btn-secondary">
+            + Add quick fact
           </button>
         </form>
       </SectionCard>

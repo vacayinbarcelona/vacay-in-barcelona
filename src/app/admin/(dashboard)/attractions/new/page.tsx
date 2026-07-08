@@ -43,6 +43,10 @@ export default function NewAttractionPage() {
           </Field>
         </div>
 
+        <Field label="Tagline" hint="Short italic line under the title on the hero, e.g. “Gaudí's Masterpiece”. Optional.">
+          <input name="tagline" className="input" />
+        </Field>
+
         <Field label="Short description" hint="Shown on cards and at the top of the page">
           <textarea name="shortDescription" rows={2} className="input" required />
         </Field>

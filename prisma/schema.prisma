@@ -9,8 +9,15 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Pooled (PgBouncer) connection — used by the running app. Neon's free-tier
+  // compute auto-suspends after idling; a direct connection left open across
+  // that suspend gets dropped ("Server has closed the connection"), but the
+  // pooler transparently reconnects/wakes the compute instead of erroring.
+  url       = env("DATABASE_URL")
+  // Direct (non-pooled) connection — used only by `prisma db push` / migrate,
+  // which don't work reliably through PgBouncer's transaction pooling mode.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------
@@ -27,6 +34,10 @@ model Attraction {
   status      String  @default("published") // draft | published
 
   badge String @default("") // card ribbon, e.g. "Best seller", "Recommended"
+
+  // Short italic line shown under the H1 on the detail page hero,
+  // e.g. "Gaudí's Masterpiece". Optional — hidden if blank.
+  tagline String @default("")
 
   shortDescription String
   longDescription  String // supports simple paragraphs separated by blank lines
@@ -69,6 +80,7 @@ model Attraction {
   faqs          FAQ[]
   reviews       Review[]
   images        AttractionImage[]
+  quickFacts    QuickFact[]
 }
 
 // A bookable ticket / tour option belonging to an attraction.
@@ -159,6 +171,20 @@ model AttractionImage {
   attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
   url          String
   altText      String @default("")
+  sortOrder    Int    @default(0)
+}
+
+// The dark "quick facts" strip at the bottom of the detail page hero, e.g.
+// "Built over 140 years / Still under construction". icon is a fixed key
+// (see ICON_MAP in QuickFactsStrip.tsx) rather than free text, so it always
+// renders a real icon.
+model QuickFact {
+  id           String @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+  icon         String @default("landmark") // column | landmark | people | camera
+  title        String
+  subtitle     String @default("")
   sortOrder    Int    @default(0)
 }
 

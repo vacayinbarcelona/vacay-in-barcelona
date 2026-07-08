@@ -23,6 +23,7 @@ type SeedAttraction = {
   category: 'attraction' | 'tour' | 'show';
   categoryLabel: string;
   badge?: string;
+  tagline?: string;
   requiresAllTravelerNames?: boolean;
   shortDescription: string;
   longDescription: string;
@@ -56,6 +57,7 @@ type SeedAttraction = {
   faqs: Array<{ q: string; a: string }>;
   reviews: Array<{ name: string; country: string; rating: number; title: string; comment: string }>;
   galleryFiles: string[];
+  quickFacts?: Array<{ icon: 'column' | 'landmark' | 'people' | 'camera'; title: string; subtitle: string }>;
 };
 
 const data: SeedAttraction[] = [
@@ -65,6 +67,7 @@ const data: SeedAttraction[] = [
     category: 'attraction',
     categoryLabel: 'Architecture & landmarks',
     badge: 'Best seller',
+    tagline: "Gaudí's Masterpiece",
     requiresAllTravelerNames: true,
     shortDescription:
       "Antoni Gaudí's unfinished masterpiece and Barcelona's most iconic landmark — a basilica unlike anything else on Earth.",
@@ -168,13 +171,20 @@ const data: SeedAttraction[] = [
         comment: 'Absolutely stunning building. We nearly missed our slot because of traffic — arrive early, there is a security line even with a timed ticket.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg']
+    galleryFiles: ['gallery-1.jpg', 'gallery-2.jpg', 'gallery-3.jpg', 'gallery-4.jpg'],
+    quickFacts: [
+      { icon: 'column', title: 'Built over 140 years', subtitle: 'Still under construction' },
+      { icon: 'landmark', title: 'UNESCO World Heritage', subtitle: 'A masterpiece by Gaudí' },
+      { icon: 'people', title: '4.5M+ Visitors Every Year', subtitle: "Barcelona's top attraction" },
+      { icon: 'camera', title: 'Unforgettable Views', subtitle: 'Inside and out' }
+    ]
   },
   {
     slug: 'park-guell',
     name: 'Park Güell',
     category: 'attraction',
     categoryLabel: 'Parks & gardens',
+    tagline: "Gaudí's Fairy-Tale Park",
     shortDescription:
       "A fairy-tale public park where Gaudí's mosaic-covered terraces and gingerbread pavilions overlook the whole city.",
     longDescription:
@@ -271,7 +281,13 @@ const data: SeedAttraction[] = [
         comment: 'We did the guided tour and learned so much about Gaudí and Güell’s failed housing project — made the visit far more interesting than just walking through.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'column', title: 'Built in 1900', subtitle: 'Originally a private garden-city' },
+      { icon: 'landmark', title: 'UNESCO World Heritage', subtitle: 'A masterpiece by Gaudí' },
+      { icon: 'people', title: '4M+ Visitors Every Year', subtitle: "One of Barcelona's top parks" },
+      { icon: 'camera', title: 'Best City Views', subtitle: 'Panoramas over Barcelona' }
+    ]
   },
   {
     slug: 'casa-batllo',
@@ -279,6 +295,7 @@ const data: SeedAttraction[] = [
     category: 'attraction',
     categoryLabel: 'Architecture & landmarks',
     badge: 'Recommended',
+    tagline: 'The House of Bones',
     shortDescription:
       'A dragon-scaled, bone-balconied masterpiece on Passeig de Gràcia — one of Gaudí’s most surreal residential works.',
     longDescription:
@@ -375,13 +392,20 @@ const data: SeedAttraction[] = [
         comment: 'Went at 1pm and it was quite crowded. Booking the early access slot next time based on other reviews.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'column', title: 'Renovated in 1904', subtitle: 'Gaudí transformed an existing house' },
+      { icon: 'landmark', title: 'UNESCO World Heritage', subtitle: 'A masterpiece by Gaudí' },
+      { icon: 'people', title: '1M+ Visitors Every Year', subtitle: 'On Passeig de Gràcia' },
+      { icon: 'camera', title: 'Immersive Experience', subtitle: 'Multimedia tour included' }
+    ]
   },
   {
     slug: 'casa-mila-la-pedrera',
     name: 'Casa Milà / La Pedrera',
     category: 'attraction',
     categoryLabel: 'Architecture & landmarks',
+    tagline: 'The Stone Quarry',
     shortDescription:
       "Gaudí's undulating stone facade and otherworldly rooftop chimneys — nicknamed \"La Pedrera,\" the stone quarry.",
     longDescription:
@@ -478,13 +502,20 @@ const data: SeedAttraction[] = [
         comment: 'Loved it but the day+night ticket is a noticeable step up in price. Worth it if you have the time, otherwise the standard day ticket covers the essentials.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'column', title: 'Built in 1912', subtitle: "Gaudí's last private commission" },
+      { icon: 'landmark', title: 'UNESCO World Heritage', subtitle: 'A masterpiece by Gaudí' },
+      { icon: 'people', title: 'Rooftop Chimneys', subtitle: 'The famous "stone quarry" facade' },
+      { icon: 'camera', title: 'Day & Night Visits', subtitle: 'Rooftop views over the city' }
+    ]
   },
   {
     slug: 'camp-nou',
     name: 'Camp Nou (FC Barcelona)',
     category: 'attraction',
     categoryLabel: 'Sports & stadiums',
+    tagline: "Europe's Largest Stadium",
     shortDescription:
       "Step into Europe's largest football stadium with a behind-the-scenes tour of FC Barcelona's home turf and museum.",
     longDescription:
@@ -582,7 +613,13 @@ const data: SeedAttraction[] = [
         comment: 'Got tickets for a home match through this and the atmosphere was incredible. Definitely arrive early to explore the stadium beforehand.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'column', title: 'Opened in 1957', subtitle: "FC Barcelona's home ground" },
+      { icon: 'landmark', title: '99,000+ Seats', subtitle: 'Largest stadium in Europe' },
+      { icon: 'people', title: 'Museum & Trophy Room', subtitle: "Club's full history on display" },
+      { icon: 'camera', title: 'Pitch-Side Access', subtitle: "Walk through the players' tunnel" }
+    ]
   },
   {
     slug: 'barcelona-walking-tours',
@@ -590,6 +627,7 @@ const data: SeedAttraction[] = [
     category: 'tour',
     categoryLabel: 'Walking tours',
     badge: 'Small group',
+    tagline: 'See the City on Foot',
     shortDescription:
       "Explore the Gothic Quarter, Gaudí landmarks, and hidden corners of Barcelona on foot with a local guide.",
     longDescription:
@@ -689,7 +727,13 @@ const data: SeedAttraction[] = [
         comment: 'Really fun evening, great food at every stop. Would have liked a little more time at the last venue but overall a great experience.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'people', title: 'Small Groups', subtitle: 'Local guides, capped group sizes' },
+      { icon: 'landmark', title: 'Gothic Quarter & Beyond', subtitle: 'History, Gaudí and hidden corners' },
+      { icon: 'column', title: 'Multiple Routes', subtitle: 'History, architecture and food walks' },
+      { icon: 'camera', title: 'On-Foot Discovery', subtitle: 'See spots most visitors miss' }
+    ]
   },
   {
     slug: 'flamenco-shows-barcelona',
@@ -697,6 +741,7 @@ const data: SeedAttraction[] = [
     category: 'show',
     categoryLabel: 'Shows & entertainment',
     badge: 'Live tablao',
+    tagline: 'Passion, Rhythm, Tradition',
     shortDescription:
       'Experience the passion and rhythm of live flamenco at intimate venues across Barcelona.',
     longDescription:
@@ -793,7 +838,13 @@ const data: SeedAttraction[] = [
         comment: 'Loved that it felt like a real tablao and not a tourist trap. The dancers performed just a few feet from our table.'
       }
     ],
-    galleryFiles: ['gallery-1.jpg']
+    galleryFiles: ['gallery-1.jpg'],
+    quickFacts: [
+      { icon: 'people', title: 'Intimate Tablaos', subtitle: 'Small, authentic venues' },
+      { icon: 'landmark', title: 'Live Musicians', subtitle: 'Guitar, cante and percussion' },
+      { icon: 'column', title: 'Traditional Art Form', subtitle: 'Rooted in Andalusian culture' },
+      { icon: 'camera', title: 'Front-Row Energy', subtitle: 'Feel the passion up close' }
+    ]
   }
 ];
 
@@ -811,6 +862,7 @@ async function main() {
         category: a.category,
         categoryLabel: a.categoryLabel,
         badge: a.badge ?? '',
+        tagline: a.tagline ?? '',
         requiresAllTravelerNames: a.requiresAllTravelerNames ?? false,
         status: 'published',
         shortDescription: a.shortDescription,
@@ -873,6 +925,14 @@ async function main() {
           create: a.galleryFiles.map((file, i) => ({
             url: img(a.slug, file),
             altText: `${a.name} photo ${i + 1}`,
+            sortOrder: i
+          }))
+        },
+        quickFacts: {
+          create: (a.quickFacts ?? []).map((f, i) => ({
+            icon: f.icon,
+            title: f.title,
+            subtitle: f.subtitle,
             sortOrder: i
           }))
         }
