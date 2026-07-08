@@ -215,8 +215,12 @@ export default async function AttractionPage({ params }: { params: { slug: strin
 
         {ticketOptions.length > 0 ? (
           <section className="bg-blue-50/60 -mx-6 px-6 py-8 mb-2 rounded-2xl">
-            <h2 className="text-xl font-semibold mb-1">Choose your ticket</h2>
-            <p className="text-sm text-gray-500 mb-5">Compare options and select the one that fits your visit</p>
+            <h2 className="text-xl font-semibold mb-1">Select your Ticket and Tour</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-5 max-w-3xl">
+              Book {attraction.name} tickets online and skip the ticket office line. Choose from skip-the-line entry
+              tickets, guided tours, and combo experiences for {attraction.name} in Barcelona — each with instant
+              confirmation, a mobile ticket, and free cancellation on most options up to 24 hours before your visit.
+            </p>
             <TicketGrid tickets={ticketOptions} />
           </section>
         ) : null}
