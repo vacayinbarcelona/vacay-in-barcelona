@@ -214,6 +214,17 @@ model Order {
   paymentIntentId         String    @default("") // set once a real payment provider charge is created
   confirmationEmailSentAt DateTime?
 
+  // Self-service cancellation (see /account/orders). refundEligible is
+  // computed at cancellation time from each attraction's freeCancellation
+  // flag plus a 24-hour-before-visit cutoff. Actual refund money movement
+  // isn't wired up yet — there's no real Stripe charge behind
+  // paymentIntentId yet either — so this records the outcome for now and
+  // an admin processes the real refund manually via Stripe until that's
+  // automated (see the TODO in orders/actions.ts).
+  cancellationReason String    @default("")
+  refundEligible     Boolean?
+  cancelledAt        DateTime?
+
   bookings Booking[]
 
   createdAt DateTime @default(now())

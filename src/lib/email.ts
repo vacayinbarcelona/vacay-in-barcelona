@@ -95,6 +95,55 @@ export function orderConfirmationEmailHtml(order: OrderWithBookings): string {
   </div>`;
 }
 
+// Sent when a customer cancels a booking themselves from /account/orders.
+// refundEligible reflects our own free-cancellation policy check (see
+// requestCancellation in src/app/account/(dashboard)/orders/actions.ts) —
+// it does NOT mean a refund has actually been issued yet, since real
+// payment processing (Stripe) isn't wired in. For now this just sets
+// expectations; an admin follows up to process the real refund.
+export async function sendOrderCancellationEmail(order: OrderWithBookings, refundEligible: boolean): Promise<void> {
+  const from = process.env.EMAIL_FROM;
+  if (!from) {
+    throw new Error('EMAIL_FROM is not set. Add it to your .env file (see .env.example).');
+  }
+
+  const resend = getResendClient();
+
+  await resend.emails.send({
+    from,
+    to: order.email,
+    subject: `Your booking has been cancelled — ${order.reference}`,
+    html: orderCancellationEmailHtml(order, refundEligible)
+  });
+}
+
+function orderCancellationEmailHtml(order: OrderWithBookings, refundEligible: boolean): string {
+  const bookingSections = order.bookings.map(bookingSectionHtml).join('');
+
+  return `
+  <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#111827;">
+    <p style="font-size:13px;color:#2563eb;font-weight:600;letter-spacing:.02em;margin:0 0 4px;">VACAY IN BARCELONA</p>
+    <h1 style="font-size:20px;margin:0 0 4px;">Booking cancelled, ${escapeHtml(order.leadFirstName)}</h1>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 24px;">Order reference ${escapeHtml(order.reference)}</p>
+
+    <p style="font-size:14px;color:#374151;margin:0 0 20px;">
+      ${
+        refundEligible
+          ? "This booking qualified for free cancellation, and we're processing your refund — it should appear on your original payment method within a few business days."
+          : "This booking was outside our free-cancellation window, so it wasn't automatically eligible for a refund. If you'd like to discuss this, reply to this email or contact us."
+      }
+    </p>
+
+    ${bookingSections}
+
+    <p style="font-size:12px;color:#9ca3af;margin-top:32px;line-height:1.6;">
+      Vacay in Barcelona is an independent ticket and tour marketplace and is not affiliated with, endorsed by,
+      or the official website of any attraction listed. Questions about this cancellation? Reply to this email or
+      visit our contact page.
+    </p>
+  </div>`;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
