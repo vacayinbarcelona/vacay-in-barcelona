@@ -19,7 +19,8 @@ export function Hero() {
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center px-6 pt-24 pb-24 sm:pb-28">
           <span className="inline-flex items-center gap-2 self-start rounded-full border border-amber-300/70 bg-white/5 backdrop-blur-sm px-4 py-1.5 text-xs font-semibold tracking-wider text-white mb-5">

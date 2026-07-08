@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import { Hero } from '@/components/home/Hero';
-import { StatsBar } from '@/components/home/StatsBar';
+import { FeatureStrip } from '@/components/home/FeatureStrip';
 import { CategoryPills } from '@/components/home/CategoryPills';
 import { AttractionCard } from '@/components/home/AttractionCard';
 import { TourCard } from '@/components/home/TourCard';
@@ -63,7 +63,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={itemListJsonLd} />
       <Hero />
-      <StatsBar />
+      <FeatureStrip />
       <CategoryPills />
 
       <section id="attractions" className="max-w-7xl mx-auto px-6 py-10">
