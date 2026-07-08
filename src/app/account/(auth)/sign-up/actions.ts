@@ -2,8 +2,9 @@
 
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { hashPassword, setCustomerSessionCookie } from '@/lib/customerAuth';
+import { hashPassword, createEmailVerificationToken } from '@/lib/customerAuth';
 import { verifyRecaptcha } from '@/lib/recaptcha';
+import { sendVerificationEmail } from '@/lib/email';
 
 export async function signUpAction(formData: FormData) {
   const firstName = String(formData.get('firstName') ?? '').trim();
@@ -12,14 +13,18 @@ export async function signUpAction(formData: FormData) {
     .trim()
     .toLowerCase();
   const password = String(formData.get('password') ?? '');
+  const confirmPassword = String(formData.get('confirmPassword') ?? '');
   const redirectTo = String(formData.get('redirectTo') ?? '') || '/account';
   const captchaToken = formData.get('g-recaptcha-response') ? String(formData.get('g-recaptcha-response')) : null;
 
-  if (!firstName || !lastName || !email || !password) {
+  if (!firstName || !lastName || !email || !password || !confirmPassword) {
     redirect(`/account/sign-up?error=missing&redirect=${encodeURIComponent(redirectTo)}`);
   }
   if (password.length < 8) {
     redirect(`/account/sign-up?error=weak&redirect=${encodeURIComponent(redirectTo)}`);
+  }
+  if (password !== confirmPassword) {
+    redirect(`/account/sign-up?error=mismatch&redirect=${encodeURIComponent(redirectTo)}`);
   }
   if (!(await verifyRecaptcha(captchaToken))) {
     redirect(`/account/sign-up?error=captcha&redirect=${encodeURIComponent(redirectTo)}`);
@@ -32,9 +37,20 @@ export async function signUpAction(formData: FormData) {
 
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
-    data: { email, passwordHash, firstName, lastName }
+    data: { email, passwordHash, firstName, lastName, emailVerified: false }
   });
 
-  await setCustomerSessionCookie(user.id);
-  redirect(redirectTo);
+  // Not signed in yet — they need to confirm their email first (see
+  // /account/verify-email). Google sign-in skips all of this.
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  const token = createEmailVerificationToken(user.id);
+  const verifyUrl = `${siteUrl}/account/verify-email?token=${token}&redirect=${encodeURIComponent(redirectTo)}`;
+
+  try {
+    await sendVerificationEmail(user.email, user.firstName, verifyUrl);
+  } catch (err) {
+    console.error('Sign-up succeeded but verification email failed to send:', err);
+  }
+
+  redirect(`/account/check-email?email=${encodeURIComponent(user.email)}&redirect=${encodeURIComponent(redirectTo)}`);
 }

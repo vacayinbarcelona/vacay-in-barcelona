@@ -44,17 +44,22 @@ export async function GET(request: NextRequest) {
     // second case links a Google sign-in to an account that was originally
     // created with a password, so the customer doesn't end up with two
     // separate accounts for the same email address.
+    // Google has already verified this email address, so accounts
+    // touched by this flow (new, or an existing password account being
+    // linked) are always marked emailVerified — skips the confirmation
+    // email entirely for anyone using "Continue with Google".
     let user = await prisma.user.findUnique({ where: { googleId: profile.sub } });
     if (!user) {
       const existingByEmail = await prisma.user.findUnique({ where: { email } });
       user = existingByEmail
-        ? await prisma.user.update({ where: { id: existingByEmail.id }, data: { googleId: profile.sub } })
+        ? await prisma.user.update({ where: { id: existingByEmail.id }, data: { googleId: profile.sub, emailVerified: true } })
         : await prisma.user.create({
             data: {
               email,
               googleId: profile.sub,
               firstName: profile.given_name || profile.name?.split(' ')[0] || 'Guest',
-              lastName: profile.family_name || profile.name?.split(' ').slice(1).join(' ') || ''
+              lastName: profile.family_name || profile.name?.split(' ').slice(1).join(' ') || '',
+              emailVerified: true
             }
           });
     }

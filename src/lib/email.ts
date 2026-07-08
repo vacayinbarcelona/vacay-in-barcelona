@@ -144,6 +144,39 @@ function orderCancellationEmailHtml(order: OrderWithBookings, refundEligible: bo
   </div>`;
 }
 
+// Sent right after someone signs up with email + password (see
+// signUpAction in src/app/account/(auth)/sign-up/actions.ts). They can't
+// sign in until they click the link — "Continue with Google" accounts skip
+// this entirely since Google has already verified that email.
+export async function sendVerificationEmail(to: string, firstName: string, verifyUrl: string): Promise<void> {
+  const from = process.env.EMAIL_FROM;
+  if (!from) {
+    throw new Error('EMAIL_FROM is not set. Add it to your .env file (see .env.example).');
+  }
+
+  const resend = getResendClient();
+
+  await resend.emails.send({
+    from,
+    to,
+    subject: 'Confirm your email — Vacay in Barcelona',
+    html: `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#111827;">
+        <p style="font-size:13px;color:#2563eb;font-weight:600;letter-spacing:.02em;margin:0 0 4px;">VACAY IN BARCELONA</p>
+        <h1 style="font-size:20px;margin:0 0 12px;">Confirm your email, ${escapeHtml(firstName)}</h1>
+        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 24px;">
+          Click the button below to confirm your email address and activate your account. This link expires in 48 hours.
+        </p>
+        <a href="${verifyUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:9999px;">
+          Confirm email
+        </a>
+        <p style="font-size:12px;color:#9ca3af;margin-top:32px;line-height:1.6;">
+          If you didn't create an account with Vacay in Barcelona, you can safely ignore this email.
+        </p>
+      </div>`
+  });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')

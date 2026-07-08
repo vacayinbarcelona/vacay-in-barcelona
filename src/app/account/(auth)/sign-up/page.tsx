@@ -5,6 +5,7 @@ import { RecaptchaWidget } from '@/components/auth/RecaptchaWidget';
 const ERROR_MESSAGES: Record<string, string> = {
   missing: 'Please fill in every field.',
   weak: 'Password must be at least 8 characters.',
+  mismatch: 'Passwords don’t match.',
   exists: 'An account with that email already exists — try signing in instead.',
   captcha: 'Please complete the captcha and try again.'
 };
@@ -67,6 +68,10 @@ export default function SignUpPage({ searchParams }: { searchParams: { error?: s
               <label className="text-xs font-medium text-gray-600 mb-1 block">Password</label>
               <input type="password" name="password" required minLength={8} className="input" />
               <p className="text-[11px] text-gray-400 mt-1">At least 8 characters.</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-600 mb-1 block">Confirm password</label>
+              <input type="password" name="confirmPassword" required minLength={8} className="input" />
             </div>
 
             {RECAPTCHA_SITE_KEY ? <RecaptchaWidget siteKey={RECAPTCHA_SITE_KEY} /> : null}

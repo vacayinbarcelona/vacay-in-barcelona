@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 
 const COOKIE_NAME = 'vib_customer_session';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 48; // 48 hours
 const SCRYPT_KEYLEN = 64;
 
 function getSecret(): string {
@@ -74,6 +75,42 @@ function verifySessionToken(token: string): { userId: string } | null {
 
     const parsed = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
     if (typeof parsed?.userId !== 'string' || typeof parsed?.expires !== 'number') return null;
+    if (Date.now() > parsed.expires) return null;
+
+    return { userId: parsed.userId };
+  } catch {
+    return null;
+  }
+}
+
+// Email confirmation for password sign-ups — Google sign-in doesn't need
+// this (a Google account is already a verified email), only accounts
+// created via /account/sign-up. Same signed-token approach as sessions,
+// just a different purpose + TTL, and a distinct "purpose" field so a
+// verification token can never be mistaken for/reused as a session token.
+export function createEmailVerificationToken(userId: string): string {
+  const expires = Date.now() + EMAIL_VERIFICATION_TTL_MS;
+  const payloadB64 = Buffer.from(JSON.stringify({ userId, purpose: 'verify-email', expires })).toString('base64url');
+  const signature = sign(payloadB64);
+  return `${payloadB64}.${signature}`;
+}
+
+export function verifyEmailVerificationToken(token: string): { userId: string } | null {
+  try {
+    const separatorIndex = token.lastIndexOf('.');
+    if (separatorIndex === -1) return null;
+
+    const payloadB64 = token.slice(0, separatorIndex);
+    const signature = token.slice(separatorIndex + 1);
+    const expected = sign(payloadB64);
+
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+
+    const parsed = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'));
+    if (typeof parsed?.userId !== 'string' || typeof parsed?.expires !== 'number') return null;
+    if (parsed.purpose !== 'verify-email') return null;
     if (Date.now() > parsed.expires) return null;
 
     return { userId: parsed.userId };

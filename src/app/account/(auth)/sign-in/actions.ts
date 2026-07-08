@@ -32,6 +32,11 @@ export async function signInAction(formData: FormData) {
   if (!(await verifyPassword(password, user.passwordHash))) {
     redirect(`/account/sign-in?error=1&redirect=${encodeURIComponent(redirectTo)}`);
   }
+  if (!user.emailVerified) {
+    // Correct password, but they haven't clicked the confirmation link
+    // yet — send them to resend/check the email instead of signing in.
+    redirect(`/account/check-email?email=${encodeURIComponent(user.email)}&redirect=${encodeURIComponent(redirectTo)}`);
+  }
 
   await setCustomerSessionCookie(user.id);
   redirect(redirectTo);

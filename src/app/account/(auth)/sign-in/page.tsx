@@ -6,7 +6,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   '1': 'Incorrect email or password.',
   'google-only': 'This email signed up with Google — continue with Google below.',
   google: "Google sign-in didn't work. Please try again.",
-  captcha: 'Please complete the captcha and try again.'
+  captcha: 'Please complete the captcha and try again.',
+  'invalid-link': 'That confirmation link is invalid or has expired. Sign in to request a new one.'
 };
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;

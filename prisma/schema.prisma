@@ -175,6 +175,12 @@ model User {
   passwordHash String? // null for accounts created via "Continue with Google" that never set a password
   googleId     String? @unique // Google "sub" claim, set once they sign in with Google
 
+  // Password sign-ups must click the link in a confirmation email before
+  // they can sign in — see /account/verify-email. Google sign-ups are
+  // created with this already true, since Google has already verified
+  // that email address.
+  emailVerified Boolean @default(false)
+
   firstName   String
   lastName    String
   phone       String    @default("")

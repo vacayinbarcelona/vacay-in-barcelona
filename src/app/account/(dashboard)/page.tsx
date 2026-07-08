@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { getCurrentUser } from '@/lib/customerAuth';
 import { formatDate } from '@/lib/format';
 
-export default async function AccountOverviewPage() {
+export default async function AccountOverviewPage({ searchParams }: { searchParams: { verified?: string } }) {
   const user = await getCurrentUser();
   if (!user) return null; // layout already redirects, this satisfies TypeScript
 
@@ -13,6 +13,12 @@ export default async function AccountOverviewPage() {
 
   return (
     <div className="space-y-6">
+      {searchParams?.verified ? (
+        <p className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+          Email confirmed — welcome!
+        </p>
+      ) : null}
+
       <div className="border border-gray-200 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold">Account details</h2>
