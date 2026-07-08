@@ -279,6 +279,24 @@ model BookingTraveler {
 }
 
 // ---------------------------------------------------------------------------
+// Additional admin panel logins beyond the one bootstrap "master" account
+// defined by ADMIN_EMAIL/ADMIN_PASSWORD in .env (that env-var account
+// always works and always has master rights, so the panel can never be
+// locked out). Accounts created here from /admin/team can be "master"
+// (full access) or "editor" (attractions content + SEO only) — see the
+// role checks in each admin page/action.
+// ---------------------------------------------------------------------------
+model AdminUser {
+  id           String @id @default(cuid())
+  email        String @unique
+  passwordHash String
+  role         String @default("editor") // "master" | "editor"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
 // Simple key/value settings editable from the admin panel — currently used
 // for per-page SEO title/description overrides (homepage + the static legal
 // pages; attraction pages have their own metaTitle/metaDescription columns

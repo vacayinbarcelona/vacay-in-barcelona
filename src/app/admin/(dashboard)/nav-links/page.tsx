@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import { DeleteButton } from '@/components/admin/DeleteButton';
 import { createNavLink, deleteNavLink } from './actions';
 
@@ -59,6 +61,9 @@ function LinkGroup({
 }
 
 export default async function NavLinksPage({ searchParams }: { searchParams: { saved?: string; error?: string } }) {
+  const session = await getSession();
+  if (session?.role !== 'master') redirect('/admin/attractions');
+
   const [headerLinks, footerLinks] = await Promise.all([getLinks('header'), getLinks('footer')]);
 
   return (

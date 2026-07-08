@@ -1,11 +1,15 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import { formatDate, formatPrice } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminBookingDetailPage({ params }: { params: { reference: string } }) {
+  const session = await getSession();
+  if (session?.role !== 'master') redirect('/admin/attractions');
+
   const order = await prisma.order.findUnique({
     where: { reference: params.reference },
     include: { bookings: { include: { travelers: { orderBy: { sortOrder: 'asc' } } } } }

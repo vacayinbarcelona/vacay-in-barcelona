@@ -1,19 +1,22 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getSession, type AdminRole } from '@/lib/auth';
 import { logoutAction } from '@/app/admin/actions';
 
-const NAV = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/attractions', label: 'Attractions & tours' },
-  { href: '/admin/bookings', label: 'Bookings' },
-  { href: '/admin/nav-links', label: 'Header & footer links' },
-  { href: '/admin/seo', label: 'SEO' }
+const NAV: { href: string; label: string; roles: AdminRole[] }[] = [
+  { href: '/admin', label: 'Dashboard', roles: ['master'] },
+  { href: '/admin/attractions', label: 'Attractions & tours', roles: ['master', 'editor'] },
+  { href: '/admin/bookings', label: 'Bookings', roles: ['master'] },
+  { href: '/admin/nav-links', label: 'Header & footer links', roles: ['master'] },
+  { href: '/admin/seo', label: 'SEO', roles: ['master', 'editor'] },
+  { href: '/admin/team', label: 'Admin team', roles: ['master'] }
 ];
 
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect('/admin/login');
+
+  const visibleNav = NAV.filter((item) => item.roles.includes(session.role));
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -26,7 +29,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {NAV.map((item) => (
+          {visibleNav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -38,7 +41,8 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         </nav>
 
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
-          <p className="px-3 text-[11px] text-gray-400 mb-1 truncate">{session.email}</p>
+          <p className="px-3 text-[11px] text-gray-400 mb-0.5 truncate">{session.email}</p>
+          <p className="px-3 text-[10px] text-gray-400 mb-1 uppercase tracking-wide">{session.role}</p>
           <Link href="/" target="_blank" className="block px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100">
             View site &rarr;
           </Link>

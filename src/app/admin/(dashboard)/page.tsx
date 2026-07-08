@@ -1,10 +1,15 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import { formatDate, formatPrice } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
+  const session = await getSession();
+  if (session?.role !== 'master') redirect('/admin/attractions');
+
   const [attractionCount, publishedCount, bookingCount, recentOrders] = await Promise.all([
     prisma.attraction.count(),
     prisma.attraction.count({ where: { status: 'published' } }),

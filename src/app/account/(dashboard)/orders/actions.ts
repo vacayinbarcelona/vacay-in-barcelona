@@ -86,5 +86,6 @@ export async function requestCancellation(orderId: string, formData: FormData) {
   }
 
   revalidatePath('/account/orders');
+  revalidatePath(`/booking-confirmation/${order.reference}`);
   redirect(`/account/orders?cancelled=1&refund=${refundEligible ? '1' : '0'}`);
 }
