@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import { DeleteButton } from '@/components/admin/DeleteButton';
 import {
   updateAttraction,
@@ -42,8 +43,9 @@ export default async function EditAttractionPage({
   params: { slug: string };
   searchParams: { saved?: string };
 }) {
-  const attraction = await getAttraction(params.slug);
+  const [session, attraction] = await Promise.all([getSession(), getAttraction(params.slug)]);
   if (!attraction) notFound();
+  const isMaster = session?.role === 'master';
 
   const boundUpdate = updateAttraction.bind(null, attraction.id, attraction.slug);
   const boundReplaceHighlights = replaceHighlights.bind(null, attraction.id, attraction.slug);
@@ -404,21 +406,23 @@ export default async function EditAttractionPage({
       </SectionCard>
 
       {/* ------------------------------------------------------------- */}
-      {/* Danger zone                                                   */}
+      {/* Danger zone — master only                                     */}
       {/* ------------------------------------------------------------- */}
-      <div className="border border-red-100 bg-red-50 rounded-xl p-5 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-red-700">Delete this attraction</p>
-          <p className="text-xs text-red-500 mt-0.5">Removes the listing and all its tickets, photos, FAQs and reviews.</p>
+      {isMaster ? (
+        <div className="border border-red-100 bg-red-50 rounded-xl p-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-red-700">Delete this attraction</p>
+            <p className="text-xs text-red-500 mt-0.5">Removes the listing and all its tickets, photos, FAQs and reviews.</p>
+          </div>
+          <form action={deleteAttraction.bind(null, attraction.id)}>
+            <DeleteButton
+              label="Delete attraction"
+              confirmText={`Delete "${attraction.name}"? This also deletes its tickets, photos, FAQs and reviews. This cannot be undone.`}
+              className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-4 py-2 rounded-lg"
+            />
+          </form>
         </div>
-        <form action={deleteAttraction.bind(null, attraction.id)}>
-          <DeleteButton
-            label="Delete attraction"
-            confirmText={`Delete "${attraction.name}"? This also deletes its tickets, photos, FAQs and reviews. This cannot be undone.`}
-            className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-4 py-2 rounded-lg"
-          />
-        </form>
-      </div>
+      ) : null}
     </div>
   );
 }

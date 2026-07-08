@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { slugify } from '@/lib/slugify';
+import { getSession } from '@/lib/auth';
 
 // All admin CRUD for attractions and their related content (ticket options,
 // highlights, included/excluded items, important info, FAQs, images,
@@ -129,6 +130,11 @@ export async function updateAttraction(id: string, currentSlug: string, formData
 }
 
 export async function deleteAttraction(id: string) {
+  // Editors can update attraction content but not delete attractions —
+  // only master accounts can.
+  const session = await getSession();
+  if (session?.role !== 'master') redirect('/admin/attractions');
+
   const attraction = await prisma.attraction.findUnique({ where: { id }, select: { slug: true } });
   await prisma.attraction.delete({ where: { id } });
   if (attraction) await revalidateAttraction(attraction.slug);

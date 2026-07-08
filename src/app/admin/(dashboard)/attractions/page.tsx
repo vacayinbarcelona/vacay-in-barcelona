@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import { formatPrice } from '@/lib/format';
 import { DeleteButton } from '@/components/admin/DeleteButton';
 import { deleteAttraction } from './actions';
@@ -7,7 +8,8 @@ import { deleteAttraction } from './actions';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminAttractionsPage() {
-  const attractions = await prisma.attraction.findMany({ orderBy: { sortOrder: 'asc' } });
+  const [session, attractions] = await Promise.all([getSession(), prisma.attraction.findMany({ orderBy: { sortOrder: 'asc' } })]);
+  const isMaster = session?.role === 'master';
 
   return (
     <div>
@@ -60,9 +62,11 @@ export default async function AdminAttractionsPage() {
                       <Link href={`/admin/attractions/${a.slug}`} className="text-blue-600 hover:text-blue-700 text-xs font-medium">
                         Edit
                       </Link>
-                      <form action={deleteAttraction.bind(null, a.id)}>
-                        <DeleteButton confirmText={`Delete ${a.name}? This also deletes its tickets, images, FAQs and reviews.`} />
-                      </form>
+                      {isMaster ? (
+                        <form action={deleteAttraction.bind(null, a.id)}>
+                          <DeleteButton confirmText={`Delete ${a.name}? This also deletes its tickets, images, FAQs and reviews.`} />
+                        </form>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
