@@ -42,22 +42,22 @@ const FEATURES = [
 
 export function FeatureStrip() {
   return (
-    <section className="max-w-7xl mx-auto px-6 -mt-px pb-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+    <section className="max-w-7xl mx-auto px-6 -mt-px pb-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 grid grid-cols-2 lg:grid-cols-4 divide-y-0 divide-x divide-gray-100">
         {FEATURES.map(({ icon: Icon, title, description, image, alt }) => (
-          <div key={title} className="flex items-center gap-4 p-6">
+          <div key={title} className="flex items-center gap-3 p-3 sm:p-4">
             <div className="flex-1 min-w-0">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-3">
-                <Icon className="h-5 w-5" />
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-1.5">
+                <Icon className="h-4 w-4" />
               </span>
-              <p className="font-semibold text-sm text-gray-900">{title}</p>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed">{description}</p>
+              <p className="font-semibold text-xs sm:text-sm text-gray-900">{title}</p>
+              <p className="hidden sm:block text-[11px] text-gray-500 mt-0.5 leading-snug">{description}</p>
             </div>
-            <div className="relative h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-blue-50 flex items-center justify-center">
+            <div className="relative h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 rounded-lg overflow-hidden bg-blue-50 flex items-center justify-center">
               {imageExists(image) ? (
-                <Image src={image} alt={alt} fill sizes="64px" className="object-cover" />
+                <Image src={image} alt={alt} fill sizes="48px" className="object-cover" />
               ) : (
-                <Icon className="h-6 w-6 text-blue-300" />
+                <Icon className="h-5 w-5 text-blue-300" />
               )}
             </div>
           </div>
