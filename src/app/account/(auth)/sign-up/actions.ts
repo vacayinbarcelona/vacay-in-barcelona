@@ -6,6 +6,13 @@ import { hashPassword, createEmailVerificationToken } from '@/lib/customerAuth';
 import { verifyRecaptcha } from '@/lib/recaptcha';
 import { sendVerificationEmail } from '@/lib/email';
 
+// Deliberately stricter than the bare minimum "has an @" check — requires
+// a local part, an @, a domain with at least one dot, and a real
+// alphabetic TLD of 2+ letters. Rejects plain text, symbols, and
+// digit-only input like "12345" or "test" that type="email" alone would
+// let through in some browsers.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
 export async function signUpAction(formData: FormData) {
   const firstName = String(formData.get('firstName') ?? '').trim();
   const lastName = String(formData.get('lastName') ?? '').trim();
@@ -19,6 +26,9 @@ export async function signUpAction(formData: FormData) {
 
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
     redirect(`/account/sign-up?error=missing&redirect=${encodeURIComponent(redirectTo)}`);
+  }
+  if (!EMAIL_PATTERN.test(email)) {
+    redirect(`/account/sign-up?error=invalid-email&redirect=${encodeURIComponent(redirectTo)}`);
   }
   if (password.length < 8) {
     redirect(`/account/sign-up?error=weak&redirect=${encodeURIComponent(redirectTo)}`);

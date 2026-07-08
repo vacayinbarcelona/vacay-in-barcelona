@@ -7,7 +7,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   weak: 'Password must be at least 8 characters.',
   mismatch: 'Passwords don’t match.',
   exists: 'An account with that email already exists — try signing in instead.',
-  captcha: 'Please complete the captcha and try again.'
+  captcha: 'Please complete the captcha and try again.',
+  'invalid-email': 'Please enter a valid email address.'
 };
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
@@ -62,7 +63,14 @@ export default function SignUpPage({ searchParams }: { searchParams: { error?: s
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Email</label>
-              <input type="email" name="email" required className="input" />
+              <input
+                type="email"
+                name="email"
+                required
+                pattern="[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}"
+                title="Enter a valid email address, e.g. name@example.com"
+                className="input"
+              />
             </div>
             <div>
               <label className="text-xs font-medium text-gray-600 mb-1 block">Password</label>
