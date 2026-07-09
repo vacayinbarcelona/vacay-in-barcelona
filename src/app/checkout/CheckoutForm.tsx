@@ -116,6 +116,15 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const emailError = !email.trim()
+    ? 'Please enter an email address.'
+    : !EMAIL_PATTERN.test(email.trim())
+      ? 'Please enter a valid email address.'
+      : null;
+  const phoneError = !phone.trim() ? 'Please enter a phone number.' : !isValidPhone(phone) ? 'Please enter a valid phone number.' : null;
 
   function updateTravelerName(itemId: string, index: number, field: keyof TravelerNameDraft, value: string) {
     setTravelerNamesByItem((prev) => ({
@@ -135,20 +144,14 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
       setError('Please enter the lead traveler’s first and last name.');
       return;
     }
-    if (!email.trim()) {
-      setError('Please enter an email address for your booking confirmation.');
+    setEmailTouched(true);
+    setPhoneTouched(true);
+    if (emailError) {
+      setError(emailError);
       return;
     }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!phone.trim()) {
-      setError('Please enter a phone number.');
-      return;
-    }
-    if (!isValidPhone(phone)) {
-      setError('Please enter a valid phone number.');
+    if (phoneError) {
+      setError(phoneError);
       return;
     }
     const paymentError = validatePaymentFields(cardName, cardNumber, expiry, cvc);
@@ -297,14 +300,29 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
                 <input placeholder="First name" value={leadFirstName} onChange={(e) => setLeadFirstName(e.target.value)} className="input" />
                 <input placeholder="Last name" value={leadLastName} onChange={(e) => setLeadLastName(e.target.value)} className="input" />
               </div>
-              <input
-                type="email"
-                placeholder="Email — booking confirmation sent here"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-              />
-              <input type="tel" placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} className="input" />
+              <div>
+                <input
+                  type="email"
+                  placeholder="Email — booking confirmation sent here"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
+                  className={`input ${emailTouched && emailError ? 'border-red-400 focus:border-red-400' : ''}`}
+                />
+                {emailTouched && emailError ? <p className="text-[11px] text-red-600 mt-1">{emailError}</p> : null}
+              </div>
+              <div>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="Phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/[^\d\s()+-]/g, ''))}
+                  onBlur={() => setPhoneTouched(true)}
+                  className={`input ${phoneTouched && phoneError ? 'border-red-400 focus:border-red-400' : ''}`}
+                />
+                {phoneTouched && phoneError ? <p className="text-[11px] text-red-600 mt-1">{phoneError}</p> : null}
+              </div>
             </div>
           </div>
 
