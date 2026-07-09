@@ -42,7 +42,7 @@ const FEATURES = [
 
 export function FeatureStrip() {
   return (
-    <section className="max-w-7xl mx-auto px-6 -mt-px pb-4">
+    <section className="max-w-7xl mx-auto px-6 mt-6 pb-4">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 grid grid-cols-2 lg:grid-cols-4 divide-y-0 divide-x divide-gray-100">
         {FEATURES.map(({ icon: Icon, title, description, image, alt }) => (
           <div key={title} className="flex items-center gap-3 p-3 sm:p-4">
