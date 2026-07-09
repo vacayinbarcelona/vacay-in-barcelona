@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import { DeleteButton } from '@/components/admin/DeleteButton';
+import { SavedToast } from '@/components/admin/SavedToast';
 import { createAdminUser, deleteAdminUser } from './actions';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -28,9 +29,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { saved
         </p>
       </div>
 
-      {searchParams?.saved ? (
-        <p className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">Saved.</p>
-      ) : null}
+      <SavedToast show={!!searchParams?.saved} />
       {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6">

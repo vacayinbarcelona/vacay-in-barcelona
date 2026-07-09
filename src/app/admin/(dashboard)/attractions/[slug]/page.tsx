@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { DeleteButton } from '@/components/admin/DeleteButton';
+import { SavedToast } from '@/components/admin/SavedToast';
 import {
   updateAttraction,
   deleteAttraction,
@@ -46,7 +47,7 @@ export default async function EditAttractionPage({
   searchParams
 }: {
   params: { slug: string };
-  searchParams: { saved?: string };
+  searchParams: { saved?: string; ticketError?: string };
 }) {
   const [session, attraction] = await Promise.all([getSession(), getAttraction(params.slug)]);
   if (!attraction) notFound();
@@ -70,9 +71,7 @@ export default async function EditAttractionPage({
       </div>
       <p className="text-xs text-gray-400 mb-6">/attractions/{attraction.slug}</p>
 
-      {searchParams?.saved === '1' ? (
-        <p className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2 mb-6">Saved.</p>
-      ) : null}
+      <SavedToast show={searchParams?.saved === '1'} />
 
       {/* ------------------------------------------------------------- */}
       {/* Core details                                                  */}
@@ -214,6 +213,9 @@ export default async function EditAttractionPage({
       {/* populate automatically instead of typing it in by hand.       */}
       {/* ------------------------------------------------------------- */}
       <SectionCard id="tickets" title="Tickets & tours" hint="Prices, durations, and each product's own meeting point / inclusions / before-you-go info">
+        {searchParams?.ticketError ? (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">{searchParams.ticketError}</p>
+        ) : null}
         <div className="space-y-4 mb-6">
           {attraction.ticketOptions.map((ticket) => {
             const ticketIncluded = ticket.includedItems.filter((i) => i.included).map((i) => i.text);
@@ -222,6 +224,7 @@ export default async function EditAttractionPage({
               <form
                 key={ticket.id}
                 action={updateTicketOption.bind(null, ticket.id, attraction.slug)}
+                encType="multipart/form-data"
                 className="border border-gray-200 rounded-xl p-4 space-y-3"
               >
                 <div className="grid grid-cols-2 gap-3">
@@ -260,17 +263,16 @@ export default async function EditAttractionPage({
                       className="input"
                     />
                   </Field>
-                  <Field label="Meeting point image URL" hint="Shown next to the meeting point on the confirmation page & email">
-                    <input
-                      name="meetingPointImage"
-                      defaultValue={ticket.meetingPointImage}
-                      placeholder="/images/attractions/slug/meeting-point.jpg or https://..."
-                      className="input"
-                    />
+                  <Field label="Meeting point image" hint="Shown next to the meeting point on the confirmation page & email">
                     {ticket.meetingPointImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ticket.meetingPointImage} alt="" className="mt-2 h-20 w-32 object-cover rounded-lg border border-gray-200" />
+                      <img src={ticket.meetingPointImage} alt="" className="mb-2 h-20 w-32 object-cover rounded-lg border border-gray-200" />
                     ) : null}
+                    <input type="hidden" name="existingMeetingPointImage" value={ticket.meetingPointImage} />
+                    <input type="file" name="meetingPointImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {ticket.meetingPointImage ? 'Choose a file to replace the current image, or leave blank to keep it.' : 'JPG, PNG, WEBP, or GIF — up to 5MB.'}
+                    </p>
                   </Field>
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="What's included" hint="One per line">
@@ -301,7 +303,7 @@ export default async function EditAttractionPage({
         </div>
 
         <p className="text-xs font-medium text-gray-500 mb-2">Add a new ticket option</p>
-        <form action={boundAddTicket} className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
+        <form action={boundAddTicket} encType="multipart/form-data" className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <input name="name" placeholder="Ticket name" required className="input" />
             <div className="flex items-center gap-2">
@@ -329,8 +331,9 @@ export default async function EditAttractionPage({
             <Field label="Meeting point">
               <textarea name="meetingPoint" rows={2} placeholder="e.g. Main entrance, Carrer de Mallorca 401" className="input" />
             </Field>
-            <Field label="Meeting point image URL" hint="Shown next to the meeting point on the confirmation page & email">
-              <input name="meetingPointImage" placeholder="/images/attractions/slug/meeting-point.jpg or https://..." className="input" />
+            <Field label="Meeting point image" hint="Shown next to the meeting point on the confirmation page & email">
+              <input type="file" name="meetingPointImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
+              <p className="text-[11px] text-gray-400 mt-1">JPG, PNG, WEBP, or GIF — up to 5MB. Optional.</p>
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="What's included" hint="One per line">

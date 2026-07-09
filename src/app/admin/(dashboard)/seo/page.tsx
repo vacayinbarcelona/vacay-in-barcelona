@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { getSiteSettings, SEO_PAGES } from '@/lib/siteSettings';
+import { SavedToast } from '@/components/admin/SavedToast';
 import { updateSeoSettings } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -23,9 +24,7 @@ export default async function AdminSeoPage({ searchParams }: { searchParams: { s
         default. Attraction pages have their own SEO fields on each attraction&apos;s edit page instead.
       </p>
 
-      {searchParams?.saved === '1' ? (
-        <p className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2 mb-6">Saved.</p>
-      ) : null}
+      <SavedToast show={searchParams?.saved === '1'} />
 
       <form action={updateSeoSettings} className="space-y-5">
         {SEO_PAGES.map((page) => (

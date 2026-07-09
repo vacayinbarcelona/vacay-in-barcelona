@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { slugify } from '@/lib/slugify';
 import { getSession } from '@/lib/auth';
+import { uploadImageFile, hasUploadedFile } from '@/lib/upload';
 
 // All admin CRUD for attractions and their related content (ticket options,
 // highlights, included/excluded items, important info, FAQs, images,
@@ -203,6 +204,16 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
   const notIncluded = lines(formData, 'notIncluded');
   const beforeYouGo = lines(formData, 'beforeYouGo');
 
+  let meetingPointImage = '';
+  if (hasUploadedFile(formData, 'meetingPointImageFile')) {
+    try {
+      meetingPointImage = await uploadImageFile(formData.get('meetingPointImageFile') as File, 'ticket-options/meeting-points');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Image upload failed.';
+      redirect(`/admin/attractions/${slug}?ticketError=${encodeURIComponent(message)}#tickets`);
+    }
+  }
+
   await prisma.ticketOption.create({
     data: {
       attractionId,
@@ -221,7 +232,7 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
       affiliateProvider: 'Direct (Rezdy)',
       sortOrder: num(formData, 'sortOrder', 0),
       meetingPoint: str(formData, 'meetingPoint'),
-      meetingPointImage: str(formData, 'meetingPointImage'),
+      meetingPointImage,
       includedItems: {
         create: [
           ...included.map((text, i) => ({ text, included: true, sortOrder: i })),
@@ -241,6 +252,20 @@ export async function updateTicketOption(id: string, slug: string, formData: For
   const notIncluded = lines(formData, 'notIncluded');
   const beforeYouGo = lines(formData, 'beforeYouGo');
 
+  // Keep the current image unless the admin picked a new file — the hidden
+  // "existingMeetingPointImage" input (see [slug]/page.tsx) carries the
+  // current URL forward so re-saving the form without touching the file
+  // input doesn't wipe it out.
+  let meetingPointImage = str(formData, 'existingMeetingPointImage');
+  if (hasUploadedFile(formData, 'meetingPointImageFile')) {
+    try {
+      meetingPointImage = await uploadImageFile(formData.get('meetingPointImageFile') as File, 'ticket-options/meeting-points');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Image upload failed.';
+      redirect(`/admin/attractions/${slug}?ticketError=${encodeURIComponent(message)}#tickets`);
+    }
+  }
+
   await prisma.$transaction([
     prisma.ticketOption.update({
       where: { id },
@@ -258,7 +283,7 @@ export async function updateTicketOption(id: string, slug: string, formData: For
         badge: str(formData, 'badge'),
         sortOrder: num(formData, 'sortOrder', 0),
         meetingPoint: str(formData, 'meetingPoint'),
-        meetingPointImage: str(formData, 'meetingPointImage')
+        meetingPointImage
       }
     }),
     prisma.ticketIncludedItem.deleteMany({ where: { ticketOptionId: id } }),

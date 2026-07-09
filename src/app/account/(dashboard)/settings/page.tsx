@@ -1,4 +1,5 @@
 import { getCurrentUser } from '@/lib/customerAuth';
+import { SavedToast } from '@/components/admin/SavedToast';
 import { updateProfileAction } from './actions';
 
 export default async function AccountSettingsPage({ searchParams }: { searchParams: { saved?: string; error?: string } }) {
@@ -11,9 +12,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
     <div className="border border-gray-200 rounded-2xl p-6 max-w-lg">
       <h2 className="text-sm font-semibold mb-4">My details</h2>
 
-      {searchParams?.saved ? (
-        <p className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2 mb-4">Details saved.</p>
-      ) : null}
+      <SavedToast show={!!searchParams?.saved} message="Details saved." />
       {searchParams?.error === 'missing' ? (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">
           First and last name are required.
