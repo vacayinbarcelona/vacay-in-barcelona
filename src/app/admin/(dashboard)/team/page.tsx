@@ -29,7 +29,7 @@ export default async function TeamPage({ searchParams }: { searchParams: { saved
         </p>
       </div>
 
-      <SavedToast show={!!searchParams?.saved} />
+      <SavedToast />
       {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
 
       <div className="bg-white border border-gray-200 rounded-2xl p-6">

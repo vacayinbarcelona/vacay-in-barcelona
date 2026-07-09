@@ -12,7 +12,7 @@ export default async function AccountSettingsPage({ searchParams }: { searchPara
     <div className="border border-gray-200 rounded-2xl p-6 max-w-lg">
       <h2 className="text-sm font-semibold mb-4">My details</h2>
 
-      <SavedToast show={!!searchParams?.saved} message="Details saved." />
+      <SavedToast message="Details saved." />
       {searchParams?.error === 'missing' ? (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">
           First and last name are required.

@@ -71,7 +71,7 @@ export default async function EditAttractionPage({
       </div>
       <p className="text-xs text-gray-400 mb-6">/attractions/{attraction.slug}</p>
 
-      <SavedToast show={searchParams?.saved === '1'} />
+      <SavedToast />
 
       {/* ------------------------------------------------------------- */}
       {/* Core details                                                  */}

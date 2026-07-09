@@ -153,7 +153,7 @@ export async function updateAttraction(id: string, currentSlug: string, formData
     await revalidateAttraction(slug);
     redirect(`/admin/attractions/${slug}`);
   }
-  redirect(`/admin/attractions/${slug}?saved=1`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}`);
 }
 
 export async function deleteAttraction(id: string) {
@@ -183,7 +183,7 @@ export async function replaceHighlights(attractionId: string, slug: string, form
     })
   ]);
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#content`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#content`);
 }
 
 export async function replaceIncludedItems(attractionId: string, slug: string, formData: FormData) {
@@ -200,7 +200,7 @@ export async function replaceIncludedItems(attractionId: string, slug: string, f
     })
   ]);
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#content`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#content`);
 }
 
 export async function replaceImportantInfo(attractionId: string, slug: string, formData: FormData) {
@@ -212,7 +212,7 @@ export async function replaceImportantInfo(attractionId: string, slug: string, f
     })
   ]);
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#content`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#content`);
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +268,7 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
   });
 
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#tickets`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#tickets`);
 }
 
 export async function updateTicketOption(id: string, slug: string, formData: FormData) {
@@ -324,13 +324,13 @@ export async function updateTicketOption(id: string, slug: string, formData: For
   ]);
 
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#tickets`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#tickets`);
 }
 
 export async function deleteTicketOption(id: string, slug: string) {
   await prisma.ticketOption.delete({ where: { id } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#tickets`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#tickets`);
 }
 
 // ---------------------------------------------------------------------------
@@ -344,7 +344,7 @@ export async function addFaq(attractionId: string, slug: string, formData: FormD
 
   await prisma.fAQ.create({ data: { attractionId, question, answer, sortOrder: num(formData, 'sortOrder', 0) } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#faqs`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#faqs`);
 }
 
 export async function updateFaq(id: string, slug: string, formData: FormData) {
@@ -353,13 +353,13 @@ export async function updateFaq(id: string, slug: string, formData: FormData) {
     data: { question: str(formData, 'question'), answer: str(formData, 'answer') }
   });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#faqs`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#faqs`);
 }
 
 export async function deleteFaq(id: string, slug: string) {
   await prisma.fAQ.delete({ where: { id } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#faqs`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#faqs`);
 }
 
 // ---------------------------------------------------------------------------
@@ -381,13 +381,13 @@ export async function addImage(attractionId: string, slug: string, formData: For
     data: { attractionId, url, altText: str(formData, 'altText'), sortOrder: num(formData, 'sortOrder', 0) }
   });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#images`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#images`);
 }
 
 export async function deleteImage(id: string, slug: string) {
   await prisma.attractionImage.delete({ where: { id } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#images`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#images`);
 }
 
 // ---------------------------------------------------------------------------
@@ -410,13 +410,13 @@ export async function addReview(attractionId: string, slug: string, formData: Fo
     }
   });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#reviews`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#reviews`);
 }
 
 export async function deleteReview(id: string, slug: string) {
   await prisma.review.delete({ where: { id } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#reviews`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#reviews`);
 }
 
 // ---------------------------------------------------------------------------
@@ -437,11 +437,11 @@ export async function addQuickFact(attractionId: string, slug: string, formData:
     }
   });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#quick-facts`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#quick-facts`);
 }
 
 export async function deleteQuickFact(id: string, slug: string) {
   await prisma.quickFact.delete({ where: { id } });
   await revalidateAttraction(slug);
-  redirect(`/admin/attractions/${slug}?saved=1#quick-facts`);
+  redirect(`/admin/attractions/${slug}?saved=${Date.now()}#quick-facts`);
 }

@@ -29,5 +29,5 @@ export async function updateProfileAction(formData: FormData) {
     }
   });
 
-  redirect('/account/settings?saved=1');
+  redirect(`/account/settings?saved=${Date.now()}`);
 }

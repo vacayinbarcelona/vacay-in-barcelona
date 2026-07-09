@@ -39,7 +39,7 @@ export async function createAdminUser(formData: FormData) {
   await prisma.adminUser.create({ data: { email, passwordHash, role } });
 
   revalidatePath('/admin/team');
-  redirect('/admin/team?saved=1');
+  redirect(`/admin/team?saved=${Date.now()}`);
 }
 
 export async function deleteAdminUser(id: string) {
@@ -55,5 +55,5 @@ export async function deleteAdminUser(id: string) {
 
   await prisma.adminUser.delete({ where: { id } });
   revalidatePath('/admin/team');
-  redirect('/admin/team?saved=1');
+  redirect(`/admin/team?saved=${Date.now()}`);
 }

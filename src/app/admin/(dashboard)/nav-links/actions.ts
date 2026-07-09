@@ -49,7 +49,7 @@ export async function createNavLink(formData: FormData) {
   });
 
   revalidateNav();
-  redirect('/admin/nav-links?saved=1');
+  redirect(`/admin/nav-links?saved=${Date.now()}`);
 }
 
 export async function deleteNavLink(id: string) {
@@ -57,5 +57,5 @@ export async function deleteNavLink(id: string) {
 
   await prisma.navLink.delete({ where: { id } });
   revalidateNav();
-  redirect('/admin/nav-links?saved=1');
+  redirect(`/admin/nav-links?saved=${Date.now()}`);
 }

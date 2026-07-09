@@ -13,5 +13,5 @@ export async function updateSeoSettings(formData: FormData) {
     revalidatePath(page.path);
   }
 
-  redirect('/admin/seo?saved=1');
+  redirect(`/admin/seo?saved=${Date.now()}`);
 }

@@ -24,7 +24,7 @@ export default async function AdminSeoPage({ searchParams }: { searchParams: { s
         default. Attraction pages have their own SEO fields on each attraction&apos;s edit page instead.
       </p>
 
-      <SavedToast show={searchParams?.saved === '1'} />
+      <SavedToast />
 
       <form action={updateSeoSettings} className="space-y-5">
         {SEO_PAGES.map((page) => (

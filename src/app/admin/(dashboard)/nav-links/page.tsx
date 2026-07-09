@@ -74,7 +74,7 @@ export default async function NavLinksPage({ searchParams }: { searchParams: { s
         <p className="text-sm text-gray-500 mt-1">Manage the navigation links shown in the site header and footer.</p>
       </div>
 
-      <SavedToast show={!!searchParams?.saved} />
+      <SavedToast />
       {searchParams?.error === 'missing' ? (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
           Please fill in both the label and the link.
