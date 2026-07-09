@@ -11,8 +11,15 @@ const TRUST_ITEMS = [
 
 export function Hero() {
   return (
-    <section className="relative">
-      <div className="relative h-[54vh] sm:h-[58vh] min-h-[440px] max-h-[620px] overflow-hidden">
+    <section className="relative h-[54vh] sm:h-[58vh] min-h-[440px] max-h-[620px]">
+      {/* Background image layer — overflow-hidden lives here only, so it
+          crops the photo/gradients but never clips content in the layer
+          below. Previously overflow-hidden wrapped the search bar too,
+          which silently cut off its suggestions dropdown on short mobile
+          viewports (it looked like the dropdown was rendering "behind" the
+          next section, but it was actually just clipped at the hero's
+          bottom edge). */}
+      <div className="absolute inset-0 overflow-hidden">
         <Image
           src="/images/site/hero-barcelona.jpg"
           alt="View over Barcelona from Park Güell, with the Sagrada Família and the sea in the distance"
@@ -22,7 +29,11 @@ export function Hero() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
+      </div>
 
+      {/* Content layer — no overflow-hidden, so the search dropdown can
+          extend past the hero's visual bottom edge without being clipped. */}
+      <div className="absolute inset-0">
         <div className="relative max-w-7xl mx-auto h-full flex flex-col lg:flex-row lg:items-center gap-6 px-6 pt-6 pb-6">
           <div className="flex-1 min-w-0 flex flex-col justify-center">
             <span className="inline-flex items-center gap-2 self-start rounded-full border border-amber-300/70 bg-white/5 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold tracking-wider text-white mb-2">

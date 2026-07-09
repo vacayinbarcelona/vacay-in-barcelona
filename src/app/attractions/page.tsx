@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { AttractionSimpleCard } from '@/components/attraction/AttractionSimpleCard';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getSeoMetadataFor } from '@/lib/siteSettings';
+import { fuzzySearch } from '@/lib/search';
 import type { AttractionCardData } from '@/types';
 
 export const revalidate = 3600;
@@ -22,10 +23,19 @@ export async function generateMetadata(): Promise<Metadata> {
 // matches across every category — not just landmarks — since a visitor who
 // searched isn't necessarily looking for a landmark specifically.
 async function getAttractions(q?: string): Promise<AttractionCardData[]> {
+  if (q) {
+    // Fuzzy-matched (see src/lib/search.ts) rather than a strict SQL
+    // `contains` — ignores accents ("guell" -> "Güell"), punctuation, and
+    // tolerates small typos, same as the homepage hero search bar.
+    const attractions = await prisma.attraction.findMany({
+      where: { status: 'published', city: 'Barcelona' },
+      orderBy: { sortOrder: 'asc' }
+    });
+    return fuzzySearch(attractions, q, (a) => a.name);
+  }
+
   return prisma.attraction.findMany({
-    where: q
-      ? { status: 'published', city: 'Barcelona', name: { contains: q, mode: 'insensitive' } }
-      : { status: 'published', city: 'Barcelona', category: 'attraction' },
+    where: { status: 'published', city: 'Barcelona', category: 'attraction' },
     orderBy: { sortOrder: 'asc' }
   });
 }
