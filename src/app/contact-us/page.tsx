@@ -1,6 +1,16 @@
 import type { Metadata } from 'next';
 import { sendContactMessage } from './actions';
 import { getSeoMetadataFor } from '@/lib/siteSettings';
+import { RecaptchaWidget } from '@/components/auth/RecaptchaWidget';
+
+const ERROR_MESSAGES: Record<string, string> = {
+  '1': 'Please fill in your name, email, and message.',
+  'invalid-email': 'Please enter a valid email address.',
+  'rate-limited': "You've sent a few messages already — please wait a few minutes and try again.",
+  captcha: 'Please complete the captcha and try again.'
+};
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await getSeoMetadataFor('contact-us');
@@ -9,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function ContactUsPage({ searchParams }: { searchParams: { sent?: string; error?: string } }) {
   const sent = searchParams?.sent === '1';
-  const hasError = searchParams?.error === '1';
+  const errorMessage = searchParams?.error ? ERROR_MESSAGES[searchParams.error] : null;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-14">
@@ -27,11 +37,16 @@ export default function ContactUsPage({ searchParams }: { searchParams: { sent?:
             </div>
           ) : (
             <form action={sendContactMessage} className="space-y-4">
-              {hasError ? (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                  Please fill in your name, email, and message.
-                </p>
+              {errorMessage ? (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p>
               ) : null}
+
+              {/* Honeypot — hidden from real visitors, but simple bots that
+                  auto-fill every field will fill this in too. */}
+              <div className="absolute -left-[9999px] top-auto" aria-hidden="true">
+                <label htmlFor="company">Company</label>
+                <input id="company" name="company" tabIndex={-1} autoComplete="off" />
+              </div>
 
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Name</label>
@@ -51,6 +66,9 @@ export default function ContactUsPage({ searchParams }: { searchParams: { sent?:
                 <label className="text-xs font-medium text-gray-600 mb-1 block">Message</label>
                 <textarea name="message" rows={5} required className="input" />
               </div>
+
+              {RECAPTCHA_SITE_KEY ? <RecaptchaWidget siteKey={RECAPTCHA_SITE_KEY} /> : null}
+
               <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg">
                 Send message
               </button>

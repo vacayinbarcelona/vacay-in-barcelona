@@ -241,6 +241,13 @@ model User {
   // that email address.
   emailVerified Boolean @default(false)
 
+  // Cooldown for the "resend confirmation email" button (see
+  // resendVerificationEmail in check-email/actions.ts) — persisted here
+  // rather than kept in memory, so the 60-second cooldown holds even across
+  // different serverless instances, preventing it being looped to
+  // email-bomb this address.
+  lastVerificationEmailSentAt DateTime?
+
   firstName   String
   lastName    String
   phone       String    @default("")

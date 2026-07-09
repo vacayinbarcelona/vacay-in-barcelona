@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/db';
 import { sendOrderConfirmationEmail } from '@/lib/email';
+import { verifyRecaptcha } from '@/lib/recaptcha';
+import { isRateLimited, getClientIp } from '@/lib/rateLimit';
 
 // Creates an Order (one payment, one confirmation) containing one or more
 // Bookings — the cart's contents at checkout time. This is the handoff
@@ -41,6 +43,7 @@ export type CreateOrderInput = {
   email: string;
   phone: string;
   userId?: string | null; // set when a signed-in customer is checking out
+  captchaToken: string | null;
 };
 
 export type CreateOrderResult = { success: true; reference: string } | { success: false; error: string };
@@ -61,6 +64,21 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     }
     if (!input.email || !input.leadFirstName || !input.leadLastName) {
       return { success: false, error: 'Missing required guest details.' };
+    }
+
+    // Best-effort per-IP throttle, on top of CAPTCHA below — checkout is the
+    // one action on the site that can send a real "your booking is
+    // confirmed" email to an arbitrary address, so it gets both layers.
+    if (isRateLimited(`checkout:${getClientIp()}`, 8, 10 * 60_000)) {
+      return { success: false, error: "You've placed a few orders in a short time — please wait a few minutes and try again." };
+    }
+
+    // Signed-in customers skip the captcha — an authenticated session is
+    // already a strong bot deterrent (same reasoning as skipping it for
+    // "Continue with Google" elsewhere). Guest checkout is the actual risk
+    // surface, since anyone can type any email address into it.
+    if (!input.userId && !(await verifyRecaptcha(input.captchaToken))) {
+      return { success: false, error: 'Please complete the captcha and try again.' };
     }
 
     // TODO before launch: verify availability (and reserve each slot) via

@@ -1,20 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/cart/CartProvider';
 import { formatDate, formatPrice } from '@/lib/format';
+import { RecaptchaWidget, type RecaptchaWidgetHandle } from '@/components/auth/RecaptchaWidget';
 import { createOrder, type CheckoutItemInput, type CheckoutTravelerInput } from './actions';
 
 type TravelerNameDraft = { firstName: string; lastName: string };
 
 type InitialUser = { id: string; firstName: string; lastName: string; email: string; phone: string } | null;
 
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
 export default function CheckoutForm({ initialUser }: { initialUser: InitialUser }) {
   const router = useRouter();
   const { items, subtotal, clear } = useCart();
+  const recaptchaRef = useRef<RecaptchaWidgetHandle>(null);
 
   // One traveler-name-fields list per cart item that requires them, keyed
   // by cart item id — sized to that item's adult+child count.
@@ -75,6 +79,10 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
       setError('Please fill in payment details.');
       return;
     }
+    if (!initialUser && RECAPTCHA_SITE_KEY && !recaptchaRef.current?.getValue()) {
+      setError('Please complete the captcha and try again.');
+      return;
+    }
 
     const checkoutItems: CheckoutItemInput[] = [];
     for (const item of items) {
@@ -117,17 +125,20 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
         leadLastName: leadLastName.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        userId: initialUser?.id ?? null
+        userId: initialUser?.id ?? null,
+        captchaToken: recaptchaRef.current?.getValue() || null
       });
 
       if (result.success) {
         clear();
         router.push(`/booking-confirmation/${result.reference}`);
       } else {
+        recaptchaRef.current?.reset();
         setError(result.error);
         setSubmitting(false);
       }
     } catch {
+      recaptchaRef.current?.reset();
       setError('Something went wrong. Please try again.');
       setSubmitting(false);
     }
@@ -234,6 +245,8 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
               Demo fields only — real payment will be handled by a secure, PCI-compliant provider (e.g. Stripe) before launch.
             </p>
           </div>
+
+          {!initialUser && RECAPTCHA_SITE_KEY ? <RecaptchaWidget ref={recaptchaRef} siteKey={RECAPTCHA_SITE_KEY} /> : null}
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
