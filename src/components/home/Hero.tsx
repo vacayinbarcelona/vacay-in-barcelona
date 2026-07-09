@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { IconSearch, IconCalendar, IconStar, IconTag, IconBolt, IconLock } from '@/components/ui/Icons';
+import { IconCalendar, IconStar, IconTag, IconBolt, IconLock } from '@/components/ui/Icons';
+import { HeroSearchBar } from './HeroSearchBar';
 
 const TRUST_ITEMS = [
   { icon: IconTag, label: 'Best Price Guarantee' },
@@ -65,42 +66,11 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="w-full lg:w-[300px] flex-shrink-0">
-            <HeroSearchCard />
+          <div className="w-full lg:w-[380px] flex-shrink-0">
+            <HeroSearchBar />
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function HeroSearchCard() {
-  return (
-    <form
-      action="/attractions"
-      className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 space-y-3"
-    >
-      <p className="text-sm font-semibold text-gray-900">Find your experience</p>
-
-      <label className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200">
-        <IconSearch className="h-4 w-4 text-gray-400 flex-shrink-0" />
-        <span className="flex-1">
-          <span className="block text-[11px] font-medium text-blue-600 leading-none mb-1">I want to explore</span>
-          <input
-            name="q"
-            type="text"
-            placeholder="Sagrada Família, Park Güell…"
-            className="block w-full text-sm text-gray-700 placeholder:text-gray-400 outline-none"
-          />
-        </span>
-      </label>
-
-      <button
-        type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-6 py-2.5 rounded-xl"
-      >
-        Search
-      </button>
-    </form>
   );
 }

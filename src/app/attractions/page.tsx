@@ -18,15 +18,21 @@ export async function generateMetadata(): Promise<Metadata> {
 // Landmark-only listing — Sagrada Família, Park Güell, Casa Batlló, Casa
 // Milà, Camp Nou. Guided walking tours and shows have their own category
 // and live on /tours instead (see src/app/tours/page.tsx).
-async function getAttractions(): Promise<AttractionCardData[]> {
+// When a search term is present (from the homepage hero search bar), it
+// matches across every category — not just landmarks — since a visitor who
+// searched isn't necessarily looking for a landmark specifically.
+async function getAttractions(q?: string): Promise<AttractionCardData[]> {
   return prisma.attraction.findMany({
-    where: { status: 'published', city: 'Barcelona', category: 'attraction' },
+    where: q
+      ? { status: 'published', city: 'Barcelona', name: { contains: q, mode: 'insensitive' } }
+      : { status: 'published', city: 'Barcelona', category: 'attraction' },
     orderBy: { sortOrder: 'asc' }
   });
 }
 
-export default async function AttractionsPage() {
-  const attractions = await getAttractions();
+export default async function AttractionsPage({ searchParams }: { searchParams: { q?: string } }) {
+  const q = searchParams?.q?.trim() || '';
+  const attractions = await getAttractions(q || undefined);
 
   const itemListJsonLd = {
     '@context': 'https://schema.org',
@@ -60,10 +66,13 @@ export default async function AttractionsPage() {
         / <span className="text-gray-600">Attractions</span>
       </nav>
 
-      <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Attractions in Barcelona</h1>
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
+        {q ? `Search results for "${q}"` : 'Attractions in Barcelona'}
+      </h1>
       <p className="text-gray-500 text-sm max-w-2xl mb-8">
-        Skip-the-line tickets for the city&apos;s most iconic landmarks — Sagrada Família, Park Güell, Casa Batlló, Casa
-        Milà, Camp Nou and more. Compare options and book in minutes, with free cancellation on most tickets.
+        {q
+          ? `${attractions.length} result${attractions.length === 1 ? '' : 's'} matching your search.`
+          : "Skip-the-line tickets for the city's most iconic landmarks — Sagrada Família, Park Güell, Casa Batlló, Casa Milà, Camp Nou and more. Compare options and book in minutes, with free cancellation on most tickets."}
       </p>
 
       {attractions.length > 0 ? (
@@ -73,7 +82,9 @@ export default async function AttractionsPage() {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-gray-500">No attractions published yet.</p>
+        <p className="text-sm text-gray-500">
+          {q ? 'No attractions or tours matched your search.' : 'No attractions published yet.'}
+        </p>
       )}
     </div>
   );
