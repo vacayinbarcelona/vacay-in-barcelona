@@ -11,6 +11,58 @@ import { createOrder, type CheckoutItemInput, type CheckoutTravelerInput } from 
 
 type TravelerNameDraft = { firstName: string; lastName: string };
 
+// Demo payment-field validation — real card validation (and the actual
+// charge) will come from the payment provider (e.g. Stripe) before launch.
+// This just stops obviously-bad input from reaching createOrder.
+function luhnCheck(digits: string): boolean {
+  let sum = 0;
+  let shouldDouble = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = Number(digits[i]);
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+  return sum % 10 === 0;
+}
+
+function formatCardNumber(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 19);
+  return digits.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatExpiry(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+function validatePaymentFields(cardName: string, cardNumber: string, expiry: string, cvc: string): string | null {
+  if (!cardName.trim()) return 'Please enter the name on the card.';
+  if (!/^[a-zA-Z\s.'-]{2,}$/.test(cardName.trim())) return 'Please enter a valid name on the card.';
+
+  const cardDigits = cardNumber.replace(/\s/g, '');
+  if (!cardDigits) return 'Please enter your card number.';
+  if (!/^\d{13,19}$/.test(cardDigits)) return 'Please enter a valid card number.';
+  if (!luhnCheck(cardDigits)) return 'That card number doesn’t look valid — please check it and try again.';
+
+  const expiryMatch = /^(\d{2})\/(\d{2})$/.exec(expiry.trim());
+  if (!expiryMatch) return 'Please enter the expiry date as MM/YY.';
+  const month = Number(expiryMatch[1]);
+  const year = 2000 + Number(expiryMatch[2]);
+  if (month < 1 || month > 12) return 'Please enter a valid expiry month.';
+  const now = new Date();
+  const expiryDate = new Date(year, month, 0, 23, 59, 59); // last moment of the expiry month
+  if (expiryDate < now) return 'That card has expired.';
+
+  if (!/^\d{3,4}$/.test(cvc.trim())) return 'Please enter a valid CVC.';
+
+  return null;
+}
+
 type InitialUser = { id: string; firstName: string; lastName: string; email: string; phone: string } | null;
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
@@ -75,8 +127,9 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
       setError('Please enter an email address for your booking confirmation.');
       return;
     }
-    if (!cardName || !cardNumber || !expiry || !cvc) {
-      setError('Please fill in payment details.');
+    const paymentError = validatePaymentFields(cardName, cardNumber, expiry, cvc);
+    if (paymentError) {
+      setError(paymentError);
       return;
     }
     if (!initialUser && RECAPTCHA_SITE_KEY && !recaptchaRef.current?.getValue()) {
@@ -235,10 +288,31 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
             <h2 className="text-sm font-semibold mb-3">Payment</h2>
             <div className="space-y-2">
               <input placeholder="Name on card" value={cardName} onChange={(e) => setCardName(e.target.value)} className="input" />
-              <input placeholder="Card number" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="input" />
+              <input
+                placeholder="Card number"
+                inputMode="numeric"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                maxLength={23}
+                className="input"
+              />
               <div className="grid grid-cols-2 gap-2">
-                <input placeholder="MM/YY" value={expiry} onChange={(e) => setExpiry(e.target.value)} className="input" />
-                <input placeholder="CVC" value={cvc} onChange={(e) => setCvc(e.target.value)} className="input" />
+                <input
+                  placeholder="MM/YY"
+                  inputMode="numeric"
+                  value={expiry}
+                  onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                  maxLength={5}
+                  className="input"
+                />
+                <input
+                  placeholder="CVC"
+                  inputMode="numeric"
+                  value={cvc}
+                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  maxLength={4}
+                  className="input"
+                />
               </div>
             </div>
             <p className="text-[11px] text-gray-400 mt-2">
