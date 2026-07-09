@@ -7,7 +7,7 @@ import { QuickFactsStrip } from '@/components/attraction/QuickFactsStrip';
 import { TicketGrid } from '@/components/attraction/TicketGrid';
 import { BookingModalProvider } from '@/components/attraction/BookingModalProvider';
 import { StickyMobileBar } from '@/components/attraction/StickyMobileBar';
-import { Highlights, About, IncludedList, ImportantInfo, ReviewsSection, FaqSection } from '@/components/attraction/InfoSections';
+import { Highlights, About, ReviewsSection, FaqSection } from '@/components/attraction/InfoSections';
 import { RelatedAttractions } from '@/components/attraction/RelatedAttractions';
 import { JsonLd } from '@/components/seo/JsonLd';
 import type { AttractionCardData, TicketOptionData } from '@/types';
@@ -20,10 +20,12 @@ async function getAttraction(slug: string) {
   return prisma.attraction.findFirst({
     where: { slug, status: 'published' },
     include: {
+      // Meeting point / included / before-you-go are NOT fetched here —
+      // they're per-ticket-option, product-specific, and only shown after
+      // booking (see the ticketOptions.includedItems/infoItems relations
+      // used in checkout/actions.ts and the booking confirmation page).
       ticketOptions: { orderBy: { sortOrder: 'asc' } },
       highlights: { orderBy: { sortOrder: 'asc' } },
-      includedItems: { orderBy: { sortOrder: 'asc' } },
-      infoItems: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
       reviews: { orderBy: { sortOrder: 'asc' } },
       images: { orderBy: { sortOrder: 'asc' } },
@@ -108,9 +110,6 @@ export default async function AttractionPage({ params }: { params: { slug: strin
     meetingAddress: attraction.address,
     mapUrl: attraction.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(attraction.address)}`
   };
-
-  const included = attraction.includedItems.filter((i) => i.included).map((i) => i.text);
-  const notIncluded = attraction.includedItems.filter((i) => !i.included).map((i) => i.text);
 
   const pageUrl = `${siteUrl}/attractions/${attraction.slug}`;
 
@@ -213,8 +212,6 @@ export default async function AttractionPage({ params }: { params: { slug: strin
         <div className="max-w-3xl">
           <Highlights items={attraction.highlights.map((h) => h.text)} />
           <About longDescription={attraction.longDescription} />
-          <IncludedList included={included} notIncluded={notIncluded} />
-          <ImportantInfo items={attraction.infoItems.map((i) => i.text)} />
           <ReviewsSection
             rating={attraction.rating}
             reviewCount={attraction.reviewCount}

@@ -49,6 +49,16 @@ type SeedAttraction = {
     groupType?: string;
     badge?: string;
     affiliateProvider?: string;
+    // Product-specific details — different per ticket option, only shown
+    // after booking (confirmation page + email), never on the public page.
+    // When omitted, falls back to the attraction's shared included/
+    // notIncluded/importantInfo/address below, so nothing is left empty —
+    // but Sagrada Família's three tickets set these explicitly as the
+    // worked example (see the admin panel's "Tickets & tours" section).
+    meetingPoint?: string;
+    included?: string[];
+    notIncluded?: string[];
+    beforeYouGo?: string[];
   }>;
   highlights: string[];
   included: string[];
@@ -93,7 +103,15 @@ const data: SeedAttraction[] = [
         durationLabel: '1 hour',
         languages: 'English, Spanish, French, German, Italian',
         badge: 'Best seller',
-        affiliateProvider: 'Partner network'
+        affiliateProvider: 'Partner network',
+        meetingPoint: 'Nativity Façade entrance, Carrer de la Marina — look for the "Skip-the-line" sign, no ticket office queue.',
+        included: ['Timed entry to the basilica', 'Official audio guide (app-based)', 'Access to the museum in the crypt'],
+        notIncluded: ['Tower access', 'Hotel pickup and drop-off', 'Food and drinks'],
+        beforeYouGo: [
+          'Arrive 15 minutes before your slot — latecomers may not be guaranteed entry.',
+          'Shoulders and knees should be covered as it remains an active place of worship.',
+          'Security screening is required at entry — bags may be inspected.'
+        ]
       },
       {
         name: 'Entry + Nativity or Passion Tower',
@@ -102,7 +120,15 @@ const data: SeedAttraction[] = [
         durationLabel: '1.5 hours',
         languages: 'English, Spanish',
         badge: 'Popular',
-        affiliateProvider: 'Partner network'
+        affiliateProvider: 'Partner network',
+        meetingPoint: 'Passion Façade entrance, Carrer de Sardenya — tower groups meet 10 minutes before their slot.',
+        included: ['Timed entry to the basilica', 'Official audio guide (app-based)', 'Lift access to your chosen tower'],
+        notIncluded: ['Hotel pickup and drop-off', 'Food and drinks'],
+        beforeYouGo: [
+          'Arrive 15 minutes before your slot — latecomers may not be guaranteed entry.',
+          'Tower access involves a narrow spiral staircase — not recommended for those with mobility issues.',
+          'Large bags and luggage are not allowed on the tower route.'
+        ]
       },
       {
         name: 'Guided Tour with Skip-the-Line Access',
@@ -111,7 +137,15 @@ const data: SeedAttraction[] = [
         durationLabel: '2 hours',
         groupType: 'Small group (max 20)',
         languages: 'English, Spanish',
-        affiliateProvider: 'Partner network'
+        affiliateProvider: 'Partner network',
+        meetingPoint: 'Meet your guide at Plaça de Gaudí, opposite the Nativity Façade — look for the guide holding a "Vacay in Barcelona" sign.',
+        included: ['Skip-the-line basilica entry', 'Small-group guided tour with a local expert', 'Free time to explore independently after the tour'],
+        notIncluded: ['Tower access', 'Hotel pickup and drop-off', 'Gratuities (optional)'],
+        beforeYouGo: [
+          'Arrive 10 minutes before the meeting time — the group departs promptly.',
+          'Shoulders and knees should be covered as it remains an active place of worship.',
+          'A lightweight earpiece is provided so you can hear your guide in busy areas.'
+        ]
       }
     ],
     highlights: [
@@ -884,22 +918,40 @@ async function main() {
         metaTitle: a.metaTitle,
         metaDescription: a.metaDescription,
         ticketOptions: {
-          create: a.ticketOptions.map((t, i) => ({
-            name: t.name,
-            description: t.description,
-            price: t.price,
-            currency: 'EUR',
-            durationLabel: t.durationLabel,
-            freeCancellation: t.freeCancellation ?? true,
-            mobileTicket: t.mobileTicket ?? true,
-            instantConfirmation: true,
-            languages: t.languages ?? '',
-            groupType: t.groupType ?? '',
-            badge: t.badge ?? '',
-            affiliateUrl: `https://example-affiliate-partner.com/book?ref=vacayinbarcelona&item=${a.slug}-${i + 1}`,
-            affiliateProvider: t.affiliateProvider ?? 'Partner network',
-            sortOrder: i
-          }))
+          create: a.ticketOptions.map((t, i) => {
+            // Falls back to the attraction's shared included/notIncluded/
+            // importantInfo/address when a ticket doesn't set its own —
+            // Sagrada Família's three tickets set these explicitly as the
+            // worked example; everything else gets a sensible default that
+            // an admin can refine per-product later.
+            const included = t.included ?? a.included;
+            const notIncluded = t.notIncluded ?? a.notIncluded;
+            const beforeYouGo = t.beforeYouGo ?? a.importantInfo;
+            return {
+              name: t.name,
+              description: t.description,
+              price: t.price,
+              currency: 'EUR',
+              durationLabel: t.durationLabel,
+              freeCancellation: t.freeCancellation ?? true,
+              mobileTicket: t.mobileTicket ?? true,
+              instantConfirmation: true,
+              languages: t.languages ?? '',
+              groupType: t.groupType ?? '',
+              badge: t.badge ?? '',
+              affiliateUrl: `https://example-affiliate-partner.com/book?ref=vacayinbarcelona&item=${a.slug}-${i + 1}`,
+              affiliateProvider: t.affiliateProvider ?? 'Partner network',
+              sortOrder: i,
+              meetingPoint: t.meetingPoint ?? a.address,
+              includedItems: {
+                create: [
+                  ...included.map((text, j) => ({ text, included: true, sortOrder: j })),
+                  ...notIncluded.map((text, j) => ({ text, included: false, sortOrder: 100 + j }))
+                ]
+              },
+              infoItems: { create: beforeYouGo.map((text, j) => ({ text, sortOrder: j })) }
+            };
+          })
         },
         highlights: { create: a.highlights.map((text, i) => ({ text, sortOrder: i })) },
         includedItems: {

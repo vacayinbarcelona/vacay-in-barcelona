@@ -98,6 +98,7 @@ export function BookingModal({
       imageUrl: ticket.imageUrl,
       imageAlt: ticket.imageAlt,
       requiresAllTravelerNames: attraction.requiresAllTravelerNames,
+      ticketOptionId: ticket.id,
       ticketOptionName: ticket.name,
       date: selectedDate.toISOString().slice(0, 10),
       timeSlot: selectedSlot.time,

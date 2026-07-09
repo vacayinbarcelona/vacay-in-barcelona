@@ -21,6 +21,7 @@ export type CheckoutTravelerInput = {
 export type CheckoutItemInput = {
   attractionSlug: string;
   attractionName: string;
+  ticketOptionId: string;
   ticketOptionName: string;
   bookingDate: string; // ISO date string, e.g. "2026-08-14"
   timeSlot: string;
@@ -67,6 +68,21 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     // PaymentIntent) before writing the order. Right now this trusts the
     // values passed in from the cart.
 
+    // Snapshot each item's product-specific details (meeting point,
+    // included/not included, before you go) from its TicketOption onto the
+    // Booking at the moment of purchase — deliberately frozen so that later
+    // edits to the product (or a future Rezdy re-sync) don't retroactively
+    // change what a past customer's confirmation shows. Looked up in one
+    // batched query rather than once per item.
+    const ticketOptionIds = Array.from(new Set(input.items.map((i) => i.ticketOptionId).filter(Boolean)));
+    const ticketOptions = ticketOptionIds.length
+      ? await prisma.ticketOption.findMany({
+          where: { id: { in: ticketOptionIds } },
+          include: { includedItems: { orderBy: { sortOrder: 'asc' } }, infoItems: { orderBy: { sortOrder: 'asc' } } }
+        })
+      : [];
+    const ticketOptionById = new Map(ticketOptions.map((t) => [t.id, t]));
+
     const currency = input.items[0]?.currency ?? 'EUR';
     const totalPrice = input.items.reduce((sum, item) => sum + item.adults * item.pricePerAdult + item.children * item.pricePerChild, 0);
 
@@ -88,29 +104,37 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
         currency,
         status: 'confirmed',
         bookings: {
-          create: input.items.map((item) => ({
-            attractionSlug: item.attractionSlug,
-            attractionName: item.attractionName,
-            ticketOptionName: item.ticketOptionName,
-            bookingDate: new Date(item.bookingDate),
-            timeSlot: item.timeSlot,
-            language: item.language,
-            adults: item.adults,
-            children: item.children,
-            pricePerAdult: item.pricePerAdult,
-            pricePerChild: item.pricePerChild,
-            totalPrice: item.adults * item.pricePerAdult + item.children * item.pricePerChild,
-            currency: item.currency,
-            status: 'confirmed',
-            travelers: {
-              create: item.travelers.map((t, i) => ({
-                firstName: t.firstName,
-                lastName: t.lastName,
-                type: t.type,
-                sortOrder: i
-              }))
-            }
-          }))
+          create: input.items.map((item) => {
+            const ticketOption = ticketOptionById.get(item.ticketOptionId);
+            return {
+              attractionSlug: item.attractionSlug,
+              attractionName: item.attractionName,
+              ticketOptionId: item.ticketOptionId,
+              ticketOptionName: item.ticketOptionName,
+              meetingPoint: ticketOption?.meetingPoint ?? '',
+              includedSnapshot: (ticketOption?.includedItems.filter((i) => i.included).map((i) => i.text) ?? []).join('\n'),
+              notIncludedSnapshot: (ticketOption?.includedItems.filter((i) => !i.included).map((i) => i.text) ?? []).join('\n'),
+              beforeYouGoSnapshot: (ticketOption?.infoItems.map((i) => i.text) ?? []).join('\n'),
+              bookingDate: new Date(item.bookingDate),
+              timeSlot: item.timeSlot,
+              language: item.language,
+              adults: item.adults,
+              children: item.children,
+              pricePerAdult: item.pricePerAdult,
+              pricePerChild: item.pricePerChild,
+              totalPrice: item.adults * item.pricePerAdult + item.children * item.pricePerChild,
+              currency: item.currency,
+              status: 'confirmed',
+              travelers: {
+                create: item.travelers.map((t, i) => ({
+                  firstName: t.firstName,
+                  lastName: t.lastName,
+                  type: t.type,
+                  sortOrder: i
+                }))
+              }
+            };
+          })
         }
       },
       include: { bookings: { include: { travelers: true } } }

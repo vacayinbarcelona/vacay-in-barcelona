@@ -28,7 +28,7 @@ export default async function BookingConfirmationPage({ params }: { params: { re
   const attractionSlugs = Array.from(new Set(order.bookings.map((b) => b.attractionSlug)));
   const attractions = await prisma.attraction.findMany({
     where: { slug: { in: attractionSlugs } },
-    include: { images: { orderBy: { sortOrder: 'asc' } }, includedItems: { orderBy: { sortOrder: 'asc' } } }
+    include: { images: { orderBy: { sortOrder: 'asc' } } }
   });
   const attractionBySlug = new Map(attractions.map((a) => [a.slug, a]));
 
@@ -145,9 +145,18 @@ export default async function BookingConfirmationPage({ params }: { params: { re
         const thumbnailAlt = attraction?.images[0]?.altText ?? attraction?.heroImageAlt ?? booking.attractionName;
         const meetingPhoto = attraction?.images[1]?.url ?? thumbnail;
         const meetingPhotoAlt = attraction?.images[1]?.altText ?? thumbnailAlt;
-        const address = attraction?.address ?? '';
-        const mapUrl = attraction?.mapUrl || (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : '');
-        const includedBullets = (attraction?.includedItems.filter((i) => i.included) ?? []).slice(0, 3).map((i) => i.text);
+        // Meeting point, included/not included, and before-you-go are all
+        // frozen at booking time on the Booking itself (product-specific —
+        // see checkout/actions.ts) rather than read live from the
+        // attraction, so this always reflects exactly what the customer
+        // was told when they booked this specific ticket.
+        const meetingPoint = booking.meetingPoint || attraction?.address || '';
+        const mapUrl =
+          attraction?.mapUrl ||
+          (meetingPoint ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint)}` : '');
+        const includedBullets = booking.includedSnapshot.split('\n').filter(Boolean);
+        const notIncludedBullets = booking.notIncludedSnapshot.split('\n').filter(Boolean);
+        const beforeYouGoBullets = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
 
         const guestsLabel = `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
           booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''
@@ -226,37 +235,69 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                     </div>
                   ) : null}
 
-                  {includedBullets.length > 0 ? (
-                    <div className="pt-4">
-                      <p className="text-xs font-medium text-gray-600 mb-2">What&rsquo;s included</p>
+                  {includedBullets.length > 0 || notIncludedBullets.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                      {includedBullets.length > 0 ? (
+                        <div>
+                          <p className="text-xs font-medium text-gray-600 mb-2">What&rsquo;s included</p>
+                          <ul className="space-y-1.5 text-sm text-gray-700">
+                            {includedBullets.map((text, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <IconCheck className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                                {text}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {notIncludedBullets.length > 0 ? (
+                        <div>
+                          <p className="text-xs font-medium text-gray-600 mb-2">Not included</p>
+                          <ul className="space-y-1.5 text-sm text-gray-500">
+                            {notIncludedBullets.map((text, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <IconX className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                                {text}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {attraction?.freeCancellation && !isCancelled ? (
+                    <p className="text-[11px] text-gray-400 mt-4 pt-4 border-t border-gray-100 flex items-center gap-1.5">
+                      <IconClock className="h-3.5 w-3.5" />
+                      Free cancellation up to 24 hours before the experience
+                    </p>
+                  ) : null}
+
+                  {beforeYouGoBullets.length > 0 ? (
+                    <div className="pt-4 mt-4 border-t border-gray-100">
+                      <p className="text-xs font-medium text-gray-600 mb-2">Before you go</p>
                       <ul className="space-y-1.5 text-sm text-gray-700">
-                        {includedBullets.map((text, i) => (
+                        {beforeYouGoBullets.map((text, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <IconCheck className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-gray-400 mt-0.5">&bull;</span>
                             {text}
                           </li>
                         ))}
                       </ul>
-                      {attraction?.freeCancellation && !isCancelled ? (
-                        <p className="text-[11px] text-gray-400 mt-3 flex items-center gap-1.5">
-                          <IconClock className="h-3.5 w-3.5" />
-                          Free cancellation up to 24 hours before the experience
-                        </p>
-                      ) : null}
                     </div>
                   ) : null}
                 </div>
               </div>
             </section>
 
-            {address ? (
+            {meetingPoint ? (
               <section className="mt-8 border border-gray-200 rounded-2xl overflow-hidden">
                 <div className="grid grid-cols-1 sm:grid-cols-2">
                   <div className="p-5 sm:p-6">
                     <h3 className="text-sm font-semibold mb-3">Meeting point</h3>
                     <div className="flex items-start gap-2 text-sm mb-3">
                       <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-gray-700">{address}</p>
+                      <p className="text-gray-700 whitespace-pre-line">{meetingPoint}</p>
                     </div>
                     {mapUrl ? (
                       <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-medium hover:underline">

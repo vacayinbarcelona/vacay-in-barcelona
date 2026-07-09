@@ -109,10 +109,44 @@ model TicketOption {
   affiliateUrl      String // external booking link (GetYourGuide/Viator/etc. or your own API later)
   affiliateProvider String @default("") // e.g. "GetYourGuide", "Viator", "Direct API"
 
+  // Product-specific details — different for every ticket/tour option (a
+  // guided tour meets somewhere different than a plain entry ticket, and
+  // each has its own inclusions). Deliberately NOT shown on the public
+  // attraction page (which is shared across all of an attraction's
+  // products) — only surfaced after booking, on the confirmation page and
+  // in the confirmation email (see Booking's snapshot fields below). These
+  // are exactly the fields a future Rezdy sync would populate automatically
+  // instead of an admin typing them in.
+  meetingPoint String @default("")
+
+  includedItems TicketIncludedItem[]
+  infoItems     TicketInfoItem[]
+
   sortOrder Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Per-ticket-option "what's included" / "not included" — see meetingPoint
+// comment on TicketOption for why this lives here instead of on Attraction.
+model TicketIncludedItem {
+  id             String       @id @default(cuid())
+  ticketOptionId String
+  ticketOption   TicketOption @relation(fields: [ticketOptionId], references: [id], onDelete: Cascade)
+  text           String
+  included       Boolean @default(true) // true = "What's included", false = "Not included"
+  sortOrder      Int     @default(0)
+}
+
+// Per-ticket-option "before you go" info — see meetingPoint comment on
+// TicketOption for why this lives here instead of on Attraction.
+model TicketInfoItem {
+  id             String       @id @default(cuid())
+  ticketOptionId String
+  ticketOption   TicketOption @relation(fields: [ticketOptionId], references: [id], onDelete: Cascade)
+  text           String
+  sortOrder      Int    @default(0)
 }
 
 model Highlight {
@@ -274,7 +308,19 @@ model Booking {
 
   attractionSlug   String
   attractionName   String
+  ticketOptionId   String @default("") // the TicketOption this was booked from, when known
   ticketOptionName String
+
+  // Snapshot of that ticket option's product-specific details, copied in at
+  // booking time (see createOrder in src/app/checkout/actions.ts). Frozen
+  // on purpose — if the product's info is edited later (or re-synced from
+  // Rezdy), past customers' confirmations should still show what was true
+  // when they booked, not the updated version. Each is newline-separated,
+  // one item per line (empty string = nothing to show).
+  meetingPoint        String @default("")
+  includedSnapshot    String @default("")
+  notIncludedSnapshot String @default("")
+  beforeYouGoSnapshot String @default("")
 
   bookingDate DateTime // the visit date selected
   timeSlot    String // e.g. "12:30"

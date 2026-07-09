@@ -38,6 +38,11 @@ export async function sendOrderConfirmationEmail(order: OrderWithBookings): Prom
   });
 }
 
+function bulletListHtml(items: string[], color = '#4b5563'): string {
+  if (items.length === 0) return '';
+  return `<ul style="margin:6px 0 0;padding-left:18px;color:${color};">${items.map((text) => `<li style="padding:1px 0;">${escapeHtml(text)}</li>`).join('')}</ul>`;
+}
+
 function bookingSectionHtml(booking: BookingWithTravelers): string {
   const travelerRows =
     booking.travelers.length > 0
@@ -49,6 +54,21 @@ function bookingSectionHtml(booking: BookingWithTravelers): string {
           .join('')
       : '';
 
+  // Meeting point / included / not included / before you go are frozen
+  // onto the booking at checkout time (product-specific — see
+  // createOrder in src/app/checkout/actions.ts), so this always reflects
+  // exactly what the customer was told when they booked this ticket.
+  const included = booking.includedSnapshot.split('\n').filter(Boolean);
+  const notIncluded = booking.notIncludedSnapshot.split('\n').filter(Boolean);
+  const beforeYouGo = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
+
+  const productDetailsRows = `
+    ${booking.meetingPoint ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Meeting point</td><td style="padding:8px 0 2px;">${escapeHtml(booking.meetingPoint)}</td></tr>` : ''}
+    ${included.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Included</td><td style="padding:8px 0 2px;">${bulletListHtml(included)}</td></tr>` : ''}
+    ${notIncluded.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Not included</td><td style="padding:8px 0 2px;">${bulletListHtml(notIncluded, '#9ca3af')}</td></tr>` : ''}
+    ${beforeYouGo.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Before you go</td><td style="padding:8px 0 2px;">${bulletListHtml(beforeYouGo)}</td></tr>` : ''}
+  `;
+
   return `
     <table style="width:100%;border-collapse:collapse;background:#f9fafb;border-radius:12px;padding:16px;font-size:14px;margin-bottom:16px;">
       <tbody>
@@ -59,6 +79,7 @@ function bookingSectionHtml(booking: BookingWithTravelers): string {
         <tr><td style="padding:4px 0;color:#4b5563;">Guests</td><td style="padding:4px 0;">${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''}</td></tr>
         <tr><td style="padding:4px 0;color:#4b5563;">Price</td><td style="padding:4px 0;font-weight:600;">${formatPrice(booking.totalPrice, booking.currency)}</td></tr>
         ${travelerRows ? `<tr><td colspan="2" style="padding-top:8px;"><table style="width:100%;border-collapse:collapse;">${travelerRows}</table></td></tr>` : ''}
+        ${productDetailsRows}
       </tbody>
     </table>`;
 }

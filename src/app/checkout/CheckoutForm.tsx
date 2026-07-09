@@ -95,6 +95,7 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
       checkoutItems.push({
         attractionSlug: item.attractionSlug,
         attractionName: item.attractionName,
+        ticketOptionId: item.ticketOptionId,
         ticketOptionName: item.ticketOptionName,
         bookingDate: item.date,
         timeSlot: item.timeSlot,

@@ -65,6 +65,7 @@ export type CartItem = {
   imageUrl: string;
   imageAlt: string;
   requiresAllTravelerNames: boolean;
+  ticketOptionId: string;
   ticketOptionName: string;
   date: string; // ISO date, e.g. "2026-08-14"
   timeSlot: string;

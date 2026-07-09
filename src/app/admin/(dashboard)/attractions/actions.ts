@@ -199,6 +199,10 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
   const name = str(formData, 'name');
   if (!name) redirect(`/admin/attractions/${slug}#tickets`);
 
+  const included = lines(formData, 'included');
+  const notIncluded = lines(formData, 'notIncluded');
+  const beforeYouGo = lines(formData, 'beforeYouGo');
+
   await prisma.ticketOption.create({
     data: {
       attractionId,
@@ -215,7 +219,15 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
       badge: str(formData, 'badge'),
       affiliateUrl: '',
       affiliateProvider: 'Direct (Rezdy)',
-      sortOrder: num(formData, 'sortOrder', 0)
+      sortOrder: num(formData, 'sortOrder', 0),
+      meetingPoint: str(formData, 'meetingPoint'),
+      includedItems: {
+        create: [
+          ...included.map((text, i) => ({ text, included: true, sortOrder: i })),
+          ...notIncluded.map((text, i) => ({ text, included: false, sortOrder: 100 + i }))
+        ]
+      },
+      infoItems: { create: beforeYouGo.map((text, i) => ({ text, sortOrder: i })) }
     }
   });
 
@@ -224,23 +236,41 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
 }
 
 export async function updateTicketOption(id: string, slug: string, formData: FormData) {
-  await prisma.ticketOption.update({
-    where: { id },
-    data: {
-      name: str(formData, 'name'),
-      description: str(formData, 'description'),
-      price: num(formData, 'price', 0),
-      currency: str(formData, 'currency') || 'EUR',
-      durationLabel: str(formData, 'durationLabel'),
-      freeCancellation: bool(formData, 'freeCancellation'),
-      mobileTicket: bool(formData, 'mobileTicket'),
-      instantConfirmation: bool(formData, 'instantConfirmation'),
-      languages: str(formData, 'languages'),
-      groupType: str(formData, 'groupType'),
-      badge: str(formData, 'badge'),
-      sortOrder: num(formData, 'sortOrder', 0)
-    }
-  });
+  const included = lines(formData, 'included');
+  const notIncluded = lines(formData, 'notIncluded');
+  const beforeYouGo = lines(formData, 'beforeYouGo');
+
+  await prisma.$transaction([
+    prisma.ticketOption.update({
+      where: { id },
+      data: {
+        name: str(formData, 'name'),
+        description: str(formData, 'description'),
+        price: num(formData, 'price', 0),
+        currency: str(formData, 'currency') || 'EUR',
+        durationLabel: str(formData, 'durationLabel'),
+        freeCancellation: bool(formData, 'freeCancellation'),
+        mobileTicket: bool(formData, 'mobileTicket'),
+        instantConfirmation: bool(formData, 'instantConfirmation'),
+        languages: str(formData, 'languages'),
+        groupType: str(formData, 'groupType'),
+        badge: str(formData, 'badge'),
+        sortOrder: num(formData, 'sortOrder', 0),
+        meetingPoint: str(formData, 'meetingPoint')
+      }
+    }),
+    prisma.ticketIncludedItem.deleteMany({ where: { ticketOptionId: id } }),
+    prisma.ticketIncludedItem.createMany({
+      data: [
+        ...included.map((text, i) => ({ ticketOptionId: id, text, included: true, sortOrder: i })),
+        ...notIncluded.map((text, i) => ({ ticketOptionId: id, text, included: false, sortOrder: 100 + i }))
+      ]
+    }),
+    prisma.ticketInfoItem.deleteMany({ where: { ticketOptionId: id } }),
+    prisma.ticketInfoItem.createMany({
+      data: beforeYouGo.map((text, i) => ({ ticketOptionId: id, text, sortOrder: i }))
+    })
+  ]);
 
   await revalidateAttraction(slug);
   redirect(`/admin/attractions/${slug}?saved=1#tickets`);

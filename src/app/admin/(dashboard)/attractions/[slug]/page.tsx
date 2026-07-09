@@ -7,8 +7,6 @@ import {
   updateAttraction,
   deleteAttraction,
   replaceHighlights,
-  replaceIncludedItems,
-  replaceImportantInfo,
   addTicketOption,
   updateTicketOption,
   deleteTicketOption,
@@ -27,10 +25,14 @@ async function getAttraction(slug: string) {
   return prisma.attraction.findUnique({
     where: { slug },
     include: {
-      ticketOptions: { orderBy: { sortOrder: 'asc' } },
+      ticketOptions: {
+        orderBy: { sortOrder: 'asc' },
+        include: {
+          includedItems: { orderBy: { sortOrder: 'asc' } },
+          infoItems: { orderBy: { sortOrder: 'asc' } }
+        }
+      },
       highlights: { orderBy: { sortOrder: 'asc' } },
-      includedItems: { orderBy: { sortOrder: 'asc' } },
-      infoItems: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
       reviews: { orderBy: { sortOrder: 'asc' } },
       images: { orderBy: { sortOrder: 'asc' } },
@@ -52,16 +54,11 @@ export default async function EditAttractionPage({
 
   const boundUpdate = updateAttraction.bind(null, attraction.id, attraction.slug);
   const boundReplaceHighlights = replaceHighlights.bind(null, attraction.id, attraction.slug);
-  const boundReplaceIncluded = replaceIncludedItems.bind(null, attraction.id, attraction.slug);
-  const boundReplaceInfo = replaceImportantInfo.bind(null, attraction.id, attraction.slug);
   const boundAddTicket = addTicketOption.bind(null, attraction.id, attraction.slug);
   const boundAddFaq = addFaq.bind(null, attraction.id, attraction.slug);
   const boundAddImage = addImage.bind(null, attraction.id, attraction.slug);
   const boundAddReview = addReview.bind(null, attraction.id, attraction.slug);
   const boundAddQuickFact = addQuickFact.bind(null, attraction.id, attraction.slug);
-
-  const included = attraction.includedItems.filter((i) => i.included).map((i) => i.text);
-  const notIncluded = attraction.includedItems.filter((i) => !i.included).map((i) => i.text);
 
   return (
     <div className="max-w-3xl pb-24">
@@ -196,7 +193,7 @@ export default async function EditAttractionPage({
       </SectionCard>
 
       {/* ------------------------------------------------------------- */}
-      {/* Highlights / included / important info                       */}
+      {/* Highlights                                                    */}
       {/* ------------------------------------------------------------- */}
       <SectionCard title="Highlights" hint="One per line">
         <form action={boundReplaceHighlights} className="space-y-3">
@@ -207,72 +204,86 @@ export default async function EditAttractionPage({
         </form>
       </SectionCard>
 
-      <SectionCard title="What's included" hint="One per line, in two lists">
-        <form action={boundReplaceIncluded} className="space-y-4">
-          <Field label="Included">
-            <textarea name="included" defaultValue={included.join('\n')} rows={4} className="input" />
-          </Field>
-          <Field label="Not included">
-            <textarea name="notIncluded" defaultValue={notIncluded.join('\n')} rows={4} className="input" />
-          </Field>
-          <button type="submit" className="btn-secondary">
-            Save included / not included
-          </button>
-        </form>
-      </SectionCard>
-
-      <SectionCard title="Important information" hint="One per line">
-        <form action={boundReplaceInfo} className="space-y-3">
-          <textarea name="importantInfo" defaultValue={attraction.infoItems.map((i) => i.text).join('\n')} rows={5} className="input" />
-          <button type="submit" className="btn-secondary">
-            Save important information
-          </button>
-        </form>
-      </SectionCard>
-
       {/* ------------------------------------------------------------- */}
-      {/* Ticket options                                                */}
+      {/* Ticket options — price/logistics AND product-specific details */}
+      {/* (meeting point, included/not included, before you go) live    */}
+      {/* here per-ticket, not on the attraction, since they differ per */}
+      {/* product. Not shown on the public page — only surfaced after   */}
+      {/* booking, on the confirmation page and in the confirmation     */}
+      {/* email. This is also exactly what a future Rezdy sync would    */}
+      {/* populate automatically instead of typing it in by hand.       */}
       {/* ------------------------------------------------------------- */}
-      <SectionCard id="tickets" title="Tickets & tours" hint="Prices, durations and languages shown on the booking widget">
+      <SectionCard id="tickets" title="Tickets & tours" hint="Prices, durations, and each product's own meeting point / inclusions / before-you-go info">
         <div className="space-y-4 mb-6">
-          {attraction.ticketOptions.map((ticket) => (
-            <form
-              key={ticket.id}
-              action={updateTicketOption.bind(null, ticket.id, attraction.slug)}
-              className="border border-gray-200 rounded-xl p-4 space-y-3"
-            >
-              <div className="grid grid-cols-2 gap-3">
-                <input name="name" defaultValue={ticket.name} placeholder="Ticket name" className="input" />
-                <div className="flex items-center gap-2">
-                  <input name="price" type="number" step="0.01" defaultValue={ticket.price} placeholder="Price" className="input" />
-                  <input name="currency" defaultValue={ticket.currency} placeholder="EUR" className="input w-20" />
+          {attraction.ticketOptions.map((ticket) => {
+            const ticketIncluded = ticket.includedItems.filter((i) => i.included).map((i) => i.text);
+            const ticketNotIncluded = ticket.includedItems.filter((i) => !i.included).map((i) => i.text);
+            return (
+              <form
+                key={ticket.id}
+                action={updateTicketOption.bind(null, ticket.id, attraction.slug)}
+                className="border border-gray-200 rounded-xl p-4 space-y-3"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <input name="name" defaultValue={ticket.name} placeholder="Ticket name" className="input" />
+                  <div className="flex items-center gap-2">
+                    <input name="price" type="number" step="0.01" defaultValue={ticket.price} placeholder="Price" className="input" />
+                    <input name="currency" defaultValue={ticket.currency} placeholder="EUR" className="input w-20" />
+                  </div>
                 </div>
-              </div>
-              <textarea name="description" defaultValue={ticket.description} rows={2} placeholder="Description" className="input" />
-              <div className="grid grid-cols-3 gap-3">
-                <input name="durationLabel" defaultValue={ticket.durationLabel} placeholder="Duration, e.g. 1 hour" className="input" />
-                <input name="languages" defaultValue={ticket.languages} placeholder="Languages, comma-separated" className="input" />
-                <input name="groupType" defaultValue={ticket.groupType} placeholder="Group type (optional)" className="input" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input name="badge" defaultValue={ticket.badge} placeholder="Badge, e.g. Best seller" className="input" />
-                <input name="sortOrder" type="number" defaultValue={ticket.sortOrder} placeholder="Sort order" className="input" />
-              </div>
-              <div className="flex items-center flex-wrap gap-x-5 gap-y-1">
-                <Checkbox name="freeCancellation" label="Free cancellation" defaultChecked={ticket.freeCancellation} />
-                <Checkbox name="mobileTicket" label="Mobile ticket" defaultChecked={ticket.mobileTicket} />
-                <Checkbox name="instantConfirmation" label="Instant confirmation" defaultChecked={ticket.instantConfirmation} />
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <button type="submit" className="btn-secondary">
-                  Save
-                </button>
-                <form action={deleteTicketOption.bind(null, ticket.id, attraction.slug)}>
-                  <DeleteButton confirmText={`Delete ticket option "${ticket.name}"?`} />
-                </form>
-              </div>
-            </form>
-          ))}
+                <textarea name="description" defaultValue={ticket.description} rows={2} placeholder="Description" className="input" />
+                <div className="grid grid-cols-3 gap-3">
+                  <input name="durationLabel" defaultValue={ticket.durationLabel} placeholder="Duration, e.g. 1 hour" className="input" />
+                  <input name="languages" defaultValue={ticket.languages} placeholder="Languages, comma-separated" className="input" />
+                  <input name="groupType" defaultValue={ticket.groupType} placeholder="Group type (optional)" className="input" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input name="badge" defaultValue={ticket.badge} placeholder="Badge, e.g. Best seller" className="input" />
+                  <input name="sortOrder" type="number" defaultValue={ticket.sortOrder} placeholder="Sort order" className="input" />
+                </div>
+                <div className="flex items-center flex-wrap gap-x-5 gap-y-1">
+                  <Checkbox name="freeCancellation" label="Free cancellation" defaultChecked={ticket.freeCancellation} />
+                  <Checkbox name="mobileTicket" label="Mobile ticket" defaultChecked={ticket.mobileTicket} />
+                  <Checkbox name="instantConfirmation" label="Instant confirmation" defaultChecked={ticket.instantConfirmation} />
+                </div>
+
+                <div className="border-t border-gray-100 pt-3 space-y-3">
+                  <p className="text-[11px] font-medium text-gray-500">
+                    Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
+                  </p>
+                  <Field label="Meeting point">
+                    <textarea
+                      name="meetingPoint"
+                      defaultValue={ticket.meetingPoint}
+                      rows={2}
+                      placeholder="e.g. Main entrance, Carrer de Mallorca 401 — look for the blue umbrella"
+                      className="input"
+                    />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="What's included" hint="One per line">
+                      <textarea name="included" defaultValue={ticketIncluded.join('\n')} rows={3} className="input" />
+                    </Field>
+                    <Field label="Not included" hint="One per line">
+                      <textarea name="notIncluded" defaultValue={ticketNotIncluded.join('\n')} rows={3} className="input" />
+                    </Field>
+                  </div>
+                  <Field label="Before you go" hint="One per line">
+                    <textarea name="beforeYouGo" defaultValue={ticket.infoItems.map((i) => i.text).join('\n')} rows={3} className="input" />
+                  </Field>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button type="submit" className="btn-secondary">
+                    Save
+                  </button>
+                  <form action={deleteTicketOption.bind(null, ticket.id, attraction.slug)}>
+                    <DeleteButton confirmText={`Delete ticket option "${ticket.name}"?`} />
+                  </form>
+                </div>
+              </form>
+            );
+          })}
 
           {attraction.ticketOptions.length === 0 ? <p className="text-sm text-gray-400">No ticket options yet.</p> : null}
         </div>
@@ -298,6 +309,27 @@ export default async function EditAttractionPage({
             <Checkbox name="mobileTicket" label="Mobile ticket" defaultChecked />
             <Checkbox name="instantConfirmation" label="Instant confirmation" defaultChecked />
           </div>
+
+          <div className="border-t border-gray-100 pt-3 space-y-3">
+            <p className="text-[11px] font-medium text-gray-500">
+              Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
+            </p>
+            <Field label="Meeting point">
+              <textarea name="meetingPoint" rows={2} placeholder="e.g. Main entrance, Carrer de Mallorca 401" className="input" />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="What's included" hint="One per line">
+                <textarea name="included" rows={3} className="input" />
+              </Field>
+              <Field label="Not included" hint="One per line">
+                <textarea name="notIncluded" rows={3} className="input" />
+              </Field>
+            </div>
+            <Field label="Before you go" hint="One per line">
+              <textarea name="beforeYouGo" rows={3} className="input" />
+            </Field>
+          </div>
+
           <button type="submit" className="btn-secondary">
             + Add ticket option
           </button>
