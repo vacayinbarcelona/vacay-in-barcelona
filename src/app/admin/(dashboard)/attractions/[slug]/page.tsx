@@ -228,13 +228,18 @@ export default async function EditAttractionPage({
           {attraction.ticketOptions.map((ticket) => {
             const ticketIncluded = ticket.includedItems.filter((i) => i.included).map((i) => i.text);
             const ticketNotIncluded = ticket.includedItems.filter((i) => !i.included).map((i) => i.text);
+            const ticketFormId = `ticket-form-${ticket.id}`;
             return (
-              <form
-                key={ticket.id}
-                action={updateTicketOption.bind(null, ticket.id, attraction.slug)}
-                encType="multipart/form-data"
-                className="border border-gray-200 rounded-xl p-4 space-y-3"
-              >
+              // Wrapping <div>, not <form> — the delete button below needs
+              // its own <form> (a different server action), and HTML
+              // doesn't allow a <form> inside a <form> (browsers silently
+              // break out of it, which caused a hydration mismatch since
+              // React's server-rendered tree didn't match what the browser
+              // actually produced). The Save button uses the HTML5
+              // form="..." attribute to submit the edit form despite living
+              // outside it, so the layout is unchanged.
+              <div key={ticket.id} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                <form id={ticketFormId} action={updateTicketOption.bind(null, ticket.id, attraction.slug)} encType="multipart/form-data" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <input name="name" defaultValue={ticket.name} placeholder="Ticket name" className="input" />
                   <div className="flex items-center gap-2">
@@ -294,16 +299,17 @@ export default async function EditAttractionPage({
                     <textarea name="beforeYouGo" defaultValue={ticket.infoItems.map((i) => i.text).join('\n')} rows={3} className="input" />
                   </Field>
                 </div>
+                </form>
 
                 <div className="flex items-center justify-between pt-1">
-                  <button type="submit" className="btn-secondary">
+                  <button type="submit" form={ticketFormId} className="btn-secondary">
                     Save
                   </button>
                   <form action={deleteTicketOption.bind(null, ticket.id, attraction.slug)}>
                     <DeleteButton confirmText={`Delete ticket option "${ticket.name}"?`} />
                   </form>
                 </div>
-              </form>
+              </div>
             );
           })}
 
@@ -442,20 +448,30 @@ export default async function EditAttractionPage({
       {/* ------------------------------------------------------------- */}
       <SectionCard id="faqs" title="FAQs">
         <div className="space-y-3 mb-4">
-          {attraction.faqs.map((faq) => (
-            <form key={faq.id} action={updateFaq.bind(null, faq.id, attraction.slug)} className="border border-gray-200 rounded-xl p-4 space-y-2">
-              <input name="question" defaultValue={faq.question} placeholder="Question" className="input" />
-              <textarea name="answer" defaultValue={faq.answer} rows={2} placeholder="Answer" className="input" />
-              <div className="flex items-center justify-between pt-1">
-                <button type="submit" className="btn-secondary">
-                  Save
-                </button>
-                <form action={deleteFaq.bind(null, faq.id, attraction.slug)}>
-                  <DeleteButton />
+          {attraction.faqs.map((faq) => {
+            const faqFormId = `faq-form-${faq.id}`;
+            return (
+              // Wrapping <div>, not <form> — see the same note on the
+              // ticket options above: a <form> can't contain another
+              // <form>, so the delete button's form has to be a sibling,
+              // with the Save button using form="..." to still submit the
+              // edit form from outside it.
+              <div key={faq.id} className="border border-gray-200 rounded-xl p-4 space-y-2">
+                <form id={faqFormId} action={updateFaq.bind(null, faq.id, attraction.slug)} className="space-y-2">
+                  <input name="question" defaultValue={faq.question} placeholder="Question" className="input" />
+                  <textarea name="answer" defaultValue={faq.answer} rows={2} placeholder="Answer" className="input" />
                 </form>
+                <div className="flex items-center justify-between pt-1">
+                  <button type="submit" form={faqFormId} className="btn-secondary">
+                    Save
+                  </button>
+                  <form action={deleteFaq.bind(null, faq.id, attraction.slug)}>
+                    <DeleteButton />
+                  </form>
+                </div>
               </div>
-            </form>
-          ))}
+            );
+          })}
           {attraction.faqs.length === 0 ? <p className="text-sm text-gray-400">No FAQs yet.</p> : null}
         </div>
 
