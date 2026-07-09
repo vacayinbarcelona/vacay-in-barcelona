@@ -11,6 +11,18 @@ import { createOrder, type CheckoutItemInput, type CheckoutTravelerInput } from 
 
 type TravelerNameDraft = { firstName: string; lastName: string };
 
+// Same pattern used for sign-up and the contact form — requires an @, a
+// non-empty local/domain part, and an alphabetic TLD of 2+ letters. Rejects
+// plain text, symbols, and digit-only input.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
+function isValidPhone(value: string): boolean {
+  const trimmed = value.trim();
+  if (!/^[\d\s()+-]+$/.test(trimmed)) return false;
+  const digits = trimmed.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+}
+
 // Demo payment-field validation — real card validation (and the actual
 // charge) will come from the payment provider (e.g. Stripe) before launch.
 // This just stops obviously-bad input from reaching createOrder.
@@ -125,6 +137,18 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
     }
     if (!email.trim()) {
       setError('Please enter an email address for your booking confirmation.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (!phone.trim()) {
+      setError('Please enter a phone number.');
+      return;
+    }
+    if (!isValidPhone(phone)) {
+      setError('Please enter a valid phone number.');
       return;
     }
     const paymentError = validatePaymentFields(cardName, cardNumber, expiry, cvc);
