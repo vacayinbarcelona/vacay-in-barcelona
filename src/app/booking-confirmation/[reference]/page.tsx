@@ -143,8 +143,6 @@ export default async function BookingConfirmationPage({ params }: { params: { re
         const attraction = attractionBySlug.get(booking.attractionSlug);
         const thumbnail = attraction?.images[0]?.url ?? attraction?.heroImageUrl;
         const thumbnailAlt = attraction?.images[0]?.altText ?? attraction?.heroImageAlt ?? booking.attractionName;
-        const meetingPhoto = attraction?.images[1]?.url ?? thumbnail;
-        const meetingPhotoAlt = attraction?.images[1]?.altText ?? thumbnailAlt;
         // Meeting point, included/not included, and before-you-go are all
         // frozen at booking time on the Booking itself (product-specific —
         // see checkout/actions.ts) rather than read live from the
@@ -235,6 +233,23 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                     </div>
                   ) : null}
 
+                  {meetingPoint ? (
+                    <div className="py-4 border-b border-gray-100">
+                      <p className="text-xs font-medium text-gray-600 mb-2">Meeting point</p>
+                      <div className="flex items-start gap-2 text-sm">
+                        <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-gray-700 whitespace-pre-line">{meetingPoint}</p>
+                          {mapUrl ? (
+                            <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-medium hover:underline">
+                              Open in Google Maps
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {includedBullets.length > 0 || notIncludedBullets.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                       {includedBullets.length > 0 ? (
@@ -289,28 +304,6 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                 </div>
               </div>
             </section>
-
-            {meetingPoint ? (
-              <section className="mt-8 border border-gray-200 rounded-2xl overflow-hidden">
-                <div className="grid grid-cols-1 sm:grid-cols-2">
-                  <div className="p-5 sm:p-6">
-                    <h3 className="text-sm font-semibold mb-3">Meeting point</h3>
-                    <div className="flex items-start gap-2 text-sm mb-3">
-                      <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-gray-700 whitespace-pre-line">{meetingPoint}</p>
-                    </div>
-                    {mapUrl ? (
-                      <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-medium hover:underline">
-                        Open in Google Maps
-                      </a>
-                    ) : null}
-                  </div>
-                  <div className="relative min-h-[160px]">
-                    {meetingPhoto ? <Image src={meetingPhoto} alt={meetingPhotoAlt} fill className="object-cover" sizes="50vw" /> : null}
-                  </div>
-                </div>
-              </section>
-            ) : null}
           </div>
         );
       })}
