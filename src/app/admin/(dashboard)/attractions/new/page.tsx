@@ -1,6 +1,6 @@
 import { createAttraction } from '../actions';
 
-export default function NewAttractionPage() {
+export default function NewAttractionPage({ searchParams }: { searchParams: { error?: string } }) {
   return (
     <div className="max-w-2xl">
       <h1 className="text-xl font-semibold mb-1">New attraction / tour</h1>
@@ -9,7 +9,11 @@ export default function NewAttractionPage() {
         created.
       </p>
 
-      <form action={createAttraction} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+      {searchParams?.error ? (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">{searchParams.error}</p>
+      ) : null}
+
+      <form action={createAttraction} encType="multipart/form-data" className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <Field label="Name">
           <input name="name" required className="input" />
         </Field>
@@ -56,8 +60,8 @@ export default function NewAttractionPage() {
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Hero image URL">
-            <input name="heroImageUrl" className="input" placeholder="/images/attractions/slug/hero.jpg" />
+          <Field label="Hero image" hint="JPG, PNG, WEBP, or GIF — up to 5MB">
+            <input type="file" name="heroImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
           </Field>
           <Field label="Hero image alt text">
             <input name="heroImageAlt" className="input" />

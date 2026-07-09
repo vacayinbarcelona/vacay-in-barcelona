@@ -51,6 +51,16 @@ export async function createAttraction(formData: FormData) {
 
   if (!name || !slug) return;
 
+  let heroImageUrl = '';
+  if (hasUploadedFile(formData, 'heroImageFile')) {
+    try {
+      heroImageUrl = await uploadImageFile(formData.get('heroImageFile') as File, 'attractions/hero');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Image upload failed.';
+      redirect(`/admin/attractions/new?error=${encodeURIComponent(message)}`);
+    }
+  }
+
   await prisma.attraction.create({
     data: {
       slug,
@@ -62,7 +72,7 @@ export async function createAttraction(formData: FormData) {
       tagline: str(formData, 'tagline'),
       shortDescription: str(formData, 'shortDescription'),
       longDescription: str(formData, 'longDescription'),
-      heroImageUrl: str(formData, 'heroImageUrl'),
+      heroImageUrl,
       heroImageAlt: str(formData, 'heroImageAlt'),
       rating: num(formData, 'rating', 4.5),
       reviewCount: num(formData, 'reviewCount', 0),
@@ -92,6 +102,20 @@ export async function updateAttraction(id: string, currentSlug: string, formData
   const slugInput = str(formData, 'slug');
   const slug = slugify(slugInput || name) || currentSlug;
 
+  // Keep the current hero photo unless the admin picked a new file — the
+  // hidden "existingHeroImageUrl" input (see [slug]/page.tsx) carries the
+  // current URL forward, same pattern as the ticket option meeting point
+  // image.
+  let heroImageUrl = str(formData, 'existingHeroImageUrl');
+  if (hasUploadedFile(formData, 'heroImageFile')) {
+    try {
+      heroImageUrl = await uploadImageFile(formData.get('heroImageFile') as File, 'attractions/hero');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Image upload failed.';
+      redirect(`/admin/attractions/${currentSlug}?error=${encodeURIComponent(message)}#content`);
+    }
+  }
+
   await prisma.attraction.update({
     where: { id },
     data: {
@@ -104,7 +128,7 @@ export async function updateAttraction(id: string, currentSlug: string, formData
       tagline: str(formData, 'tagline'),
       shortDescription: str(formData, 'shortDescription'),
       longDescription: str(formData, 'longDescription'),
-      heroImageUrl: str(formData, 'heroImageUrl'),
+      heroImageUrl,
       heroImageAlt: str(formData, 'heroImageAlt'),
       rating: num(formData, 'rating', 4.5),
       reviewCount: num(formData, 'reviewCount', 0),
@@ -343,8 +367,15 @@ export async function deleteFaq(id: string, slug: string) {
 // ---------------------------------------------------------------------------
 
 export async function addImage(attractionId: string, slug: string, formData: FormData) {
-  const url = str(formData, 'url');
-  if (!url) redirect(`/admin/attractions/${slug}#images`);
+  if (!hasUploadedFile(formData, 'imageFile')) redirect(`/admin/attractions/${slug}#images`);
+
+  let url = '';
+  try {
+    url = await uploadImageFile(formData.get('imageFile') as File, 'attractions/gallery');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image upload failed.';
+    redirect(`/admin/attractions/${slug}?error=${encodeURIComponent(message)}#images`);
+  }
 
   await prisma.attractionImage.create({
     data: { attractionId, url, altText: str(formData, 'altText'), sortOrder: num(formData, 'sortOrder', 0) }

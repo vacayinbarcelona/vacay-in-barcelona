@@ -47,7 +47,7 @@ export default async function EditAttractionPage({
   searchParams
 }: {
   params: { slug: string };
-  searchParams: { saved?: string; ticketError?: string };
+  searchParams: { saved?: string; ticketError?: string; error?: string };
 }) {
   const [session, attraction] = await Promise.all([getSession(), getAttraction(params.slug)]);
   if (!attraction) notFound();
@@ -77,7 +77,10 @@ export default async function EditAttractionPage({
       {/* Core details                                                  */}
       {/* ------------------------------------------------------------- */}
       <SectionCard id="content" title="Details">
-        <form action={boundUpdate} className="space-y-4">
+        {searchParams?.error ? (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">{searchParams.error}</p>
+        ) : null}
+        <form action={boundUpdate} encType="multipart/form-data" className="space-y-4">
           <Field label="Name">
             <input name="name" defaultValue={attraction.name} required className="input" />
           </Field>
@@ -124,8 +127,13 @@ export default async function EditAttractionPage({
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Hero image URL">
-              <input name="heroImageUrl" defaultValue={attraction.heroImageUrl} className="input" />
+            <Field label="Hero image" hint="Choose a file to replace it, or leave blank to keep the current one">
+              {attraction.heroImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={attraction.heroImageUrl} alt="" className="mb-2 h-20 w-32 object-cover rounded-lg border border-gray-200" />
+              ) : null}
+              <input type="hidden" name="existingHeroImageUrl" value={attraction.heroImageUrl} />
+              <input type="file" name="heroImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
             </Field>
             <Field label="Hero image alt text">
               <input name="heroImageAlt" defaultValue={attraction.heroImageAlt} className="input" />
@@ -357,7 +365,10 @@ export default async function EditAttractionPage({
       {/* ------------------------------------------------------------- */}
       {/* Images                                                        */}
       {/* ------------------------------------------------------------- */}
-      <SectionCard id="images" title="Gallery photos" hint="Real photos only — paste a path under /public/images or a full URL">
+      <SectionCard id="images" title="Gallery photos" hint="Real photos only">
+        {searchParams?.error ? (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">{searchParams.error}</p>
+        ) : null}
         <div className="space-y-2 mb-4">
           {attraction.images.map((img) => (
             <div key={img.id} className="flex items-center gap-3 border border-gray-200 rounded-lg p-3">
@@ -375,9 +386,9 @@ export default async function EditAttractionPage({
           {attraction.images.length === 0 ? <p className="text-sm text-gray-400">No gallery photos yet — the hero image is used as a fallback.</p> : null}
         </div>
 
-        <form action={boundAddImage} className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
+        <form action={boundAddImage} encType="multipart/form-data" className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <input name="url" placeholder="/images/attractions/slug/gallery-2.jpg" required className="input" />
+            <input type="file" name="imageFile" accept="image/jpeg,image/png,image/webp,image/gif" required className="input" />
             <input name="altText" placeholder="Alt text (for accessibility & SEO)" className="input" />
           </div>
           <button type="submit" className="btn-secondary">
