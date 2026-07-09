@@ -260,6 +260,18 @@ export default async function EditAttractionPage({
                       className="input"
                     />
                   </Field>
+                  <Field label="Meeting point image URL" hint="Shown next to the meeting point on the confirmation page & email">
+                    <input
+                      name="meetingPointImage"
+                      defaultValue={ticket.meetingPointImage}
+                      placeholder="/images/attractions/slug/meeting-point.jpg or https://..."
+                      className="input"
+                    />
+                    {ticket.meetingPointImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={ticket.meetingPointImage} alt="" className="mt-2 h-20 w-32 object-cover rounded-lg border border-gray-200" />
+                    ) : null}
+                  </Field>
                   <div className="grid grid-cols-2 gap-3">
                     <Field label="What's included" hint="One per line">
                       <textarea name="included" defaultValue={ticketIncluded.join('\n')} rows={3} className="input" />
@@ -316,6 +328,9 @@ export default async function EditAttractionPage({
             </p>
             <Field label="Meeting point">
               <textarea name="meetingPoint" rows={2} placeholder="e.g. Main entrance, Carrer de Mallorca 401" className="input" />
+            </Field>
+            <Field label="Meeting point image URL" hint="Shown next to the meeting point on the confirmation page & email">
+              <input name="meetingPointImage" placeholder="/images/attractions/slug/meeting-point.jpg or https://..." className="input" />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="What's included" hint="One per line">

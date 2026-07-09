@@ -236,8 +236,20 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                   {meetingPoint ? (
                     <div className="py-4 border-b border-gray-100">
                       <p className="text-xs font-medium text-gray-600 mb-2">Meeting point</p>
-                      <div className="flex items-start gap-2 text-sm">
-                        <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex items-start gap-3 text-sm">
+                        {booking.meetingPointImage ? (
+                          // Plain <img>, not next/image — this URL is a free-text admin field
+                          // (any external host), and next/image requires each remote hostname
+                          // to be allowlisted in next.config.js ahead of time.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={booking.meetingPointImage}
+                            alt="Meeting point"
+                            className="w-20 h-20 flex-shrink-0 rounded-lg object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                        )}
                         <div>
                           <p className="text-gray-700 whitespace-pre-line">{meetingPoint}</p>
                           {mapUrl ? (

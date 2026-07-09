@@ -221,6 +221,7 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
       affiliateProvider: 'Direct (Rezdy)',
       sortOrder: num(formData, 'sortOrder', 0),
       meetingPoint: str(formData, 'meetingPoint'),
+      meetingPointImage: str(formData, 'meetingPointImage'),
       includedItems: {
         create: [
           ...included.map((text, i) => ({ text, included: true, sortOrder: i })),
@@ -256,7 +257,8 @@ export async function updateTicketOption(id: string, slug: string, formData: For
         groupType: str(formData, 'groupType'),
         badge: str(formData, 'badge'),
         sortOrder: num(formData, 'sortOrder', 0),
-        meetingPoint: str(formData, 'meetingPoint')
+        meetingPoint: str(formData, 'meetingPoint'),
+        meetingPointImage: str(formData, 'meetingPointImage')
       }
     }),
     prisma.ticketIncludedItem.deleteMany({ where: { ticketOptionId: id } }),

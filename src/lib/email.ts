@@ -38,6 +38,18 @@ export async function sendOrderConfirmationEmail(order: OrderWithBookings): Prom
   });
 }
 
+// Email clients load images over the open internet, not relative to any
+// page — so a meeting point image saved as a local path (e.g.
+// "/images/attractions/sagrada/meeting-point.jpg") needs the site's domain
+// prepended before it'll render in an inbox. Full https:// URLs pass through
+// unchanged.
+function toAbsoluteImageUrl(url: string): string {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+  return `${siteUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 function bulletListHtml(items: string[], color = '#4b5563'): string {
   if (items.length === 0) return '';
   return `<ul style="margin:6px 0 0;padding-left:18px;color:${color};">${items.map((text) => `<li style="padding:1px 0;">${escapeHtml(text)}</li>`).join('')}</ul>`;
@@ -63,7 +75,14 @@ function bookingSectionHtml(booking: BookingWithTravelers): string {
   const beforeYouGo = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
 
   const productDetailsRows = `
-    ${booking.meetingPoint ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Meeting point</td><td style="padding:8px 0 2px;">${escapeHtml(booking.meetingPoint)}</td></tr>` : ''}
+    ${
+      booking.meetingPoint
+        ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Meeting point</td><td style="padding:8px 0 2px;">
+            ${booking.meetingPointImage ? `<img src="${escapeHtml(toAbsoluteImageUrl(booking.meetingPointImage))}" alt="Meeting point" width="120" style="display:block;border-radius:8px;margin-bottom:6px;max-width:120px;height:auto;" />` : ''}
+            ${escapeHtml(booking.meetingPoint)}
+          </td></tr>`
+        : ''
+    }
     ${included.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Included</td><td style="padding:8px 0 2px;">${bulletListHtml(included)}</td></tr>` : ''}
     ${notIncluded.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Not included</td><td style="padding:8px 0 2px;">${bulletListHtml(notIncluded, '#9ca3af')}</td></tr>` : ''}
     ${beforeYouGo.length > 0 ? `<tr><td style="padding:8px 0 2px;color:#4b5563;vertical-align:top;">Before you go</td><td style="padding:8px 0 2px;">${bulletListHtml(beforeYouGo)}</td></tr>` : ''}

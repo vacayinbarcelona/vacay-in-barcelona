@@ -26,21 +26,6 @@ function isValidPhone(value: string): boolean {
 // Demo payment-field validation — real card validation (and the actual
 // charge) will come from the payment provider (e.g. Stripe) before launch.
 // This just stops obviously-bad input from reaching createOrder.
-function luhnCheck(digits: string): boolean {
-  let sum = 0;
-  let shouldDouble = false;
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let digit = Number(digits[i]);
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-  return sum % 10 === 0;
-}
-
 function formatCardNumber(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 19);
   return digits.replace(/(.{4})/g, '$1 ').trim();
@@ -58,8 +43,11 @@ function validatePaymentFields(cardName: string, cardNumber: string, expiry: str
 
   const cardDigits = cardNumber.replace(/\s/g, '');
   if (!cardDigits) return 'Please enter your card number.';
+  // Length check only, no Luhn checksum — this form doesn't process a real
+  // charge yet (see the disclaimer below the payment fields), so it would
+  // just as often reject a made-up test number as a real one. Real
+  // validation happens once a provider like Stripe is wired in.
   if (!/^\d{13,19}$/.test(cardDigits)) return 'Please enter a valid card number.';
-  if (!luhnCheck(cardDigits)) return 'That card number doesn’t look valid — please check it and try again.';
 
   const expiryMatch = /^(\d{2})\/(\d{2})$/.exec(expiry.trim());
   if (!expiryMatch) return 'Please enter the expiry date as MM/YY.';

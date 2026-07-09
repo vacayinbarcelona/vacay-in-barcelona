@@ -117,7 +117,8 @@ model TicketOption {
   // in the confirmation email (see Booking's snapshot fields below). These
   // are exactly the fields a future Rezdy sync would populate automatically
   // instead of an admin typing them in.
-  meetingPoint String @default("")
+  meetingPoint      String @default("")
+  meetingPointImage String @default("") // URL/path shown alongside the meeting point on the confirmation page & email
 
   includedItems TicketIncludedItem[]
   infoItems     TicketInfoItem[]
@@ -325,6 +326,7 @@ model Booking {
   // when they booked, not the updated version. Each is newline-separated,
   // one item per line (empty string = nothing to show).
   meetingPoint        String @default("")
+  meetingPointImage   String @default("")
   includedSnapshot    String @default("")
   notIncludedSnapshot String @default("")
   beforeYouGoSnapshot String @default("")
