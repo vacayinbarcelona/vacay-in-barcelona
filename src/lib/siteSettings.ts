@@ -56,6 +56,14 @@ export const SEO_PAGES = [
       "Every ticket and guided experience Vacay in Barcelona offers, in one place — compare products across all of Barcelona's top attractions, tours and shows."
   },
   {
+    key: 'blog',
+    label: 'Blog listing',
+    path: '/blog',
+    defaultTitle: 'Barcelona Travel Blog — Tips, Guides & Things to Do',
+    defaultDescription:
+      'Guides, itineraries, and insider tips for visiting Barcelona — from must-see landmarks to hidden gems, written to help you plan the perfect trip.'
+  },
+  {
     key: 'about-us',
     label: 'About us',
     path: '/about-us',

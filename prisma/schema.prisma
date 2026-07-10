@@ -412,3 +412,57 @@ model NavLink {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ---------------------------------------------------------------------------
+// Blog — content-marketing articles ("Things to Do in Barcelona", etc.),
+// separate from the Attraction catalogue. `content` is Markdown, rendered
+// via src/lib/markdown.ts (supports headings, images, and custom
+// :::tip / :::info / :::warning callout blocks). `category` is a free-form
+// string rather than its own model — see BLOG_CATEGORIES in
+// src/lib/blogCategories.ts for the fixed list offered in the admin panel;
+// this mirrors how Attraction.category/categoryLabel already work elsewhere
+// in this app, so there's no extra CRUD section just for taxonomy.
+// ---------------------------------------------------------------------------
+model BlogPost {
+  id      String @id @default(cuid())
+  slug    String @unique
+  title   String
+  excerpt String @default("") // shown on cards + used as the meta description fallback; auto-derived from content if left blank
+
+  content String // Markdown
+
+  featuredImageUrl String @default("")
+  featuredImageAlt String @default("")
+
+  authorName     String @default("Vacay in Barcelona Team")
+  authorImageUrl String @default("")
+
+  category String @default("Things To Do")
+
+  // Drafts are only visible in the admin panel; the public /blog pages only
+  // ever show status = "published". publishedAt is set the first time a
+  // post is published and then left alone (even if unpublished and
+  // republished later), so "originally published" date stays stable.
+  status      String    @default("draft") // "draft" | "published"
+  publishedAt DateTime?
+
+  metaTitle       String @default("")
+  metaDescription String @default("")
+
+  sortOrder Int @default(0) // manual tie-breaker only — the public listing sorts by publishedAt desc
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Newsletter signups from the blog article page's CTA. Deliberately minimal
+// — no admin UI to manage subscribers yet (that's a "connect to an ESP like
+// Mailchimp/Resend Audiences" job for later); this just captures the email
+// so nothing is lost.
+// ---------------------------------------------------------------------------
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

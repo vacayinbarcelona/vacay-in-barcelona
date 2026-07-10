@@ -23,6 +23,18 @@ export type TourCardData = AttractionCardData & {
   highlightBullets: string[];
 };
 
+export type BlogPostCardData = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string; // needed client-side only to estimate reading time on cards
+  featuredImageUrl: string;
+  featuredImageAlt: string;
+  authorName: string;
+  category: string;
+  publishedAt: Date | null;
+};
+
 // Lean shape passed into the client-side booking widget — only what the
 // calendar/checkout UI actually needs, not the full Prisma row.
 export type TicketOptionData = {

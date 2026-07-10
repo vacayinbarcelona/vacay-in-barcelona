@@ -882,6 +882,118 @@ const data: SeedAttraction[] = [
   }
 ];
 
+// Demo article for the new /blog section — see the seeding block near the
+// end of main() for where this gets used. Markdown, rendered via
+// src/lib/markdown.ts (supports headings, images, and :::tip / :::info /
+// :::warning callout blocks).
+const BARCELONA_BLOG_POST_CONTENT = `Barcelona rewards visitors who are willing to walk. Within a few square kilometers, the city packs in Roman ruins, a medieval old town, the world's most famous unfinished church, an entire neighborhood shaped by one architect's imagination, a Mediterranean beachfront, and some of the best tapas bars you'll find anywhere in Spain. It's a city that looks completely different depending on whether you're wandering the tangled lanes of the Gothic Quarter at 9am with a coffee in hand, or watching the sun set from a rooftop terrace with a glass of cava.
+
+Three days is enough to hit the highlights. A week lets you slow down and actually live in it for a while. Either way, here's a guide to the attractions, neighborhoods, and experiences that make Barcelona worth the trip — and a few practical tips we wish someone had told us before we went.
+
+## 1. Marvel at the Sagrada Família
+
+No list of things to do in Barcelona could start anywhere else. Antoni Gaudí's unfinished basilica has been under construction since 1882, and it still doesn't look like anything else on Earth — a forest of stone columns branching into a canopy overhead, stained glass that floods the nave in shifting color as the sun moves, and facades so densely carved with scripture and symbolism that they reward an hour of just standing still and looking.
+
+![Sagrada Família basilica towers rising above Barcelona](/images/attractions/sagrada-familia/hero.jpg)
+
+Construction is now targeting completion within the next several years — over 140 years after it began — but even mid-build, it's Spain's most-visited monument, and for good reason. The Nativity Façade, carved under Gaudí's own supervision, is worth circling slowly; the newer Passion Façade, stark and angular, is a deliberate contrast.
+
+:::tip
+Book your [Sagrada Família](/attractions/sagrada-familia) ticket a few days ahead in peak season (June through September). Time slots sell out, and a skip-the-line ticket saves you from a queue that can stretch well over an hour in summer.
+:::
+
+Go for the first entry slot of the day if you can — the light through the stained glass is softer, and the crowds are noticeably thinner. If your legs are up for it, add tower access: the views over the Eixample district's famous grid-planned streets, with their chamfered corners, are worth the climb.
+
+## 2. Get Lost in Park Güell
+
+Gaudí's second act in Barcelona is a public park on a hillside above the city, and it might be even more photogenic than the Sagrada Família. Mosaic-tiled benches curve along a terrace overlooking the skyline, a gingerbread-house gatehouse guards the entrance, and the whole place feels a little like walking through a fairy tale that someone built out of broken tile and stone.
+
+![Colorful mosaic terrace and gatehouses at Park Güell in Barcelona](/images/attractions/park-guell/hero.jpg)
+
+The park is split into a free public area and a small monumental zone (where the famous mosaic lizard and the tiled terrace live) that requires a timed ticket. Both are worth your time, but if you only have twenty minutes, prioritize the monumental zone — it's the postcard shot for a reason.
+
+### When to visit
+
+Sunrise and late afternoon both work well for photos and lighter crowds. Midday in summer gets busy and hot, since there's limited shade across most of the park. Wear comfortable shoes; the paths are uneven stone and there's a reasonable amount of walking uphill to reach the upper viewpoints.
+
+## 3. Step Inside Gaudí's Casa Batlló and Casa Milà
+
+A ten-minute walk apart on Passeig de Gràcia, these two buildings show two very different sides of Gaudí's imagination. [Casa Batlló](/attractions/casa-batllo) is often nicknamed the "House of Bones" — its facade ripples with bone-like balconies and a scaled, dragon-back roof that's said to represent Saint George slaying the dragon, a Catalan legend. Inside, barely a straight line survives; even the light switches were designed to fit the hand.
+
+![The undulating, mosaic-covered facade of Casa Batlló in Barcelona](/images/attractions/casa-batllo/hero.jpg)
+
+A short stroll away, [Casa Milà](/attractions/casa-mila-la-pedrera) — better known as La Pedrera, "the stone quarry," for its wave-like limestone facade — takes a more restrained but equally strange approach. The rooftop, lined with sculptural chimneys that later inspired the helmeted Stormtroopers of *Star Wars* (or so the story goes), is one of the most surreal spaces in the city.
+
+:::info
+Both buildings offer audio guides that go into far more depth on Gaudí's design philosophy than you'd get wandering through on your own. If you only have time for one interior, Casa Batlló's is slightly more theatrical and immersive; La Pedrera's rooftop is the better view.
+:::
+
+## 4. Watch the Beautiful Game at Camp Nou
+
+Football is close to a civic religion in Barcelona, and [Camp Nou](/attractions/camp-nou), home of FC Barcelona, is one of the largest stadiums in Europe. Even outside match days, the stadium tour is worth doing — you walk through the players' tunnel, sit in the dugout, and get a sense of the scale of the place from the stands.
+
+![The vast stands of Camp Nou stadium, home of FC Barcelona](/images/attractions/camp-nou/hero.jpg)
+
+If you can time your visit around a home match, the atmosphere is genuinely something else — tens of thousands of voices in unison, and a stadium that somehow still feels intimate despite its size. Match tickets move fast for the biggest fixtures, so it's worth checking the schedule as soon as you have travel dates confirmed.
+
+## 5. Feel the Passion of a Flamenco Show
+
+Flamenco isn't originally a Barcelona tradition — it's rooted in Andalusia, further south — but the city has embraced it, and a good [flamenco show](/attractions/flamenco-shows-barcelona) is one of the most emotionally direct things you can experience here. Live guitar, percussion, and *cante* (the raw, often improvised vocal style) accompany dancers whose footwork alone can carry the entire room's energy.
+
+![A flamenco dancer mid-performance in a Barcelona tablao](/images/attractions/flamenco-shows-barcelona/hero.jpg)
+
+Look for a smaller *tablao* (a flamenco venue) over a large theater production if you want to feel the performance up close — some seat only a few dozen people, and the intensity is completely different when you can see a dancer's expression rather than watching from thirty rows back.
+
+## 6. Walk the City with a Local Guide
+
+Barcelona is a city that gives up its best stories to people who know where to look — a courtyard behind an unmarked door, the meaning behind a Gothic gargoyle, why a particular square has three names depending on who you ask. A good [walking tour](/attractions/barcelona-walking-tours) covers ground you'd otherwise walk straight past.
+
+![A small walking tour group exploring a narrow street in Barcelona's old town](/images/attractions/barcelona-walking-tours/hero.jpg)
+
+Most tours run two to three hours and cover the Gothic Quarter and El Born, weaving in Roman wall fragments, medieval guild halls, and the odd hidden square that never makes it into a guidebook. It's a good first-morning activity — it gives you a mental map of the old town that makes the rest of your trip easier to navigate.
+
+## 7. Explore the Neighborhoods Beyond the Landmarks
+
+The single-attraction list only tells half the story. Barcelona's neighborhoods each have a distinct personality, and a lot of the city's charm is in wandering them without a fixed itinerary.
+
+**Barri Gòtic (Gothic Quarter)** is the medieval core — narrow stone lanes, hidden plazas, and the Barcelona Cathedral, all dense enough that you'll get pleasantly lost at least once.
+
+**El Born** sits just east of the Gothic Quarter and has a similar medieval bones but a noticeably more modern energy — concept stores, natural wine bars, and the Picasso Museum, which holds one of the most complete collections of the artist's early work anywhere in the world.
+
+**Gràcia** was its own independent town until the late 19th century, and it still feels that way — leafy squares, independent boutiques, and a slower pace than the tourist-heavy center. It's where a lot of Barcelona locals actually spend their evenings.
+
+**Barceloneta** is the beachfront district, built on reclaimed land in the 18th century for the city's fishermen. Today it's the place to go for a swim, a walk along the boardwalk, or seafood paella eaten within sight of the water.
+
+:::tip
+If you only have one "no itinerary" afternoon, spend it in El Born and Gràcia. Both reward slow wandering far more than a checklist ever could.
+:::
+
+## 8. Eat Like You Live Here
+
+Barcelona's food scene runs from Michelin-starred tasting menus to a €2 slice of tortilla española eaten standing at a bar, and both experiences are worth having. A few things to seek out: **pan con tomate** (bread rubbed with ripe tomato, olive oil, and salt — simpler than it sounds, and better than it has any right to be), fresh seafood at the **Boqueria market** just off Las Ramblas, and **vermouth hour** — a very Barcelona tradition of drinking vermouth on tap with a small plate of olives or anchovies before lunch on a Sunday.
+
+For tapas, skip the restaurants with laminated, photo-heavy menus directly on Las Ramblas — they're built for tourist volume, not flavor. A few blocks in any direction from the main thoroughfares usually turns up better, cheaper, and more authentic options.
+
+## 9. Practical Tips for Your Trip
+
+**Getting around:** Barcelona's metro is fast, cheap, and covers almost everywhere you'll want to go. A T-Casual card (10 rides, shareable between travelers) is usually the best value for a short stay.
+
+**Best time to visit:** Late spring (May–June) and early autumn (September–October) offer the best balance of warm weather and manageable crowds. July and August are hot and busy — beautiful for beach days, less pleasant for standing in line at monuments.
+
+**Language:** Both Catalan and Spanish are spoken; Catalan is the local preference, but Spanish will get you through almost any situation, and English is common in tourist-facing businesses.
+
+:::warning
+Pickpocketing is a genuine, well-documented issue around Las Ramblas, on the metro, and in other crowded tourist areas — keep bags zipped and in front of you, and be extra mindful around anyone creating a distraction (a common tactic). It shouldn't stop you from enjoying the city, just stay aware in crowds.
+:::
+
+**Booking ahead:** For the Sagrada Família, Park Güell, Casa Batlló, and Casa Milà in particular, book timed-entry tickets in advance — especially April through October. Walk-up availability on the day is unreliable, and queues without a pre-booked ticket can eat hours out of your day.
+
+## Final Thoughts
+
+Barcelona doesn't need to be rushed. The landmarks are extraordinary and absolutely worth prioritizing, but some of the best moments here happen in between them — an unplanned coffee stop in a quiet plaza, a wrong turn that leads somewhere better than where you were headed, the light hitting Gaudí's tile work at exactly the right angle for thirty seconds before a cloud moves past. Build your days around two or three anchor experiences, and leave room for the city to surprise you with the rest.
+
+Ready to start planning? Browse [tickets and tours for Barcelona's top attractions](/attractions) and lock in the experiences that matter most to you before your trip.`;
+
 async function main() {
   console.log('Seeding database…');
 
@@ -994,6 +1106,32 @@ async function main() {
     console.log(`  ✔ ${a.name}`);
   }
 
+  // Demo blog post — showcases the /blog listing and /blog/[slug] pages
+  // with real content instead of empty states. Delete-then-recreate, same
+  // idempotent pattern as the attractions above.
+  await prisma.blogPost.deleteMany({ where: { slug: 'things-to-do-in-barcelona' } });
+  await prisma.blogPost.create({
+    data: {
+      slug: 'things-to-do-in-barcelona',
+      title: 'Things to Do in Barcelona',
+      excerpt:
+        "From Gaudí's unfinished basilica to tapas bars tucked into the Gothic Quarter, here's how to spend your days in one of Europe's most rewarding cities to explore on foot.",
+      featuredImageUrl: '/images/site/hero-barcelona.jpg',
+      featuredImageAlt: 'Panoramic view over Barcelona from Park Güell, with the Sagrada Família and the sea in the distance',
+      authorName: 'Vacay in Barcelona Team',
+      authorImageUrl: '',
+      category: 'Things To Do',
+      status: 'published',
+      publishedAt: new Date('2026-06-24T09:00:00Z'),
+      metaTitle: 'Things to Do in Barcelona: 10 Must-See Attractions & Experiences',
+      metaDescription:
+        "The ultimate guide to Barcelona's best attractions — Sagrada Família, Park Güell, Gaudí's Casa Batlló and Casa Milà, Camp Nou, flamenco, and the neighborhoods worth getting lost in.",
+      sortOrder: 0,
+      content: BARCELONA_BLOG_POST_CONTENT
+    }
+  });
+  console.log('  ✔ Demo blog post: Things to Do in Barcelona');
+
   // Default header/footer links — only seeded once (if the table is
   // empty), so re-running this script doesn't wipe out links added or
   // removed later from /admin/nav-links.
@@ -1004,6 +1142,7 @@ async function main() {
         { location: 'header', label: 'Sagrada Família', href: '/attractions/sagrada-familia', sortOrder: 0 },
         { location: 'header', label: 'Park Güell', href: '/attractions/park-guell', sortOrder: 1 },
         { location: 'header', label: 'Flamenco Shows', href: '/attractions/flamenco-shows-barcelona', sortOrder: 2 },
+        { location: 'header', label: 'Blog', href: '/blog', sortOrder: 3 },
         { location: 'footer', label: 'Attractions', href: '/attractions', sortOrder: 0 },
         { location: 'footer', label: 'Tours & tickets', href: '/tours', sortOrder: 1 },
         { location: 'footer', label: 'About us', href: '/about-us', sortOrder: 2 },
