@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/format';
 import { SavedToast } from '@/components/admin/SavedToast';
 
 const STATUS_STYLES: Record<string, string> = {
+  draft: 'bg-blue-50 text-blue-600 border-blue-100',
   pending_review: 'bg-amber-50 text-amber-700 border-amber-100',
   published: 'bg-green-50 text-green-700 border-green-100',
   rejected: 'bg-red-50 text-red-700 border-red-100',
@@ -13,6 +14,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
   pending_review: 'Pending review',
   published: 'Published',
   rejected: 'Rejected',

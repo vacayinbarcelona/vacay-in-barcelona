@@ -72,6 +72,7 @@ export default async function EditAdminProductPage({
     meetingPointAddress: product.meetingPointAddress,
     meetingPoint: product.meetingPoint,
     meetingPointImage: product.meetingPointImage,
+    supplierContactName: product.supplierContactName,
     supplierContactEmail: product.supplierContactEmail,
     supplierContactPhone: product.supplierContactPhone,
     cancellationPolicy: product.cancellationPolicy,

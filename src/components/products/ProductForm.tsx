@@ -19,6 +19,7 @@ export type ProductFormValues = {
   meetingPointAddress: string;
   meetingPoint: string;
   meetingPointImage: string;
+  supplierContactName: string;
   supplierContactEmail: string;
   supplierContactPhone: string;
   cancellationPolicy: string;
@@ -48,6 +49,7 @@ export const EMPTY_PRODUCT_VALUES: ProductFormValues = {
   meetingPointAddress: '',
   meetingPoint: '',
   meetingPointImage: '',
+  supplierContactName: '',
   supplierContactEmail: '',
   supplierContactPhone: '',
   cancellationPolicy: '',
@@ -182,6 +184,7 @@ export function ProductForm({
           Shown to the customer on their booking confirmation so they can reach you directly about their booking.
         </p>
         <SupplierContactFields
+          defaultName={values.supplierContactName}
           defaultEmail={values.supplierContactEmail}
           defaultPhone={values.supplierContactPhone}
           required={requireContactInfo}

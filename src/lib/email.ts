@@ -182,6 +182,7 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
             <tr>
               <td style="padding:12px 14px;">
                 <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#374151;">Contact your supplier</p>
+                ${booking.supplierContactName ? `<p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#374151;">${escapeHtml(booking.supplierContactName)}</p>` : ''}
                 <p style="margin:0;font-size:13px;color:#1d4ed8;">
                   ${booking.supplierContactEmail ? `<a href="mailto:${escapeHtml(booking.supplierContactEmail)}" style="color:#1d4ed8;text-decoration:none;font-weight:600;">${escapeHtml(booking.supplierContactEmail)}</a>` : ''}
                   ${booking.supplierContactEmail && booking.supplierContactPhone ? '&nbsp;&nbsp;&bull;&nbsp;&nbsp;' : ''}

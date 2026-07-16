@@ -15,21 +15,27 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 // mirrors ProductForm's requireContactInfo — true on the supplier panel,
 // optional for the Master Admin's own house products.
 export function SupplierContactFields({
+  defaultName,
   defaultEmail,
   defaultPhone,
   required
 }: {
+  defaultName: string;
   defaultEmail: string;
   defaultPhone: string;
   required: boolean;
 }) {
   const initialPhone = parsePhoneWithCountry(defaultPhone);
 
+  const [name, setName] = useState(defaultName);
+  const [nameTouched, setNameTouched] = useState(false);
   const [email, setEmail] = useState(defaultEmail);
   const [emailTouched, setEmailTouched] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(initialPhone.country);
   const [phoneNumber, setPhoneNumber] = useState(initialPhone.number);
   const [phoneTouched, setPhoneTouched] = useState(false);
+
+  const nameError = !name.trim() && required ? 'Supplier name is required.' : null;
 
   const emailError = !email.trim()
     ? required
@@ -53,6 +59,20 @@ export function SupplierContactFields({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <input type="hidden" name="supplierContactPhone" value={combinedPhone} />
+
+      <label className="block sm:col-span-2">
+        <span className="text-xs font-medium text-gray-600 mb-1 block">Supplier name</span>
+        <input
+          name="supplierContactName"
+          required={required}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => setNameTouched(true)}
+          placeholder="Who should the customer ask for?"
+          className={`input ${nameTouched && nameError ? 'border-red-400 focus:border-red-400' : ''}`}
+        />
+        {nameTouched && nameError ? <p className="text-[11px] text-red-600 mt-1">{nameError}</p> : null}
+      </label>
 
       <label className="block">
         <span className="text-xs font-medium text-gray-600 mb-1 block">Supplier email address</span>

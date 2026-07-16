@@ -124,16 +124,17 @@ model TicketOption {
   supplierId String?
   supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 
-  status          String @default("published") // pending_review | published | rejected | disabled
+  status          String @default("published") // draft | pending_review | published | rejected | disabled
   rejectionReason String @default("") // shown to the supplier when status = rejected
 
   // Direct contact details for whoever fulfills this specific product —
-  // required when a supplier creates/edits a product (see the "required"
-  // attribute in ProductForm.tsx and the check in
-  // src/app/supplier/(dashboard)/products/actions.ts), optional for house
+  // required when a supplier creates/edits a product (see Step 2 of the
+  // supplier product wizard, src/components/products/wizard/, and the check
+  // in src/app/supplier/(dashboard)/products/actions.ts), optional for house
   // products created by the Master Admin. Shown to the customer after
   // booking (see Booking's snapshot fields below) so they can reach the
   // operator directly about their specific reservation.
+  supplierContactName  String @default("")
   supplierContactEmail String @default("")
   supplierContactPhone String @default("")
 
@@ -502,6 +503,7 @@ model Booking {
   // change what a past customer sees). Shown on the booking confirmation
   // page and email so the customer can reach the supplier directly about
   // this specific reservation.
+  supplierContactName  String @default("")
   supplierContactEmail String @default("")
   supplierContactPhone String @default("")
 

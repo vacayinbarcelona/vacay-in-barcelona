@@ -302,6 +302,9 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                     <div className="py-4 border-b border-gray-100">
                       <div className="bg-blue-50/60 border border-blue-100 rounded-xl px-4 py-3">
                         <p className="text-xs font-semibold text-gray-700 mb-2">Contact your supplier</p>
+                        {booking.supplierContactName ? (
+                          <p className="text-sm text-gray-700 font-medium mb-1">{booking.supplierContactName}</p>
+                        ) : null}
                         <div className="flex flex-wrap gap-x-6 gap-y-1.5">
                           {booking.supplierContactEmail ? (
                             <a

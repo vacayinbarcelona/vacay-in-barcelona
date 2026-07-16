@@ -53,6 +53,7 @@ export type ProductCoreFields = {
   badge: string;
   meetingPointAddress: string;
   meetingPoint: string;
+  supplierContactName: string;
   supplierContactEmail: string;
   supplierContactPhone: string;
   cancellationPolicy: string;
@@ -78,6 +79,7 @@ export function readProductCoreFields(formData: FormData): ProductCoreFields {
     badge: str(formData, 'badge'),
     meetingPointAddress: str(formData, 'meetingPointAddress'),
     meetingPoint: str(formData, 'meetingPoint'),
+    supplierContactName: str(formData, 'supplierContactName'),
     supplierContactEmail: str(formData, 'supplierContactEmail').toLowerCase(),
     supplierContactPhone: str(formData, 'supplierContactPhone'),
     cancellationPolicy: str(formData, 'cancellationPolicy'),

@@ -206,6 +206,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
               meetingPointImage: ticketOption?.meetingPointImage ?? '',
               supplierId: ticketOption?.supplier?.id ?? '',
               supplierName: ticketOption?.supplier?.companyName ?? '',
+              supplierContactName: ticketOption?.supplierContactName ?? '',
               supplierContactEmail: ticketOption?.supplierContactEmail ?? '',
               supplierContactPhone: ticketOption?.supplierContactPhone ?? '',
               includedSnapshot: (ticketOption?.includedItems.filter((i) => i.included).map((i) => i.text) ?? []).join('\n'),
