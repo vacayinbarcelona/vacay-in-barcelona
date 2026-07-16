@@ -123,9 +123,13 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     });
   }
 
-  // Same collapsed-by-default toggle, for the "Default ticket configuration"
-  // block (keyed by schedule id — only one per language schedule).
-  const [expandedDefaults, setExpandedDefaults] = useState<Set<string>>(new Set());
+  // Same toggle mechanism for the "Default ticket configuration" block
+  // (keyed by schedule id — only one per language schedule), but this one
+  // starts expanded — for every schedule already on the page at load, and
+  // for each new language added afterward — since it holds required setup
+  // (age ranges, prices, which ticket types are offered) suppliers need to
+  // see before they can select any days below.
+  const [expandedDefaults, setExpandedDefaults] = useState<Set<string>>(() => new Set(initialSchedules.map((s) => s.id)));
   function toggleDefaultsExpanded(scheduleId: string) {
     setExpandedDefaults((prev) => {
       const next = new Set(prev);
@@ -157,10 +161,11 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     // next unused language alphabetically once English is already taken by
     // another block.
     const nextLanguage = !used.has('English') ? 'English' : LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
+    const newId = newDraftId('lang');
     setSchedules((prev) => [
       ...prev,
       {
-        id: newDraftId('lang'),
+        id: newId,
         language: nextLanguage,
         dateFrom: '',
         dateTo: '',
@@ -169,6 +174,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         slots: []
       }
     ]);
+    setExpandedDefaults((prev) => new Set(prev).add(newId));
   }
 
   function patchDefaultTicketType(scheduleId: string, name: string, patch: Partial<DefaultTicketTypeConfig>) {
