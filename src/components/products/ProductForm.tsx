@@ -1,4 +1,5 @@
 import { WEEKDAYS } from '@/lib/productForm';
+import { SupplierContactFields } from './SupplierContactFields';
 
 export type ProductFormValues = {
   attractionId: string;
@@ -174,27 +175,11 @@ export function ProductForm({
         <p className="text-xs text-gray-500 -mt-2">
           Shown to the customer on their booking confirmation so they can reach you directly about their booking.
         </p>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Supplier email address">
-            <input
-              type="email"
-              name="supplierContactEmail"
-              required={requireContactInfo}
-              defaultValue={values.supplierContactEmail}
-              className="input"
-            />
-          </Field>
-          <Field label="Supplier contact number">
-            <input
-              type="tel"
-              name="supplierContactPhone"
-              required={requireContactInfo}
-              defaultValue={values.supplierContactPhone}
-              className="input"
-              placeholder="+34 123 456 789"
-            />
-          </Field>
-        </div>
+        <SupplierContactFields
+          defaultEmail={values.supplierContactEmail}
+          defaultPhone={values.supplierContactPhone}
+          required={requireContactInfo}
+        />
       </div>
 
       {showInitialPhotoUpload ? (
