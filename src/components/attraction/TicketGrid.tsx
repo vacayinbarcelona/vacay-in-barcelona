@@ -34,6 +34,7 @@ export function TicketGrid({ tickets }: { tickets: TicketOptionData[] }) {
 
             <div className="p-5 flex flex-col flex-1">
               <h3 className="font-semibold text-sm mb-1">{ticket.name}</h3>
+              {ticket.supplierName ? <p className="text-[11px] text-gray-400 mb-1.5">Sold by {ticket.supplierName}</p> : null}
               <p className="text-xs text-gray-500 leading-relaxed mb-3 flex-1">{ticket.description}</p>
 
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 mb-4">

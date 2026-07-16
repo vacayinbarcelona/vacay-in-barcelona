@@ -52,6 +52,7 @@ export type TicketOptionData = {
   badge: string;
   imageUrl: string;
   imageAlt: string;
+  supplierName: string; // empty = house product, otherwise "Sold by <supplierName>"
 };
 
 // Passed into the booking modal/provider so it knows which attraction the

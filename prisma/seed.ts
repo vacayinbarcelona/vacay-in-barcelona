@@ -994,6 +994,69 @@ Barcelona doesn't need to be rushed. The landmarks are extraordinary and absolut
 
 Ready to start planning? Browse [tickets and tours for Barcelona's top attractions](/attractions) and lock in the experiences that matter most to you before your trip.`;
 
+// Second demo article — timely/topical piece to show the blog handles more
+// than evergreen "things to do" content. Sourced from July 2026 reporting
+// on Spain's summer heatwaves and their effect on tourism (see the create
+// block below for where this gets used).
+const HEATWAVES_BLOG_POST_CONTENT = `Barcelona's summers used to peak in the comfortable high-20s and low-30s. This year has been different. Spain's meteorological agency has issued repeated high-temperature warnings across the country, with highs pushing past 40°C in parts of Catalonia and toward 44°C further south — and Barcelona itself has seen stretches well above 40°C in early summer 2026. For a city that welcomes millions of visitors a year, that's changing what a trip here actually looks like.
+
+![Sagrada Família standing tall under the summer sun in Barcelona](/images/attractions/sagrada-familia/gallery-3.jpg)
+
+:::info
+A heatwave is generally defined as an extended period — usually three or more days — of unusually high temperatures for a given region and season. What's notable about this summer isn't a single freak day, but how often that threshold is being crossed.
+:::
+
+## Overcrowding meets overheating
+
+Heat alone wouldn't be a huge problem if it weren't landing on top of Barcelona's already-packed summer season. Barceloneta beach alone draws roughly half a million visitors over the summer months, and combined with sustained high temperatures, that concentration creates real pressure: shade is scarce, hydration and first-aid stations see heavier use, and the comfortable window for being outdoors shrinks to a few hours at either end of the day. Barcelona isn't alone in this — Valencia, Málaga, and the Balearic Islands are dealing with the same overlap of near-record visitor numbers and near-record heat.
+
+## How travelers are adjusting their days
+
+The clearest shift is in scheduling. Rather than the traditional late-morning-to-afternoon sightseeing block, visitors are increasingly front-loading their days: early starts for outdoor attractions while it's still cool, then retreating into air-conditioned museums, shops, or hotel rooms through the hottest stretch — roughly noon to 5pm — before re-emerging for evening activities.
+
+![Morning light over Park Güell, before the midday heat sets in](/images/attractions/park-guell/gallery-1.jpg)
+
+Sagrada Família is a good example of why this matters. A large part of the visit involves queueing outdoors before security and entry, and that line offers little shade.
+
+:::tip
+Book the earliest entry slot you can for outdoor attractions like the Sagrada Família in summer. You'll deal with less direct sun and noticeably shorter lines than a midday visit.
+:::
+
+Evening entertainment has picked up some of the slack that midday sightseeing has lost. A flamenco show, a late tapas dinner, or a walk through the Gothic Quarter after sunset are all now more central to how people structure a Barcelona day than they were even a few years ago.
+
+![A flamenco performance in the cooler evening hours](/images/attractions/flamenco-shows-barcelona/gallery-1.jpg)
+
+## The economic picture isn't all bad
+
+Despite the heat, Spain's tourism numbers keep climbing rather than falling. International tourist spending was up roughly 7.4% year-over-year in April 2026, and visitor arrivals rose over 5% in the same period. In other words, the heat is reshaping how people spend their time here, not whether they come at all. That continued spending has, in turn, helped fund more shaded rest areas, expanded hydration campaigns, and better crowd-management planning — though transport networks and accommodation in the busiest coastal spots are still operating close to capacity at peak times.
+
+## Practical tips if you're visiting this summer
+
+:::warning
+Heat exhaustion is a real risk during a Barcelona heatwave, not just discomfort. Watch for heavy sweating, dizziness, nausea, or headache, and move somewhere cool and hydrate immediately if any of these appear.
+:::
+
+A few adjustments make a noticeable difference: carry a refillable water bottle (the city has public drinking fountains all over, including many historic ones worth a look in their own right), wear light and breathable clothing, apply sunscreen before you head out rather than after you're already pink, and treat the early afternoon as local Barcelonans often do — as a natural pause rather than prime sightseeing time.
+
+![A small walking tour group exploring Barcelona's old town in the early morning](/images/attractions/barcelona-walking-tours/gallery-1.jpg)
+
+Booking tickets for a morning or early-evening slot, rather than whatever's available, is one of the simplest ways to keep a hot-weather trip comfortable rather than exhausting.
+
+## What this means for the future of Barcelona tourism
+
+None of this is a reason to skip Barcelona — the city, its architecture, and its food scene are still very much worth the trip. But the traditional peak-summer, midday-heavy travel pattern is visibly shifting toward something more climate-aware: earlier starts, longer indoor breaks, later evenings, and a growing case for visiting in the shoulder seasons of spring and early autumn instead. Planning around the heat, rather than around it happening to you, is quickly becoming part of how a smart Barcelona trip gets built.
+
+Ready to plan around the coolest hours of the day? [Browse tickets and tours](/attractions) and pick time slots that work with the weather, not against it.`;
+
+// Launch scope (see the Supplier Management System change): Rezdy API
+// access is taking longer than expected, so the marketplace is launching
+// with just these three "category pages" while suppliers manually add
+// products under them. The other four attractions stay fully seeded with
+// content — just unpublished (status "draft") — so they're one click away
+// from going live again in /admin/attractions once they're back in scope,
+// without re-entering anything.
+const LAUNCH_SLUGS = new Set(['sagrada-familia', 'park-guell', 'barcelona-walking-tours']);
+
 async function main() {
   console.log('Seeding database…');
 
@@ -1010,7 +1073,7 @@ async function main() {
         badge: a.badge ?? '',
         tagline: a.tagline ?? '',
         requiresAllTravelerNames: a.requiresAllTravelerNames ?? false,
-        status: 'published',
+        status: LAUNCH_SLUGS.has(a.slug) ? 'published' : 'draft',
         shortDescription: a.shortDescription,
         longDescription: a.longDescription,
         heroImageUrl: img(a.slug, 'hero.jpg'),
@@ -1132,6 +1195,29 @@ async function main() {
   });
   console.log('  ✔ Demo blog post: Things to Do in Barcelona');
 
+  await prisma.blogPost.deleteMany({ where: { slug: 'barcelona-heat-waves-and-tourism' } });
+  await prisma.blogPost.create({
+    data: {
+      slug: 'barcelona-heat-waves-and-tourism',
+      title: "How Barcelona's Summer Heat Waves Are Reshaping Tourism",
+      excerpt:
+        "Record-breaking summer heat is changing how visitors experience Barcelona — from shifted sightseeing hours to a growing case for shoulder-season travel. Here's what's happening and how to plan around it.",
+      featuredImageUrl: '/images/site/feature-travelers.jpg',
+      featuredImageAlt: 'Travelers navigating Barcelona during a summer heat wave',
+      authorName: 'Vacay in Barcelona Team',
+      authorImageUrl: '',
+      category: 'Travel Tips',
+      status: 'published',
+      publishedAt: new Date('2026-07-13T09:00:00Z'),
+      metaTitle: "Barcelona Heat Waves & Tourism: How Rising Summer Temperatures Are Changing Travel",
+      metaDescription:
+        "Barcelona is seeing record summer heat in 2026. Here's how it's affecting tourism, how travelers are adjusting their schedules, and practical tips for visiting comfortably.",
+      sortOrder: 1,
+      content: HEATWAVES_BLOG_POST_CONTENT
+    }
+  });
+  console.log("  ✔ Demo blog post: How Barcelona's Summer Heat Waves Are Reshaping Tourism");
+
   // Default header/footer links — only seeded once (if the table is
   // empty), so re-running this script doesn't wipe out links added or
   // removed later from /admin/nav-links.
@@ -1141,15 +1227,16 @@ async function main() {
       data: [
         { location: 'header', label: 'Sagrada Família', href: '/attractions/sagrada-familia', sortOrder: 0 },
         { location: 'header', label: 'Park Güell', href: '/attractions/park-guell', sortOrder: 1 },
-        { location: 'header', label: 'Flamenco Shows', href: '/attractions/flamenco-shows-barcelona', sortOrder: 2 },
+        { location: 'header', label: 'Barcelona Walking Tour', href: '/attractions/barcelona-walking-tours', sortOrder: 2 },
         { location: 'header', label: 'Blog', href: '/blog', sortOrder: 3 },
         { location: 'footer', label: 'Attractions', href: '/attractions', sortOrder: 0 },
         { location: 'footer', label: 'Tours & tickets', href: '/tours', sortOrder: 1 },
-        { location: 'footer', label: 'About us', href: '/about-us', sortOrder: 2 },
-        { location: 'footer', label: 'Contact us', href: '/contact-us', sortOrder: 3 },
-        { location: 'footer', label: 'Privacy policy', href: '/privacy-policy', sortOrder: 4 },
-        { location: 'footer', label: 'Terms & conditions', href: '/terms-conditions', sortOrder: 5 },
-        { location: 'footer', label: 'Affiliate disclosure', href: '/affiliate-disclosure', sortOrder: 6 }
+        { location: 'footer', label: 'Become a supplier', href: '/become-a-supplier', sortOrder: 2 },
+        { location: 'footer', label: 'About us', href: '/about-us', sortOrder: 3 },
+        { location: 'footer', label: 'Contact us', href: '/contact-us', sortOrder: 4 },
+        { location: 'footer', label: 'Privacy policy', href: '/privacy-policy', sortOrder: 5 },
+        { location: 'footer', label: 'Terms & conditions', href: '/terms-conditions', sortOrder: 6 },
+        { location: 'footer', label: 'Affiliate disclosure', href: '/affiliate-disclosure', sortOrder: 7 }
       ]
     });
     console.log('  ✔ Default header/footer nav links');

@@ -6,6 +6,8 @@ import { logoutAction } from '@/app/admin/actions';
 const NAV: { href: string; label: string; roles: AdminRole[] }[] = [
   { href: '/admin', label: 'Dashboard', roles: ['master'] },
   { href: '/admin/attractions', label: 'Attractions & tours', roles: ['master', 'editor'] },
+  { href: '/admin/products', label: 'Products', roles: ['master'] },
+  { href: '/admin/suppliers', label: 'Suppliers', roles: ['master'] },
   { href: '/admin/blog', label: 'Blog', roles: ['master', 'editor'] },
   { href: '/admin/bookings', label: 'Bookings', roles: ['master'] },
   { href: '/admin/nav-links', label: 'Header & footer links', roles: ['master'] },

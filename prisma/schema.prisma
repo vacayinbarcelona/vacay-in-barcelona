@@ -81,6 +81,10 @@ model Attraction {
   reviews       Review[]
   images        AttractionImage[]
   quickFacts    QuickFact[]
+
+  // Suppliers granted access to add their own products under this
+  // attraction ("category page") — see the Supplier model below.
+  supplierCategories SupplierCategory[]
 }
 
 // A bookable ticket / tour option belonging to an attraction.
@@ -108,6 +112,32 @@ model TicketOption {
 
   affiliateUrl      String // external booking link (GetYourGuide/Viator/etc. or your own API later)
   affiliateProvider String @default("") // e.g. "GetYourGuide", "Viator", "Direct API"
+
+  // Manual Supplier Management System (stopgap while Rezdy API access is
+  // pending — see the Supplier model's comment for how this is designed to
+  // fold into a future Rezdy sync without a redesign). Null supplierId =
+  // a "house" product created directly by the Master/editor admin, exactly
+  // like every TicketOption before this feature existed — those default to
+  // status "published" immediately, same as today. A supplier-created
+  // product defaults to "pending_review" and only appears on the public
+  // site once a Master Admin approves it.
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  status          String @default("published") // pending_review | published | rejected | disabled
+  rejectionReason String @default("") // shown to the supplier when status = rejected
+
+  cancellationPolicy String @default("")
+  maxGroupSize       Int?
+
+  // Informational only for now — the live booking calendar still uses the
+  // demo generator in src/lib/availability.ts until real Rezdy availability
+  // is connected (see the TODO there). Comma-separated, e.g.
+  // "Mon,Tue,Wed,Thu,Fri" / "09:00,12:30,16:00".
+  availableDays String @default("")
+  timeSlots     String @default("")
+
+  images TicketOptionImage[]
 
   // Product-specific details — different for every ticket/tour option (a
   // guided tour meets somewhere different than a plain entry ticket, and
@@ -147,6 +177,18 @@ model TicketInfoItem {
   ticketOptionId String
   ticketOption   TicketOption @relation(fields: [ticketOptionId], references: [id], onDelete: Cascade)
   text           String
+  sortOrder      Int    @default(0)
+}
+
+// Per-ticket-option product photos — suppliers upload these for their own
+// products; house products fall back to the attraction's own gallery on the
+// public page (see src/app/attractions/[slug]/page.tsx) when empty.
+model TicketOptionImage {
+  id             String       @id @default(cuid())
+  ticketOptionId String
+  ticketOption   TicketOption @relation(fields: [ticketOptionId], references: [id], onDelete: Cascade)
+  url            String
+  altText        String @default("")
   sortOrder      Int    @default(0)
 }
 
@@ -331,6 +373,13 @@ model Booking {
   notIncludedSnapshot String @default("")
   beforeYouGoSnapshot String @default("")
 
+  // Which supplier fulfilled this booking, frozen at checkout time (empty
+  // string = house product). Lets the Master Admin see supplier attribution
+  // on /admin/bookings without joining back through TicketOption, which may
+  // later be edited, reassigned, or removed.
+  supplierId   String @default("")
+  supplierName String @default("")
+
   bookingDate DateTime // the visit date selected
   timeSlot    String // e.g. "12:30"
   language    String @default("")
@@ -363,6 +412,71 @@ model BookingTraveler {
   lastName  String
   type      String @default("adult") // adult | child
   sortOrder Int    @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Supplier Management System — the manual stopgap while Rezdy API access is
+// pending. A Supplier applies via the public /become-a-supplier form,
+// a Master Admin approves/rejects the application and grants access to one
+// or more Attraction "category pages" (see SupplierCategory below), and the
+// approved supplier logs into their own panel to create/manage TicketOption
+// products under those categories only.
+//
+// Forward-compatible with Rezdy on purpose: a TicketOption doesn't care
+// whether it was typed in by a supplier or synced from Rezdy — it's just a
+// row with a supplierId, a status, and the same product fields either way.
+// When Rezdy access arrives, a sync job can create/update TicketOptions the
+// same way this manual panel does, without changing the public site,
+// checkout, or the Attraction "category" structure at all.
+// ---------------------------------------------------------------------------
+model Supplier {
+  id String @id @default(cuid())
+
+  companyName String
+  contactName String
+  email       String @unique
+  phone       String @default("")
+  website     String @default("")
+
+  // Why they want to join / what they offer — filled in on the application
+  // form, shown to the Master Admin on the review page.
+  message String @default("")
+
+  // pending (just applied) -> approved | rejected, set by the Master Admin.
+  // An approved supplier can later be disabled (blocks login + hides every
+  // one of their products from the public site) without losing their
+  // application history.
+  status          String    @default("pending") // pending | approved | rejected | disabled
+  rejectionReason String    @default("")
+  reviewedAt      DateTime?
+
+  // Null until they set a password via the link in the "Supplier Account
+  // Approved" email — see createSupplierPasswordSetupToken in
+  // src/lib/supplierAuth.ts. Login is blocked with no passwordHash set.
+  passwordHash String?
+
+  categories SupplierCategory[]
+  products   TicketOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Which Attraction "category pages" a supplier applied for / is allowed to
+// manage products under — the same table serves both purposes. A row here
+// means "this supplier can create/edit TicketOptions under this Attraction."
+// The Master Admin edits this set from /admin/suppliers/[id], defaulting to
+// whatever the supplier originally applied for.
+model SupplierCategory {
+  id           String     @id @default(cuid())
+  supplierId   String
+  supplier     Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([supplierId, attractionId])
 }
 
 // ---------------------------------------------------------------------------

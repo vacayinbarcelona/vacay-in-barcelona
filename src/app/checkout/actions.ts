@@ -96,10 +96,25 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     const ticketOptions = ticketOptionIds.length
       ? await prisma.ticketOption.findMany({
           where: { id: { in: ticketOptionIds } },
-          include: { includedItems: { orderBy: { sortOrder: 'asc' } }, infoItems: { orderBy: { sortOrder: 'asc' } } }
+          include: {
+            includedItems: { orderBy: { sortOrder: 'asc' } },
+            infoItems: { orderBy: { sortOrder: 'asc' } },
+            supplier: { select: { id: true, companyName: true } }
+          }
         })
       : [];
     const ticketOptionById = new Map(ticketOptions.map((t) => [t.id, t]));
+
+    // Guard against booking a product that isn't (or is no longer) live —
+    // pending-review, rejected, and disabled supplier products should never
+    // be bookable, even via a crafted request that bypasses the public page.
+    for (const item of input.items) {
+      if (!item.ticketOptionId) continue; // legacy/manual items without a linked product are trusted as before
+      const ticketOption = ticketOptionById.get(item.ticketOptionId);
+      if (!ticketOption || ticketOption.status !== 'published') {
+        return { success: false, error: 'One of the items in your cart is no longer available. Please remove it and try again.' };
+      }
+    }
 
     const currency = input.items[0]?.currency ?? 'EUR';
     const totalPrice = input.items.reduce((sum, item) => sum + item.adults * item.pricePerAdult + item.children * item.pricePerChild, 0);
@@ -131,6 +146,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
               ticketOptionName: item.ticketOptionName,
               meetingPoint: ticketOption?.meetingPoint ?? '',
               meetingPointImage: ticketOption?.meetingPointImage ?? '',
+              supplierId: ticketOption?.supplier?.id ?? '',
+              supplierName: ticketOption?.supplier?.companyName ?? '',
               includedSnapshot: (ticketOption?.includedItems.filter((i) => i.included).map((i) => i.text) ?? []).join('\n'),
               notIncludedSnapshot: (ticketOption?.includedItems.filter((i) => !i.included).map((i) => i.text) ?? []).join('\n'),
               beforeYouGoSnapshot: (ticketOption?.infoItems.map((i) => i.text) ?? []).join('\n'),

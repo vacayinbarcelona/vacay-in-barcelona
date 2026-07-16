@@ -378,6 +378,78 @@ export async function sendVerificationEmail(to: string, firstName: string, verif
   });
 }
 
+// Sent once a Master Admin approves a supplier application (see
+// approveSupplier in src/app/admin/(dashboard)/suppliers/actions.ts). The
+// set-password link uses the same signed-token pattern as customer email
+// verification — see createSupplierPasswordSetupToken in
+// src/lib/supplierAuth.ts — so no password is ever emailed in plain text.
+export async function sendSupplierApprovedEmail(to: string, contactName: string, companyName: string, setPasswordUrl: string, categoryNames: string[]): Promise<void> {
+  const from = process.env.EMAIL_FROM;
+  if (!from) {
+    throw new Error('EMAIL_FROM is not set. Add it to your .env file (see .env.example).');
+  }
+
+  const resend = getResendClient();
+  const categoriesHtml =
+    categoryNames.length > 0
+      ? `<p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 24px;">You&rsquo;ve been given access to manage products under: <strong>${escapeHtml(categoryNames.join(', '))}</strong>.</p>`
+      : '';
+
+  await resend.emails.send({
+    from,
+    to,
+    subject: 'Your supplier account has been approved — Vacay in Barcelona',
+    html: `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#111827;">
+        <p style="font-size:13px;color:#2563eb;font-weight:600;letter-spacing:.02em;margin:0 0 4px;">VACAY IN BARCELONA</p>
+        <h1 style="font-size:20px;margin:0 0 12px;">Welcome aboard, ${escapeHtml(contactName)}!</h1>
+        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px;">
+          Good news — <strong>${escapeHtml(companyName)}</strong>&rsquo;s supplier application has been approved.
+        </p>
+        ${categoriesHtml}
+        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 24px;">
+          Click the button below to set your password and log in to your supplier panel, where you can start adding your
+          products. This link expires in 48 hours.
+        </p>
+        <a href="${setPasswordUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:9999px;">
+          Set your password
+        </a>
+        <p style="font-size:12px;color:#9ca3af;margin-top:32px;line-height:1.6;">
+          Any products you add will need approval from our team before they appear on the site.
+        </p>
+      </div>`
+  });
+}
+
+// Sent once a Master Admin rejects a supplier application.
+export async function sendSupplierRejectedEmail(to: string, contactName: string, companyName: string, reason: string): Promise<void> {
+  const from = process.env.EMAIL_FROM;
+  if (!from) {
+    throw new Error('EMAIL_FROM is not set. Add it to your .env file (see .env.example).');
+  }
+
+  const resend = getResendClient();
+
+  await resend.emails.send({
+    from,
+    to,
+    subject: 'Update on your supplier application — Vacay in Barcelona',
+    html: `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#111827;">
+        <p style="font-size:13px;color:#2563eb;font-weight:600;letter-spacing:.02em;margin:0 0 4px;">VACAY IN BARCELONA</p>
+        <h1 style="font-size:20px;margin:0 0 12px;">Thanks for applying, ${escapeHtml(contactName)}</h1>
+        <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px;">
+          We&rsquo;ve reviewed <strong>${escapeHtml(companyName)}</strong>&rsquo;s supplier application and won&rsquo;t be moving
+          forward with it at this time.
+        </p>
+        ${reason ? `<p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px;">${escapeHtml(reason)}</p>` : ''}
+        <p style="font-size:12px;color:#9ca3af;margin-top:24px;line-height:1.6;">
+          If you have questions about this decision, feel free to reply to this email.
+        </p>
+      </div>`
+  });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')

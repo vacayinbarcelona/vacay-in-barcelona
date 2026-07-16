@@ -24,7 +24,11 @@ async function getAttraction(slug: string) {
       // they're per-ticket-option, product-specific, and only shown after
       // booking (see the ticketOptions.includedItems/infoItems relations
       // used in checkout/actions.ts and the booking confirmation page).
-      ticketOptions: { orderBy: { sortOrder: 'asc' } },
+      ticketOptions: {
+        where: { status: 'published' },
+        orderBy: { sortOrder: 'asc' },
+        include: { images: { orderBy: { sortOrder: 'asc' }, take: 1 }, supplier: { select: { companyName: true } } }
+      },
       highlights: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
       reviews: { orderBy: { sortOrder: 'asc' } },
@@ -81,7 +85,12 @@ export default async function AttractionPage({ params }: { params: { slug: strin
   const galleryPhotos = attraction.images.length > 0 ? attraction.images : [{ url: attraction.heroImageUrl, altText: attraction.heroImageAlt }];
 
   const ticketOptions: TicketOptionData[] = attraction.ticketOptions.map((t, i) => {
-    const photo = galleryPhotos[i % galleryPhotos.length];
+    // Suppliers can upload their own product photo — fall back to cycling
+    // through the attraction's own gallery for house products (or supplier
+    // products that haven't added one yet) so every card still shows a real
+    // photo instead of a placeholder.
+    const ownPhoto = t.images[0];
+    const photo = ownPhoto ? { url: ownPhoto.url, altText: ownPhoto.altText } : galleryPhotos[i % galleryPhotos.length];
     return {
       id: t.id,
       name: t.name,
@@ -96,7 +105,8 @@ export default async function AttractionPage({ params }: { params: { slug: strin
       groupType: t.groupType,
       badge: t.badge,
       imageUrl: photo.url,
-      imageAlt: photo.altText || attraction.heroImageAlt
+      imageAlt: photo.altText || attraction.heroImageAlt,
+      supplierName: t.supplier?.companyName ?? ''
     };
   });
 

@@ -21,7 +21,7 @@ async function getAllProducts() {
   const attractions = await prisma.attraction.findMany({
     where: { status: 'published', city: 'Barcelona' },
     orderBy: { sortOrder: 'asc' },
-    include: { ticketOptions: { orderBy: { sortOrder: 'asc' } } }
+    include: { ticketOptions: { where: { status: 'published' }, orderBy: { sortOrder: 'asc' } } }
   });
 
   return attractions.flatMap((attraction) =>
