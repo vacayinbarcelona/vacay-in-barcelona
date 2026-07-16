@@ -66,13 +66,16 @@ export type TicketTypeDraft = {
   ageToValue: number;
   ageToUnit: AgeUnit;
   price: number;
-  availability: number;
 };
 
 export type SlotDraft = {
   id: string;
   weekday: Weekday;
   time: string;
+  // Total shared inventory for this departure — every ticket type booked
+  // against this slot (Adult/Child/Infant/Senior, etc.) draws from this same
+  // pool, rather than each ticket type tracking its own separate count.
+  availability: number;
   ticketTypes: TicketTypeDraft[];
 };
 
@@ -102,6 +105,7 @@ export type DbLanguageSchedule = {
     id: string;
     weekday: string;
     time: string;
+    availability: number;
     ticketTypes: {
       id: string;
       name: string;
@@ -110,7 +114,6 @@ export type DbLanguageSchedule = {
       ageToValue: number;
       ageToUnit: string;
       price: number;
-      availability: number;
     }[];
   }[];
 };
@@ -125,6 +128,7 @@ export function dbSchedulesToDraft(schedules: DbLanguageSchedule[]): LanguageSch
       id: sl.id,
       weekday: (WEEKDAYS.includes(sl.weekday as Weekday) ? sl.weekday : 'Mon') as Weekday,
       time: sl.time,
+      availability: sl.availability,
       ticketTypes: sl.ticketTypes.map((t) => ({
         id: t.id,
         name: t.name,
@@ -132,8 +136,7 @@ export function dbSchedulesToDraft(schedules: DbLanguageSchedule[]): LanguageSch
         ageFromUnit: (AGE_UNITS.includes(t.ageFromUnit as AgeUnit) ? t.ageFromUnit : 'years') as AgeUnit,
         ageToValue: t.ageToValue,
         ageToUnit: (AGE_UNITS.includes(t.ageToUnit as AgeUnit) ? t.ageToUnit : 'years') as AgeUnit,
-        price: t.price,
-        availability: t.availability
+        price: t.price
       }))
     }))
   }));
@@ -153,6 +156,7 @@ export function draftToPrismaCreate(schedules: LanguageScheduleDraft[]) {
       create: s.slots.map((sl, sli) => ({
         weekday: sl.weekday,
         time: sl.time,
+        availability: sl.availability,
         sortOrder: sli,
         ticketTypes: {
           create: sl.ticketTypes.map((t, ti) => ({
@@ -162,7 +166,6 @@ export function draftToPrismaCreate(schedules: LanguageScheduleDraft[]) {
             ageToValue: t.ageToValue,
             ageToUnit: t.ageToUnit,
             price: t.price,
-            availability: t.availability,
             sortOrder: ti
           }))
         }
@@ -199,6 +202,7 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
       const slot = sl as Record<string, unknown>;
       const weekday = WEEKDAYS.includes(slot.weekday as Weekday) ? (slot.weekday as Weekday) : null;
       const time = typeof slot.time === 'string' ? slot.time : '';
+      const availability = Number.isFinite(Number(slot.availability)) ? Math.max(0, Math.round(Number(slot.availability))) : 0;
       const rawTicketTypes = Array.isArray(slot.ticketTypes) ? slot.ticketTypes : [];
       if (!weekday || !time) continue;
 
@@ -215,12 +219,11 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
           ageFromUnit: AGE_UNITS.includes(t.ageFromUnit as AgeUnit) ? (t.ageFromUnit as AgeUnit) : 'years',
           ageToValue: Number.isFinite(Number(t.ageToValue)) ? Math.max(0, Math.round(Number(t.ageToValue))) : 0,
           ageToUnit: AGE_UNITS.includes(t.ageToUnit as AgeUnit) ? (t.ageToUnit as AgeUnit) : 'years',
-          price: Number.isFinite(Number(t.price)) ? Math.max(0, Number(t.price)) : 0,
-          availability: Number.isFinite(Number(t.availability)) ? Math.max(0, Math.round(Number(t.availability))) : 0
+          price: Number.isFinite(Number(t.price)) ? Math.max(0, Number(t.price)) : 0
         });
       }
 
-      slots.push({ id: typeof slot.id === 'string' ? slot.id : newDraftId('slot'), weekday, time, ticketTypes });
+      slots.push({ id: typeof slot.id === 'string' ? slot.id : newDraftId('slot'), weekday, time, availability, ticketTypes });
     }
 
     if (!language || !dateFrom || !dateTo) continue;
@@ -242,13 +245,13 @@ export function validateAvailabilitySchedules(schedules: LanguageScheduleDraft[]
     if (schedule.slots.length === 0) return `Select at least one day and time slot for ${schedule.language}.`;
     for (const slot of schedule.slots) {
       if (!slot.time) return `Set a time for every slot on ${slot.weekday} (${schedule.language}).`;
+      if (slot.availability < 0) return `Total availability can't be negative (${slot.weekday} ${slot.time}, ${schedule.language}).`;
       if (slot.ticketTypes.length === 0) {
         return `Add at least one ticket type to the ${slot.time} slot on ${slot.weekday} (${schedule.language}), or remove that time slot.`;
       }
       for (const t of slot.ticketTypes) {
         if (!t.name.trim()) return `Every ticket type needs a name (${slot.weekday} ${slot.time}, ${schedule.language}).`;
         if (t.price < 0) return `${t.name}'s price can't be negative (${slot.weekday} ${slot.time}, ${schedule.language}).`;
-        if (t.availability < 0) return `${t.name}'s availability can't be negative (${slot.weekday} ${slot.time}, ${schedule.language}).`;
       }
     }
   }

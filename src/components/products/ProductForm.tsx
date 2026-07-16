@@ -136,8 +136,8 @@ export function ProductForm({
         <div>
           <p className="text-sm font-semibold">Availability</p>
           <p className="text-xs text-gray-500 mt-0.5">
-            For each language you offer, set a date range, which days within it are bookable, one or more time slots per day, and
-            the ticket types (with age range, price, and availability) sold at each slot.
+            For each language you offer, set a date range, which days within it are bookable, one or more time slots per day, a
+            shared total availability for each slot, and the ticket types (with age range and price) sold at each slot.
           </p>
         </div>
         <AvailabilityScheduleEditor initialSchedules={values.availabilitySchedules} />

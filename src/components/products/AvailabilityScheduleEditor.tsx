@@ -66,7 +66,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         if (s.id !== scheduleId) return s;
         const hasDay = s.slots.some((sl) => sl.weekday === weekday);
         if (hasDay) return { ...s, slots: s.slots.filter((sl) => sl.weekday !== weekday) };
-        return { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', ticketTypes: [] }] };
+        return { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: 20, ticketTypes: [] }] };
       })
     );
   }
@@ -74,7 +74,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
   function addSlot(scheduleId: string, weekday: Weekday) {
     setSchedules((prev) =>
       prev.map((s) =>
-        s.id === scheduleId ? { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', ticketTypes: [] }] } : s
+        s.id === scheduleId
+          ? { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: 20, ticketTypes: [] }] }
+          : s
       )
     );
   }
@@ -89,10 +91,16 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     );
   }
 
+  function patchSlotAvailability(scheduleId: string, slotId: string, availability: number) {
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, slots: s.slots.map((sl) => (sl.id === slotId ? { ...sl, availability } : sl)) } : s))
+    );
+  }
+
   function addTicketType(scheduleId: string, slotId: string, preset?: (typeof TICKET_TYPE_PRESETS)[number]) {
     const draft: TicketTypeDraft = preset
-      ? { id: newDraftId('tt'), name: preset.name, ageFromValue: preset.ageFromValue, ageFromUnit: preset.ageFromUnit, ageToValue: preset.ageToValue, ageToUnit: preset.ageToUnit, price: 0, availability: 10 }
-      : { id: newDraftId('tt'), name: '', ageFromValue: 0, ageFromUnit: 'years', ageToValue: 0, ageToUnit: 'years', price: 0, availability: 10 };
+      ? { id: newDraftId('tt'), name: preset.name, ageFromValue: preset.ageFromValue, ageFromUnit: preset.ageFromUnit, ageToValue: preset.ageToValue, ageToUnit: preset.ageToUnit, price: 0 }
+      : { id: newDraftId('tt'), name: '', ageFromValue: 0, ageFromUnit: 'years', ageToValue: 0, ageToUnit: 'years', price: 0 };
     setSchedules((prev) =>
       prev.map((s) =>
         s.id === scheduleId
@@ -219,7 +227,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   .filter((sl) => sl.weekday === day)
                   .map((slot) => (
                     <div key={slot.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <select
                           value={slot.time}
                           onChange={(e) => patchSlotTime(schedule.id, slot.id, e.target.value)}
@@ -231,14 +239,27 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             </option>
                           ))}
                         </select>
+                        <label className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-500 whitespace-nowrap">Total availability</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={slot.availability}
+                            onChange={(e) => patchSlotAvailability(schedule.id, slot.id, Number(e.target.value))}
+                            className="input w-20 text-sm py-1.5"
+                          />
+                        </label>
                         <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium ml-auto">
                           Remove time slot
                         </button>
                       </div>
+                      <p className="text-[11px] text-gray-400 -mt-1">
+                        Shared inventory for this departure — every ticket type below books against this same pool.
+                      </p>
 
                       <div className="space-y-2">
                         {slot.ticketTypes.map((t) => (
-                          <div key={t.id} className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end bg-white border border-gray-200 rounded-lg p-2.5">
+                          <div key={t.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end bg-white border border-gray-200 rounded-lg p-2.5">
                             <label className="block col-span-2">
                               <span className="text-[10px] text-gray-500 block mb-0.5">Name</span>
                               <input
@@ -290,24 +311,14 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             </label>
                             <label className="block">
                               <span className="text-[10px] text-gray-500 block mb-0.5">Price</span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={t.price}
-                                onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { price: Number(e.target.value) })}
-                                className="input text-xs py-1.5"
-                              />
-                            </label>
-                            <label className="block">
-                              <span className="text-[10px] text-gray-500 block mb-0.5">Availability</span>
                               <div className="flex items-center gap-1">
                                 <input
                                   type="number"
                                   min="0"
-                                  value={t.availability}
-                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { availability: Number(e.target.value) })}
-                                  className="input text-xs py-1.5 w-16"
+                                  step="0.01"
+                                  value={t.price}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { price: Number(e.target.value) })}
+                                  className="input text-xs py-1.5"
                                 />
                                 <button
                                   type="button"

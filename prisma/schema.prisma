@@ -209,6 +209,13 @@ model TicketOptionLanguageSchedule {
 // 09:00". Which weekdays are "selected" for a schedule is derived from
 // which weekdays have at least one slot here, rather than stored as its own
 // separate list.
+//
+// Inventory is tracked here, at the slot ("departure") level, not per ticket
+// type — this is the standard tour/ticketing model: a 09:00 departure has one
+// shared pool of seats (e.g. 30 total), and every ticket type booked against
+// that departure (Adult/Child/Infant/Senior) draws down the same pool.
+// Remaining availability = availability minus the sum of all ticket types'
+// quantities booked against this slot across all orders.
 model TicketOptionScheduleSlot {
   id                String                       @id @default(cuid())
   languageScheduleId String
@@ -217,15 +224,19 @@ model TicketOptionScheduleSlot {
   weekday String // "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun"
   time    String // "HH:MM", 15-minute increments
 
+  availability Int @default(0) // total shared inventory for this departure, across all ticket types
+
   ticketTypes TicketOptionScheduleTicketType[]
 
   sortOrder Int @default(0)
 }
 
 // One bookable ticket category within a specific time slot — e.g. "Adult,
-// 18-64 years, €45, 12 available". Fully custom per slot: a supplier can
-// rename/add/remove these freely, the 4 common ones (Adult/Child/Infant/
-// Senior) are just a UI starting suggestion, not enforced by the schema.
+// 18-64 years, €45". Fully custom per slot: a supplier can rename/add/remove
+// these freely, the 4 common ones (Adult/Child/Infant/Senior) are just a UI
+// starting suggestion, not enforced by the schema. No availability field here
+// on purpose — inventory is shared across all ticket types at the slot level
+// (see TicketOptionScheduleSlot.availability above).
 model TicketOptionScheduleTicketType {
   id     String                    @id @default(cuid())
   slotId String
@@ -238,8 +249,7 @@ model TicketOptionScheduleTicketType {
   ageToValue   Int
   ageToUnit    String @default("years") // "years" | "months"
 
-  price        Float
-  availability Int    @default(0) // inventory count for this ticket type at this slot
+  price Float
 
   sortOrder Int @default(0)
 }
