@@ -13,7 +13,7 @@ import { deleteSupplierProductAction } from '../actions';
 const ERROR_MESSAGES: Record<string, string> = {
   category: 'Select one of your assigned categories.',
   missing: 'Product title is required.',
-  'missing-contact': 'Supplier name, email address, and contact number are all required.',
+  'missing-contact': 'Supplier email address and contact number are both required.',
   'invalid-contact-email': 'Please enter a valid supplier email address.'
 };
 

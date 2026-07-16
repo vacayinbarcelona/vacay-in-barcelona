@@ -222,10 +222,9 @@ export async function step2SaveAndPreviousAction(id: string, formData: FormData)
 export async function step2SaveAndNextAction(id: string, formData: FormData) {
   const supplier = await requireSupplier();
   await writeStep2(supplier, id, formData);
-  const name = str(formData, 'supplierContactName');
   const email = str(formData, 'supplierContactEmail');
   const phone = str(formData, 'supplierContactPhone');
-  if (!name || !email || !phone) redirect(`/supplier/products/${id}?step=2&error=missing-contact`);
+  if (!email || !phone) redirect(`/supplier/products/${id}?step=2&error=missing-contact`);
   if (!EMAIL_PATTERN.test(email)) redirect(`/supplier/products/${id}?step=2&error=invalid-contact-email`);
   redirect(`/supplier/products/${id}?step=3`);
 }
@@ -274,7 +273,7 @@ export async function step3PublishAction(id: string, formData: FormData) {
   // product is submitted to the Master Admin for review.
   const product = await requireOwnedProduct(supplier, id);
   if (!product.name) redirect(`/supplier/products/${id}?step=1&error=missing`);
-  if (!product.supplierContactName || !product.supplierContactEmail || !product.supplierContactPhone) {
+  if (!product.supplierContactEmail || !product.supplierContactPhone) {
     redirect(`/supplier/products/${id}?step=2&error=missing-contact`);
   }
   if (schedules.length === 0) {

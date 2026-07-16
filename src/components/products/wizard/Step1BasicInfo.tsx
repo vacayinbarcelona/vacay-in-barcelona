@@ -35,10 +35,10 @@ export const EMPTY_STEP1_VALUES: Step1Values = {
 };
 
 // Step 1 of the supplier product wizard — category, title, description,
-// what's included/not included/before you go, and photos. Also carries a
-// handful of fields not called out as their own step (price, currency,
-// duration, the 3 feature checkboxes, cancellation policy, group type) so
-// nothing gets silently dropped — see "Additional details" below.
+// duration, what's included/not included/before you go, and photos. Price,
+// currency, cancellation policy, group type, and the 3 feature checkboxes
+// aren't shown here (no dedicated section) but are still carried forward via
+// hidden inputs below so a save never silently drops them.
 export function Step1BasicInfo({
   productId,
   categories,
@@ -79,45 +79,22 @@ export function Step1BasicInfo({
         <Field label="Product description">
           <textarea name="description" defaultValue={values.description} rows={4} className="input" />
         </Field>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <div>
-          <p className="text-sm font-semibold">Additional details</p>
-          <p className="text-xs text-gray-500 mt-0.5">Shown to customers alongside the product.</p>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Price per adult" hint="Base display price — real per-ticket-type pricing is set in Step 3">
-            <input type="number" name="price" step="0.01" min="0" defaultValue={values.price} className="input" />
-          </Field>
-          <Field label="Currency">
-            <input name="currency" defaultValue={values.currency} className="input" />
-          </Field>
-        </div>
         <Field label="Duration" hint="Optional — e.g. '2 hours', 'Half day'">
           <input name="durationLabel" defaultValue={values.durationLabel} className="input" />
         </Field>
-        <Field label="Cancellation policy" hint="Optional — free text shown to customers">
-          <textarea name="cancellationPolicy" defaultValue={values.cancellationPolicy} rows={2} className="input" />
-        </Field>
-        <Field label="Group type label" hint="Optional — e.g. 'Small group (max 15)'">
-          <input name="groupType" defaultValue={values.groupType} className="input" />
-        </Field>
-        <div className="flex flex-wrap gap-5 pt-1">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="freeCancellation" defaultChecked={values.freeCancellation} className="h-4 w-4" />
-            Free cancellation
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="mobileTicket" defaultChecked={values.mobileTicket} className="h-4 w-4" />
-            Mobile ticket
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" name="instantConfirmation" defaultChecked={values.instantConfirmation} className="h-4 w-4" />
-            Instant confirmation
-          </label>
-        </div>
       </div>
+
+      {/* Price, currency, cancellation policy, group type, and the 3 feature
+          checkboxes no longer have their own visible section — carried
+          forward untouched via hidden inputs so a Step 1 save never wipes
+          them. Real per-ticket-type pricing lives in Step 3. */}
+      <input type="hidden" name="price" value={values.price} />
+      <input type="hidden" name="currency" value={values.currency} />
+      <input type="hidden" name="cancellationPolicy" value={values.cancellationPolicy} />
+      <input type="hidden" name="groupType" value={values.groupType} />
+      {values.freeCancellation ? <input type="hidden" name="freeCancellation" value="on" /> : null}
+      {values.mobileTicket ? <input type="hidden" name="mobileTicket" value="on" /> : null}
+      {values.instantConfirmation ? <input type="hidden" name="instantConfirmation" value="on" /> : null}
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <p className="text-sm font-semibold">What&rsquo;s included</p>

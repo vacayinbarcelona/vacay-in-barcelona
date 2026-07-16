@@ -12,8 +12,11 @@ export type Step2Values = {
 };
 
 // Step 2 of the supplier product wizard — meeting point details and the
-// mandatory supplier contact info shown to customers on their booking
-// confirmation and email (see Booking.supplierContactName/Email/Phone).
+// supplier contact info shown to customers on their booking confirmation and
+// email (see Booking.supplierContactName/Email/Phone). Supplier name isn't
+// editable here (see SupplierContactFields showName) — only email and phone
+// are collected/required on this screen; whatever name value the product
+// already has is carried forward untouched.
 export function Step2MeetingPoint({ productId, values, errorMessage }: { productId: string; values: Step2Values; errorMessage?: string }) {
   const saveAndList = step2SaveAndListAction.bind(null, productId);
   const saveAndPrevious = step2SaveAndPreviousAction.bind(null, productId);
@@ -53,6 +56,7 @@ export function Step2MeetingPoint({ productId, values, errorMessage }: { product
           defaultEmail={values.supplierContactEmail}
           defaultPhone={values.supplierContactPhone}
           required
+          showName={false}
         />
       </div>
 
