@@ -7,7 +7,7 @@ import { formatDateShort, formatPrice, formatTime12h } from '@/lib/format';
 import { buildIcsDataUri } from '@/lib/ics';
 import { CopyReferenceButton } from '@/components/booking/CopyReferenceButton';
 import { RelatedAttractions } from '@/components/attraction/RelatedAttractions';
-import { IconCalendar, IconCheck, IconClock, IconPin, IconX } from '@/components/ui/Icons';
+import { IconCalendar, IconCheck, IconClock, IconMail, IconPhone, IconPin, IconX } from '@/components/ui/Icons';
 import type { AttractionCardData } from '@/types';
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
@@ -258,6 +258,35 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                             </a>
                           ) : null}
                         </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {!isCancelled && (booking.supplierContactEmail || booking.supplierContactPhone) ? (
+                    <div className="py-4 border-b border-gray-100">
+                      <div className="bg-blue-50/60 border border-blue-100 rounded-xl px-4 py-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Contact your supplier</p>
+                        <div className="flex flex-wrap gap-x-6 gap-y-1.5">
+                          {booking.supplierContactEmail ? (
+                            <a
+                              href={`mailto:${booking.supplierContactEmail}`}
+                              className="inline-flex items-center gap-1.5 text-sm text-blue-700 font-medium hover:underline"
+                            >
+                              <IconMail className="h-4 w-4" />
+                              {booking.supplierContactEmail}
+                            </a>
+                          ) : null}
+                          {booking.supplierContactPhone ? (
+                            <a
+                              href={`tel:${booking.supplierContactPhone.replace(/[^\d+]/g, '')}`}
+                              className="inline-flex items-center gap-1.5 text-sm text-blue-700 font-medium hover:underline"
+                            >
+                              <IconPhone className="h-4 w-4" />
+                              {booking.supplierContactPhone}
+                            </a>
+                          ) : null}
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-1.5">Reach out directly if you have any questions about this booking.</p>
                       </div>
                     </div>
                   ) : null}

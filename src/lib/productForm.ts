@@ -35,6 +35,10 @@ export function lines(formData: FormData, key: string): string[] {
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
+// Same pattern used across the site's other forms (checkout, supplier
+// application) — used to validate supplierContactEmail below.
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+
 export type ProductCoreFields = {
   name: string;
   description: string;
@@ -48,6 +52,8 @@ export type ProductCoreFields = {
   groupType: string;
   badge: string;
   meetingPoint: string;
+  supplierContactEmail: string;
+  supplierContactPhone: string;
   cancellationPolicy: string;
   maxGroupSize: number | null;
   availableDays: string;
@@ -70,6 +76,8 @@ export function readProductCoreFields(formData: FormData): ProductCoreFields {
     groupType: str(formData, 'groupType'),
     badge: str(formData, 'badge'),
     meetingPoint: str(formData, 'meetingPoint'),
+    supplierContactEmail: str(formData, 'supplierContactEmail').toLowerCase(),
+    supplierContactPhone: str(formData, 'supplierContactPhone'),
     cancellationPolicy: str(formData, 'cancellationPolicy'),
     maxGroupSize: optionalInt(formData, 'maxGroupSize'),
     availableDays,

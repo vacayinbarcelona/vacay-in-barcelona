@@ -101,6 +101,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
             infoItems: { orderBy: { sortOrder: 'asc' } },
             supplier: { select: { id: true, companyName: true } }
           }
+          // supplierContactEmail / supplierContactPhone are plain columns on
+          // TicketOption, included automatically — no extra select needed.
         })
       : [];
     const ticketOptionById = new Map(ticketOptions.map((t) => [t.id, t]));
@@ -148,6 +150,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
               meetingPointImage: ticketOption?.meetingPointImage ?? '',
               supplierId: ticketOption?.supplier?.id ?? '',
               supplierName: ticketOption?.supplier?.companyName ?? '',
+              supplierContactEmail: ticketOption?.supplierContactEmail ?? '',
+              supplierContactPhone: ticketOption?.supplierContactPhone ?? '',
               includedSnapshot: (ticketOption?.includedItems.filter((i) => i.included).map((i) => i.text) ?? []).join('\n'),
               notIncludedSnapshot: (ticketOption?.includedItems.filter((i) => !i.included).map((i) => i.text) ?? []).join('\n'),
               beforeYouGoSnapshot: (ticketOption?.infoItems.map((i) => i.text) ?? []).join('\n'),

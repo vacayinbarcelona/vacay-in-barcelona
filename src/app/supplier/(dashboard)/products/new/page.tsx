@@ -7,7 +7,9 @@ import { createSupplierProductAction } from '../actions';
 
 const ERROR_MESSAGES: Record<string, string> = {
   category: "Select one of your assigned categories.",
-  missing: 'Product title is required.'
+  missing: 'Product title is required.',
+  'missing-contact': 'Supplier email address and contact number are required.',
+  'invalid-contact-email': 'Please enter a valid supplier email address.'
 };
 
 export default async function NewSupplierProductPage({ searchParams }: { searchParams: { error?: string } }) {
@@ -41,6 +43,7 @@ export default async function NewSupplierProductPage({ searchParams }: { searchP
           categories={categories}
           errorMessage={errorMessage}
           showInitialPhotoUpload
+          requireContactInfo
         />
       )}
     </div>

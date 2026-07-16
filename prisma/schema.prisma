@@ -127,6 +127,16 @@ model TicketOption {
   status          String @default("published") // pending_review | published | rejected | disabled
   rejectionReason String @default("") // shown to the supplier when status = rejected
 
+  // Direct contact details for whoever fulfills this specific product —
+  // required when a supplier creates/edits a product (see the "required"
+  // attribute in ProductForm.tsx and the check in
+  // src/app/supplier/(dashboard)/products/actions.ts), optional for house
+  // products created by the Master Admin. Shown to the customer after
+  // booking (see Booking's snapshot fields below) so they can reach the
+  // operator directly about their specific reservation.
+  supplierContactEmail String @default("")
+  supplierContactPhone String @default("")
+
   cancellationPolicy String @default("")
   maxGroupSize       Int?
 
@@ -379,6 +389,15 @@ model Booking {
   // later be edited, reassigned, or removed.
   supplierId   String @default("")
   supplierName String @default("")
+
+  // Direct contact details for the supplier who fulfilled this booking,
+  // frozen from the TicketOption at checkout time (same reasoning as the
+  // other snapshot fields above — a later edit to the product shouldn't
+  // change what a past customer sees). Shown on the booking confirmation
+  // page and email so the customer can reach the supplier directly about
+  // this specific reservation.
+  supplierContactEmail String @default("")
+  supplierContactPhone String @default("")
 
   bookingDate DateTime // the visit date selected
   timeSlot    String // e.g. "12:30"

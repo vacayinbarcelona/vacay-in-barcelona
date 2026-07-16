@@ -144,6 +144,25 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
       `)
     : '';
 
+  const supplierContactHtml =
+    !isCancelled && (booking.supplierContactEmail || booking.supplierContactPhone)
+      ? sectionDivider(`
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#eff6ff;border:1px solid #dbeafe;border-radius:10px;">
+            <tr>
+              <td style="padding:12px 14px;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#374151;">Contact your supplier</p>
+                <p style="margin:0;font-size:13px;color:#1d4ed8;">
+                  ${booking.supplierContactEmail ? `<a href="mailto:${escapeHtml(booking.supplierContactEmail)}" style="color:#1d4ed8;text-decoration:none;font-weight:600;">${escapeHtml(booking.supplierContactEmail)}</a>` : ''}
+                  ${booking.supplierContactEmail && booking.supplierContactPhone ? '&nbsp;&nbsp;&bull;&nbsp;&nbsp;' : ''}
+                  ${booking.supplierContactPhone ? `<a href="tel:${escapeHtml(booking.supplierContactPhone.replace(/[^\d+]/g, ''))}" style="color:#1d4ed8;text-decoration:none;font-weight:600;">${escapeHtml(booking.supplierContactPhone)}</a>` : ''}
+                </p>
+                <p style="margin:6px 0 0;font-size:11px;color:#6b7280;">Reach out directly if you have any questions about this booking.</p>
+              </td>
+            </tr>
+          </table>
+        `)
+      : '';
+
   const inclusionsHtml =
     included.length > 0 || notIncluded.length > 0
       ? sectionDivider(`
@@ -216,6 +235,7 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
         `)}
         ${travelersHtml}
         ${meetingPointHtml}
+        ${supplierContactHtml}
         ${inclusionsHtml}
         ${cancellationNoteHtml}
         ${beforeYouGoHtml}

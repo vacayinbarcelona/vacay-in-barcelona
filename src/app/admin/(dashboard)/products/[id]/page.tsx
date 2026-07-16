@@ -66,6 +66,8 @@ export default async function EditAdminProductPage({
     badge: product.badge,
     meetingPoint: product.meetingPoint,
     meetingPointImage: product.meetingPointImage,
+    supplierContactEmail: product.supplierContactEmail,
+    supplierContactPhone: product.supplierContactPhone,
     cancellationPolicy: product.cancellationPolicy,
     maxGroupSize: product.maxGroupSize,
     availableDays: product.availableDays,

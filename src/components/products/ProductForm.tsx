@@ -15,6 +15,8 @@ export type ProductFormValues = {
   badge: string;
   meetingPoint: string;
   meetingPointImage: string;
+  supplierContactEmail: string;
+  supplierContactPhone: string;
   cancellationPolicy: string;
   maxGroupSize: number | null;
   availableDays: string; // CSV, e.g. "Mon,Tue,Wed"
@@ -40,6 +42,8 @@ export const EMPTY_PRODUCT_VALUES: ProductFormValues = {
   badge: '',
   meetingPoint: '',
   meetingPointImage: '',
+  supplierContactEmail: '',
+  supplierContactPhone: '',
   cancellationPolicy: '',
   maxGroupSize: null,
   availableDays: '',
@@ -64,7 +68,8 @@ export function ProductForm({
   values = EMPTY_PRODUCT_VALUES,
   errorMessage,
   showInitialPhotoUpload = false,
-  lockCategory = false
+  lockCategory = false,
+  requireContactInfo = false
 }: {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
@@ -73,6 +78,10 @@ export function ProductForm({
   errorMessage?: string;
   showInitialPhotoUpload?: boolean;
   lockCategory?: boolean;
+  // Supplier contact email/phone are mandatory when a supplier is creating
+  // the product (so customers always have a direct contact), but stay
+  // optional for the Master Admin's own house products.
+  requireContactInfo?: boolean;
 }) {
   const selectedDays = new Set(values.availableDays.split(',').filter(Boolean));
 
@@ -158,6 +167,34 @@ export function ProductForm({
           <input type="hidden" name="existingMeetingPointImage" value={values.meetingPointImage} />
           <input type="file" name="meetingPointImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
         </Field>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <p className="text-sm font-semibold">Supplier contact</p>
+        <p className="text-xs text-gray-500 -mt-2">
+          Shown to the customer on their booking confirmation so they can reach you directly about their booking.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Supplier email address">
+            <input
+              type="email"
+              name="supplierContactEmail"
+              required={requireContactInfo}
+              defaultValue={values.supplierContactEmail}
+              className="input"
+            />
+          </Field>
+          <Field label="Supplier contact number">
+            <input
+              type="tel"
+              name="supplierContactPhone"
+              required={requireContactInfo}
+              defaultValue={values.supplierContactPhone}
+              className="input"
+              placeholder="+34 123 456 789"
+            />
+          </Field>
+        </div>
       </div>
 
       {showInitialPhotoUpload ? (

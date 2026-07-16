@@ -217,3 +217,15 @@ export function IconMail({ className = 'h-4 w-4' }: { className?: string }) {
     </svg>
   );
 }
+
+export function IconPhone({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 4.5a1 1 0 011-1h2.4a1 1 0 01.98.8l.72 3.4a1 1 0 01-.27.94l-1.4 1.4a13.5 13.5 0 006.5 6.5l1.4-1.4a1 1 0 01.94-.27l3.4.72a1 1 0 01.8.98v2.4a1 1 0 01-1 1H18C10.27 20 4 13.73 4 6V4.5z"
+      />
+    </svg>
+  );
+}

@@ -13,7 +13,9 @@ import {
 
 const ERROR_MESSAGES: Record<string, string> = {
   category: 'Select one of your assigned categories.',
-  missing: 'Product title is required.'
+  missing: 'Product title is required.',
+  'missing-contact': 'Supplier email address and contact number are required.',
+  'invalid-contact-email': 'Please enter a valid supplier email address.'
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -70,6 +72,8 @@ export default async function EditSupplierProductPage({
     badge: product.badge,
     meetingPoint: product.meetingPoint,
     meetingPointImage: product.meetingPointImage,
+    supplierContactEmail: product.supplierContactEmail,
+    supplierContactPhone: product.supplierContactPhone,
     cancellationPolicy: product.cancellationPolicy,
     maxGroupSize: product.maxGroupSize,
     availableDays: product.availableDays,
@@ -135,6 +139,7 @@ export default async function EditSupplierProductPage({
         categories={categories}
         values={values}
         errorMessage={errorMessage}
+        requireContactInfo
       />
 
       <div className="mt-6 pt-6 border-t border-gray-200">

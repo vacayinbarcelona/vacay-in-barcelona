@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getCurrentSupplier } from '@/lib/supplierAuth';
 import { uploadImageFile, hasUploadedFile } from '@/lib/upload';
-import { readProductCoreFields, lines } from '@/lib/productForm';
+import { readProductCoreFields, lines, EMAIL_PATTERN } from '@/lib/productForm';
 
 // Product CRUD for the supplier panel — every create/edit here is scoped to
 // the signed-in supplier's own products, and only within categories they've
@@ -31,6 +31,19 @@ async function revalidateProduct(attractionSlug: string) {
   revalidatePath(`/attractions/${attractionSlug}`);
 }
 
+// Supplier email/phone are mandatory on every supplier-created product (see
+// ProductForm's requireContactInfo) — customers need a way to reach the
+// operator directly about their specific booking. Checked again here since
+// this is a server action; the `required` attribute alone isn't trustworthy.
+function assertContactInfo(core: { supplierContactEmail: string; supplierContactPhone: string }, errorRedirectTo: string) {
+  if (!core.supplierContactEmail || !core.supplierContactPhone) {
+    redirect(`${errorRedirectTo}?error=missing-contact`);
+  }
+  if (!EMAIL_PATTERN.test(core.supplierContactEmail)) {
+    redirect(`${errorRedirectTo}?error=invalid-contact-email`);
+  }
+}
+
 export async function createSupplierProductAction(formData: FormData) {
   const supplier = await requireSupplier();
 
@@ -44,6 +57,7 @@ export async function createSupplierProductAction(formData: FormData) {
 
   const core = readProductCoreFields(formData);
   if (!core.name) redirect('/supplier/products/new?error=missing');
+  assertContactInfo(core, '/supplier/products/new');
 
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
@@ -108,6 +122,7 @@ export async function updateSupplierProductAction(id: string, formData: FormData
 
   const core = readProductCoreFields(formData);
   if (!core.name) redirect(`/supplier/products/${id}?error=missing`);
+  assertContactInfo(core, `/supplier/products/${id}`);
 
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
