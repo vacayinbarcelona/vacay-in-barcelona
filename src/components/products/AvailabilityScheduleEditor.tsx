@@ -36,34 +36,42 @@ function ticketTypesFromDefaults(defaults: DefaultTicketTypeConfig[]): TicketTyp
     }));
 }
 
-// Plain numeric text input (no browser spinner arrows) used for the Default
-// price field. Keeps its own local text so a trailing decimal point (e.g.
-// while typing "12.5") isn't stripped mid-keystroke by the numeric value
-// round-tripping back through props — only fully-typed valid numbers (up to
-// 2 decimals) are ever pushed up via onChange. Local state is intentional:
-// each row remounts fresh whenever its schedule/name key changes, which is
-// the only time the starting price should be picked up from outside.
-function PriceTextInput({
+// Plain numeric text input (no browser spinner arrows) used for prices,
+// availability counts, and ages throughout this editor. Keeps its own local
+// text so a trailing decimal point (e.g. while typing "12.5") isn't stripped
+// mid-keystroke by the numeric value round-tripping back through props —
+// only fully-typed valid numbers are ever pushed up via onChange. Local
+// state is intentional: each input remounts fresh whenever its row's key
+// changes, which is the only time the starting value should be picked up
+// from outside.
+function NumberTextInput({
   value,
   disabled,
+  decimal,
+  placeholder,
+  className,
   onChange
 }: {
   value: number;
   disabled?: boolean;
+  decimal?: boolean;
+  placeholder?: string;
+  className?: string;
   onChange: (value: number) => void;
 }) {
   const [text, setText] = useState(value === 0 ? '' : String(value));
+  const pattern = decimal ? /^\d*\.?\d{0,2}$/ : /^\d*$/;
 
   return (
     <input
       type="text"
-      inputMode="decimal"
+      inputMode={decimal ? 'decimal' : 'numeric'}
       disabled={disabled}
-      placeholder="0 = Free"
+      placeholder={placeholder}
       value={text}
       onChange={(e) => {
         const raw = e.target.value;
-        if (raw !== '' && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+        if (raw !== '' && !pattern.test(raw)) return;
         setText(raw);
         if (raw === '' || raw === '.') {
           onChange(0);
@@ -72,7 +80,7 @@ function PriceTextInput({
           if (!Number.isNaN(parsed)) onChange(parsed);
         }
       }}
-      className="input text-xs py-1.5"
+      className={className ?? 'input text-xs py-1.5'}
     />
   );
 }
@@ -97,6 +105,23 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
   const [schedules, setSchedules] = useState<LanguageScheduleDraft[]>(initialSchedules);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Which "<day> time slots" sections are expanded — collapsed by default so
+  // a schedule with several active days doesn't dump every slot's fields on
+  // screen at once. Purely a display toggle; doesn't touch the saved data.
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
+  function dayKey(scheduleId: string, day: Weekday) {
+    return `${scheduleId}:${day}`;
+  }
+  function toggleDayExpanded(scheduleId: string, day: Weekday) {
+    const key = dayKey(scheduleId, day);
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   useEffect(() => {
     const form = containerRef.current?.closest('form');
@@ -168,6 +193,15 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         };
       })
     );
+    // Newly-selected days start expanded so the just-generated slot is
+    // immediately visible; removing a day just cleans up its toggle state.
+    setExpandedDays((prev) => {
+      const key = dayKey(scheduleId, weekday);
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }
 
   function addSlot(scheduleId: string, weekday: Weekday) {
@@ -387,9 +421,11 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         </label>
                         <label className="block">
                           <span className="text-[10px] text-gray-500 block mb-0.5">Default price</span>
-                          <PriceTextInput
+                          <NumberTextInput
                             value={t.price}
+                            decimal
                             disabled={!t.enabled}
+                            placeholder="0 = Free"
                             onChange={(price) => patchDefaultTicketType(schedule.id, t.name, { price })}
                           />
                         </label>
@@ -429,10 +465,24 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
               </div>
             ) : null}
 
-            {activeDays.map((day) => (
+            {activeDays.map((day) => {
+              const daySlotCount = schedule.slots.filter((sl) => sl.weekday === day).length;
+              const isExpanded = expandedDays.has(dayKey(schedule.id, day));
+              return (
               <div key={day} className="border-t border-gray-100 pt-3 space-y-3">
-                <p className="text-xs font-semibold text-gray-700">{day} time slots</p>
+                <button
+                  type="button"
+                  onClick={() => toggleDayExpanded(schedule.id, day)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-gray-700"
+                  aria-expanded={isExpanded}
+                >
+                  <span className={`inline-block transition-transform ${isExpanded ? 'rotate-90' : ''}`}>&#9656;</span>
+                  {day} time slots
+                  <span className="text-gray-400 font-normal">({daySlotCount})</span>
+                </button>
 
+                {isExpanded ? (
+                  <>
                 {schedule.slots
                   .filter((sl) => sl.weekday === day)
                   .map((slot) => (
@@ -451,11 +501,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         </select>
                         <label className="flex items-center gap-1.5">
                           <span className="text-xs text-gray-500 whitespace-nowrap">Total availability</span>
-                          <input
-                            type="number"
-                            min="0"
+                          <NumberTextInput
                             value={slot.availability}
-                            onChange={(e) => patchSlotAvailability(schedule.id, slot.id, Number(e.target.value))}
+                            onChange={(availability) => patchSlotAvailability(schedule.id, slot.id, availability)}
                             className="input w-20 text-sm py-1.5"
                           />
                         </label>
@@ -482,11 +530,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             <label className="block">
                               <span className="text-[10px] text-gray-500 block mb-0.5">Age from</span>
                               <div className="flex gap-1">
-                                <input
-                                  type="number"
-                                  min="0"
+                                <NumberTextInput
                                   value={t.ageFromValue}
-                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageFromValue: Number(e.target.value) })}
+                                  onChange={(ageFromValue) => patchTicketType(schedule.id, slot.id, t.id, { ageFromValue })}
                                   className="input text-xs py-1.5 w-14"
                                 />
                                 <select
@@ -502,11 +548,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             <label className="block">
                               <span className="text-[10px] text-gray-500 block mb-0.5">Age to</span>
                               <div className="flex gap-1">
-                                <input
-                                  type="number"
-                                  min="0"
+                                <NumberTextInput
                                   value={t.ageToValue}
-                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageToValue: Number(e.target.value) })}
+                                  onChange={(ageToValue) => patchTicketType(schedule.id, slot.id, t.id, { ageToValue })}
                                   className="input text-xs py-1.5 w-14"
                                 />
                                 <select
@@ -522,12 +566,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             <label className="block">
                               <span className="text-[10px] text-gray-500 block mb-0.5">Price</span>
                               <div className="flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
+                                <NumberTextInput
                                   value={t.price}
-                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { price: Number(e.target.value) })}
+                                  decimal
+                                  onChange={(price) => patchTicketType(schedule.id, slot.id, t.id, { price })}
                                   className="input text-xs py-1.5"
                                 />
                                 <button
@@ -574,8 +616,11 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                 >
                   + Add another time slot for {day}
                 </button>
+                  </>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
           </div>
         );
       })}
