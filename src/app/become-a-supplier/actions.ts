@@ -43,9 +43,18 @@ export async function submitSupplierApplication(formData: FormData) {
     redirect('/become-a-supplier?error=captcha');
   }
 
-  const existing = await prisma.supplier.findUnique({ where: { email } });
-  if (existing) {
-    redirect('/become-a-supplier?error=exists');
+  const existingByEmail = await prisma.supplier.findUnique({ where: { email } });
+  if (existingByEmail) {
+    redirect('/become-a-supplier?error=exists-email');
+  }
+
+  // Case-insensitive — "Barcelona Tours SL" and "barcelona tours sl" should
+  // count as the same company for this check.
+  const existingByCompany = await prisma.supplier.findFirst({
+    where: { companyName: { equals: companyName, mode: 'insensitive' } }
+  });
+  if (existingByCompany) {
+    redirect('/become-a-supplier?error=exists-company');
   }
 
   // Only offer categories that actually exist — a crafted request with a
