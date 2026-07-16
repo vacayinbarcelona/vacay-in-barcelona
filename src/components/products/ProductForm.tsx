@@ -215,28 +215,19 @@ export function ProductForm({
         <Field label="Cancellation policy" hint="Optional — free text shown to customers">
           <textarea name="cancellationPolicy" defaultValue={values.cancellationPolicy} rows={2} className="input" />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Maximum group size" hint="Optional">
-            <input type="number" name="maxGroupSize" min="1" defaultValue={values.maxGroupSize ?? ''} className="input" />
-          </Field>
-          <Field label="Group type label" hint="Optional — e.g. 'Small group (max 15)'">
-            <input name="groupType" defaultValue={values.groupType} className="input" />
-          </Field>
-        </div>
+        {/* Maximum group size and Languages removed from this section per request —
+            their values are preserved via hidden fields (not editable here anymore)
+            so re-saving an existing product doesn't wipe out whatever was set before. */}
+        <input type="hidden" name="maxGroupSize" defaultValue={values.maxGroupSize ?? ''} />
+        <input type="hidden" name="languages" defaultValue={values.languages} />
+        <Field label="Group type label" hint="Optional — e.g. 'Small group (max 15)'">
+          <input name="groupType" defaultValue={values.groupType} className="input" />
+        </Field>
         {showBadgeAndSortOrder ? (
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Languages" hint="Comma-separated">
-              <input name="languages" defaultValue={values.languages} className="input" />
-            </Field>
-            <Field label="Badge" hint="Optional — e.g. 'Best seller'">
-              <input name="badge" defaultValue={values.badge} className="input" />
-            </Field>
-          </div>
-        ) : (
-          <Field label="Languages" hint="Comma-separated">
-            <input name="languages" defaultValue={values.languages} className="input" />
+          <Field label="Badge" hint="Optional — e.g. 'Best seller'">
+            <input name="badge" defaultValue={values.badge} className="input" />
           </Field>
-        )}
+        ) : null}
         <div className="flex flex-wrap gap-5 pt-1">
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" name="freeCancellation" defaultChecked={values.freeCancellation} className="h-4 w-4" />
