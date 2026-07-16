@@ -205,13 +205,16 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         };
       })
     );
-    // Newly-selected days start expanded so the just-generated slot is
-    // immediately visible; removing a day just cleans up its toggle state.
+    // Every collapsible section (this one included) stays closed by default
+    // everywhere — selecting a day never auto-opens its time slots list, the
+    // supplier always has to click the toggle themselves. Only clean up the
+    // toggle state when a day is deselected, so re-selecting it later starts
+    // collapsed again rather than remembering a stale expanded state.
     setExpandedDays((prev) => {
       const key = dayKey(scheduleId, weekday);
+      if (!prev.has(key)) return prev;
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      next.delete(key);
       return next;
     });
   }
