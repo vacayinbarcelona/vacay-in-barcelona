@@ -123,6 +123,17 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     });
   }
 
+  // Which single time slot (by id) currently has its full ticket-type
+  // configuration (names, age ranges, prices) expanded for editing. Newly
+  // generated slots show only Time/Total availability/Edit/Remove by
+  // default — this keeps a day with several slots from dumping every
+  // ticket-type grid on screen at once. Only one slot can be open at a
+  // time: clicking Edit on a different slot switches to it automatically.
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  function toggleSlotEditing(slotId: string) {
+    setEditingSlotId((prev) => (prev === slotId ? null : slotId));
+  }
+
   // Same toggle mechanism for the "Default ticket configuration" block
   // (keyed by schedule id — only one per language schedule), but this one
   // starts expanded — for every schedule already on the page at load, and
@@ -242,6 +253,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
 
   function removeSlot(scheduleId: string, slotId: string) {
     setSchedules((prev) => prev.map((s) => (s.id === scheduleId ? { ...s, slots: s.slots.filter((sl) => sl.id !== slotId) } : s)));
+    setEditingSlotId((prev) => (prev === slotId ? null : prev));
   }
 
   function patchSlotTime(scheduleId: string, slotId: string, time: string) {
@@ -524,7 +536,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   <>
                 {schedule.slots
                   .filter((sl) => sl.weekday === day)
-                  .map((slot) => (
+                  .map((slot) => {
+                    const isEditingSlot = editingSlotId === slot.id;
+                    return (
                     <div key={slot.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <select
@@ -546,10 +560,22 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             className="input w-20 text-sm py-1.5"
                           />
                         </label>
-                        <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium ml-auto">
+                        <button
+                          type="button"
+                          onClick={() => toggleSlotEditing(slot.id)}
+                          className={`text-xs font-medium px-2.5 py-1 rounded-lg border ml-auto ${
+                            isEditingSlot ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {isEditingSlot ? 'Done editing' : 'Edit'}
+                        </button>
+                        <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium">
                           Remove time slot
                         </button>
                       </div>
+
+                      {isEditingSlot ? (
+                        <>
                       <p className="text-[11px] text-gray-400 -mt-1">
                         Shared inventory for this departure — every ticket type below books against this same pool.
                       </p>
@@ -644,8 +670,11 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                           + Custom ticket type
                         </button>
                       </div>
+                        </>
+                      ) : null}
                     </div>
-                  ))}
+                    );
+                  })}
 
                 <button
                   type="button"
