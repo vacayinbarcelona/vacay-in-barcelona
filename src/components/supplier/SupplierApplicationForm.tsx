@@ -231,7 +231,12 @@ export function SupplierApplicationForm({
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
-  const [countryCode, setCountryCode] = useState('+34');
+  // Keyed by country *name*, not dial code — several countries share the
+  // same code (e.g. +1 covers the US, Canada, Bahamas, Jamaica...), so a
+  // <select> bound to the code alone always resolves to whichever of those
+  // options comes first in the list, snapping the visible selection back to
+  // it regardless of which one was actually picked.
+  const [selectedCountry, setSelectedCountry] = useState('Spain');
   const [phone, setPhone] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
@@ -250,6 +255,7 @@ export function SupplierApplicationForm({
       ? 'Please enter a valid email address.'
       : null;
   const phoneError = phone.trim() && !isValidPhone(phone) ? 'Please enter a valid phone number.' : null;
+  const countryCode = COUNTRY_CODES.find((c) => c.name === selectedCountry)?.code ?? '+34';
 
   function toggleCategory(id: string) {
     setSelectedCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
@@ -332,13 +338,13 @@ export function SupplierApplicationForm({
           <label className="text-xs font-medium text-gray-600 mb-1 block">Phone</label>
           <div className="flex gap-2">
             <select
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
               className="input w-[168px] flex-shrink-0"
-              aria-label="Country code"
+              aria-label="Country"
             >
               {COUNTRY_CODES.map((c) => (
-                <option key={`${c.name}-${c.code}`} value={c.code}>
+                <option key={c.name} value={c.name}>
                   {c.name} ({c.code})
                 </option>
               ))}
