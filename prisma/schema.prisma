@@ -497,6 +497,17 @@ model Booking {
   totalPrice    Float
   currency      String @default("EUR")
 
+  // Per-ticket-type breakdown for a booking made against a real Availability
+  // schedule (see TicketOptionLanguageSchedule and friends) — JSON array of
+  // { name, quantity, price, ageFromValue, ageFromUnit, ageToValue, ageToUnit },
+  // frozen at checkout time same as the other snapshot fields above. Empty
+  // string for legacy/demo bookings made before a product had real schedule
+  // data — those are still fully described by adults/children above, which
+  // continue to hold the *total* traveler count and a blended per-traveler
+  // price either way (so cart/checkout totals and item counts don't need to
+  // special-case schedule vs. non-schedule bookings anywhere else).
+  ticketBreakdownJson String @default("")
+
   status String @default("pending") // pending | confirmed | cancelled
 
   rezdyBookingId String @default("") // set once a real Rezdy booking is created

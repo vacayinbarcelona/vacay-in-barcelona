@@ -107,9 +107,21 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
   const included = booking.includedSnapshot.split('\n').filter(Boolean);
   const notIncluded = booking.notIncludedSnapshot.split('\n').filter(Boolean);
   const beforeYouGo = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
-  const guestsLabel = `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
-    booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''
-  }`;
+  const ticketBreakdown: { name: string; quantity: number; price: number }[] = booking.ticketBreakdownJson
+    ? (() => {
+        try {
+          return JSON.parse(booking.ticketBreakdownJson);
+        } catch {
+          return [];
+        }
+      })()
+    : [];
+  const guestsLabel =
+    ticketBreakdown.length > 0
+      ? `${ticketBreakdown.reduce((sum, t) => sum + t.quantity, 0)} traveler${ticketBreakdown.reduce((sum, t) => sum + t.quantity, 0) !== 1 ? 's' : ''}`
+      : `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
+          booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''
+        }`;
   const qrData = encodeURIComponent(`${booking.id} | ${booking.attractionName} | ${formatDateShort(booking.bookingDate)} ${formatTime12h(booking.timeSlot)}`);
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrData}`;
 
@@ -124,6 +136,21 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
           <p style="margin:0;font-size:13px;color:#374151;">${booking.travelers
             .map((t) => `${escapeHtml(t.firstName)} ${escapeHtml(t.lastName)}`)
             .join(' &bull; ')}</p>
+        `)
+      : '';
+
+  const ticketBreakdownHtml =
+    ticketBreakdown.length > 0
+      ? sectionDivider(`
+          ${labelHtml('Tickets')}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            ${ticketBreakdown
+              .map(
+                (t) =>
+                  `<tr><td style="padding:2px 0;font-size:13px;color:#374151;">${escapeHtml(t.name)} &times;${t.quantity}</td><td align="right" style="padding:2px 0;font-size:13px;color:#6b7280;">${formatPrice(t.price, booking.currency)} each</td></tr>`
+              )
+              .join('')}
+          </table>
         `)
       : '';
 
@@ -237,6 +264,7 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
             </tr>
           </table>
         `)}
+        ${ticketBreakdownHtml}
         ${travelersHtml}
         ${meetingPointHtml}
         ${supplierContactHtml}

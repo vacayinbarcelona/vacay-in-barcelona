@@ -10,6 +10,7 @@ import { StickyMobileBar } from '@/components/attraction/StickyMobileBar';
 import { Highlights, About, ReviewsSection, FaqSection } from '@/components/attraction/InfoSections';
 import { RelatedAttractions } from '@/components/attraction/RelatedAttractions';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { dbSchedulesToDraft } from '@/lib/availabilitySchedule';
 import type { AttractionCardData, TicketOptionData } from '@/types';
 
 export const revalidate = 3600;
@@ -27,7 +28,14 @@ async function getAttraction(slug: string) {
       ticketOptions: {
         where: { status: 'published' },
         orderBy: { sortOrder: 'asc' },
-        include: { images: { orderBy: { sortOrder: 'asc' }, take: 1 }, supplier: { select: { companyName: true } } }
+        include: {
+          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          supplier: { select: { companyName: true } },
+          languageSchedules: {
+            orderBy: { sortOrder: 'asc' },
+            include: { slots: { orderBy: { sortOrder: 'asc' }, include: { ticketTypes: { orderBy: { sortOrder: 'asc' } } } } }
+          }
+        }
       },
       highlights: { orderBy: { sortOrder: 'asc' } },
       faqs: { orderBy: { sortOrder: 'asc' } },
@@ -106,7 +114,8 @@ export default async function AttractionPage({ params }: { params: { slug: strin
       badge: t.badge,
       imageUrl: photo.url,
       imageAlt: photo.altText || attraction.heroImageAlt,
-      supplierName: t.supplier?.companyName ?? ''
+      supplierName: t.supplier?.companyName ?? '',
+      availabilitySchedules: dbSchedulesToDraft(t.languageSchedules)
     };
   });
 

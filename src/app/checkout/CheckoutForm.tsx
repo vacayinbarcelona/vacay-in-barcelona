@@ -181,7 +181,8 @@ export default function CheckoutForm({ initialUser }: { initialUser: InitialUser
         pricePerAdult: item.pricePerAdult,
         pricePerChild: item.pricePerChild,
         currency: item.currency,
-        travelers
+        travelers,
+        ticketBreakdown: item.ticketBreakdown
       });
     }
 

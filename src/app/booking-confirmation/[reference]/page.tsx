@@ -158,9 +158,24 @@ export default async function BookingConfirmationPage({ params }: { params: { re
         const notIncludedBullets = booking.notIncludedSnapshot.split('\n').filter(Boolean);
         const beforeYouGoBullets = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
 
-        const guestsLabel = `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
-          booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''
-        }`;
+        // A schedule-based booking (see ScheduledBookingFlow) freezes its
+        // per-ticket-type breakdown here — legacy/demo bookings fall back to
+        // the plain adult/child count.
+        const ticketBreakdown: { name: string; quantity: number; price: number }[] = booking.ticketBreakdownJson
+          ? (() => {
+              try {
+                return JSON.parse(booking.ticketBreakdownJson);
+              } catch {
+                return [];
+              }
+            })()
+          : [];
+        const guestsLabel =
+          ticketBreakdown.length > 0
+            ? `${ticketBreakdown.reduce((sum, t) => sum + t.quantity, 0)} traveler${ticketBreakdown.reduce((sum, t) => sum + t.quantity, 0) !== 1 ? 's' : ''}`
+            : `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${
+                booking.children > 0 ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''
+              }`;
         const qrData = encodeURIComponent(`${order.reference} | ${booking.attractionName} | ${formatDateShort(booking.bookingDate)} ${formatTime12h(booking.timeSlot)}`);
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}`;
 
@@ -221,6 +236,22 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                       <p className="text-sm font-medium">{booking.language || '—'}</p>
                     </div>
                   </div>
+
+                  {ticketBreakdown.length > 0 ? (
+                    <div className="py-4 border-b border-gray-100">
+                      <p className="text-xs font-medium text-gray-600 mb-2">Tickets</p>
+                      <div className="space-y-1">
+                        {ticketBreakdown.map((t, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm">
+                            <span className="text-gray-700">
+                              {t.name} &times;{t.quantity}
+                            </span>
+                            <span className="text-gray-500">{formatPrice(t.price, booking.currency)} each</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {booking.travelers.length > 0 ? (
                     <div className="py-4 border-b border-gray-100">

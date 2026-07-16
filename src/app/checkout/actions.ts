@@ -4,6 +4,9 @@ import { prisma } from '@/lib/db';
 import { sendOrderConfirmationEmail } from '@/lib/email';
 import { verifyRecaptcha } from '@/lib/recaptcha';
 import { isRateLimited, getClientIp } from '@/lib/rateLimit';
+import { weekdayFromDateString } from '@/lib/availabilitySchedule';
+import { getScheduleBookedQuantities } from '@/lib/scheduleAvailabilityActions';
+import type { TicketBreakdownEntry } from '@/types';
 
 // Creates an Order (one payment, one confirmation) containing one or more
 // Bookings — the cart's contents at checkout time. This is the handoff
@@ -34,6 +37,12 @@ export type CheckoutItemInput = {
   pricePerChild: number;
   currency: string;
   travelers: CheckoutTravelerInput[]; // empty when this item's attraction only needs a lead name
+  // Present for a booking made against a real Availability schedule (see
+  // ScheduledBookingFlow) — absent/empty for the legacy demo-calendar flow.
+  // adults/children above already carry the total quantity and blended
+  // price either way; this is the granular per-type detail, used both for
+  // the confirmation snapshot and to re-validate remaining inventory below.
+  ticketBreakdown?: TicketBreakdownEntry[];
 };
 
 export type CreateOrderInput = {
@@ -99,7 +108,8 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
           include: {
             includedItems: { orderBy: { sortOrder: 'asc' } },
             infoItems: { orderBy: { sortOrder: 'asc' } },
-            supplier: { select: { id: true, companyName: true } }
+            supplier: { select: { id: true, companyName: true } },
+            languageSchedules: { include: { slots: true } }
           }
           // supplierContactEmail / supplierContactPhone are plain columns on
           // TicketOption, included automatically — no extra select needed.
@@ -116,6 +126,51 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
       if (!ticketOption || ticketOption.status !== 'published') {
         return { success: false, error: 'One of the items in your cart is no longer available. Please remove it and try again.' };
       }
+    }
+
+    // Re-validate remaining shared inventory for items booked against a real
+    // Availability schedule (see ScheduledBookingFlow) — the modal already
+    // caps quantity pickers at the remaining count it saw when the shopper
+    // picked a slot, but time can pass (or another tab/device can book)
+    // between then and now, so this re-checks against the current numbers
+    // right before the order is written. Best-effort, not fully concurrency-
+    // safe under simultaneous checkouts for the last few seats — a real
+    // atomic hold needs a payment-provider-backed reservation, which (like
+    // the Rezdy availability check above) isn't wired in yet either.
+    const bookedMapCache = new Map<string, Record<string, number>>();
+    const reservedThisOrder = new Map<string, number>(); // key: ticketOptionId|date|time
+    for (const item of input.items) {
+      if (!item.ticketBreakdown || item.ticketBreakdown.length === 0) continue;
+      const ticketOption = ticketOptionById.get(item.ticketOptionId);
+      if (!ticketOption) continue;
+
+      const weekday = weekdayFromDateString(item.bookingDate);
+      const schedule = ticketOption.languageSchedules.find((s) => s.language === item.language);
+      const slot = schedule?.slots.find((sl) => sl.weekday === weekday && sl.time === item.timeSlot);
+      if (!slot) {
+        return {
+          success: false,
+          error: `${item.ticketOptionName} is no longer available at the selected date/time. Please remove it from your cart and pick another slot.`
+        };
+      }
+
+      if (!bookedMapCache.has(item.ticketOptionId)) {
+        bookedMapCache.set(item.ticketOptionId, await getScheduleBookedQuantities(item.ticketOptionId));
+      }
+      const bookedMap = bookedMapCache.get(item.ticketOptionId)!;
+      const key = `${item.ticketOptionId}|${item.bookingDate}|${item.timeSlot}`;
+      const alreadyBooked = bookedMap[`${item.bookingDate}|${item.timeSlot}`] ?? 0;
+      const reservedSoFar = reservedThisOrder.get(key) ?? 0;
+      const requested = item.adults + item.children;
+      const remaining = slot.availability - alreadyBooked - reservedSoFar;
+
+      if (requested > remaining) {
+        return {
+          success: false,
+          error: `Only ${Math.max(0, remaining)} spot${remaining === 1 ? '' : 's'} left for ${item.ticketOptionName} at ${item.timeSlot} on ${item.bookingDate}. Please adjust the quantity in your cart.`
+        };
+      }
+      reservedThisOrder.set(key, reservedSoFar + requested);
     }
 
     const currency = input.items[0]?.currency ?? 'EUR';
@@ -163,6 +218,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
               children: item.children,
               pricePerAdult: item.pricePerAdult,
               pricePerChild: item.pricePerChild,
+              ticketBreakdownJson: item.ticketBreakdown && item.ticketBreakdown.length > 0 ? JSON.stringify(item.ticketBreakdown) : '',
               totalPrice: item.adults * item.pricePerAdult + item.children * item.pricePerChild,
               currency: item.currency,
               status: 'confirmed',

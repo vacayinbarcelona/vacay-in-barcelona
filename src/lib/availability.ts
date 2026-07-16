@@ -14,6 +14,19 @@ export type TimeSlot = {
   popular?: boolean;
 };
 
+// Converts a local Date (e.g. one built by buildMonthGrid, which always
+// constructs plain local calendar dates) into "YYYY-MM-DD" using its local
+// year/month/day parts — NOT `.toISOString()`, which converts to UTC first
+// and can silently roll the date backward by one day in negative-UTC-offset
+// timezones. Used when a locally-selected calendar date needs to become the
+// date key sent to the server/cart.
+export function toDateKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function isPastDate(date: Date): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

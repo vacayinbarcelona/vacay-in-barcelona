@@ -1,23 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  buildMonthGrid,
-  getTimeSlotsForDate,
-  isDateAvailable,
-  MONTH_NAMES,
-  WEEKDAY_LABELS,
-  type TimeSlot
-} from '@/lib/availability';
-import { formatPrice } from '@/lib/format';
-import { useCart } from '@/components/cart/CartProvider';
+import { useState } from 'react';
+import { LegacyBookingFlow } from './LegacyBookingFlow';
+import { ScheduledBookingFlow } from './ScheduledBookingFlow';
 import type { BookingAttractionContext, TicketOptionData } from '@/types';
 
-// Picks date, time, language and traveler count for one ticket, then adds it
-// to the cart — guest details, traveler names (when required) and payment
-// all happen once, together, at /checkout, so adding several tickets from
-// different attractions to one order stays quick.
+// Shared modal chrome (header, close button, "added to cart" screen) —
+// dispatches the actual date/time/ticket picking UI to one of two flows
+// depending on whether this product has real Availability schedule data:
+//   - ScheduledBookingFlow: language -> date range -> weekday -> time slot
+//     (with live remaining capacity) -> per-ticket-type quantities.
+//   - LegacyBookingFlow: the original demo-calendar flow, used as a
+//     fallback for any product that hasn't had a schedule set up yet.
+// Both flows call the same onAdded callback once an item is added to the
+// cart, which is all this component needs to know to render a generic
+// confirmation screen either way.
 type Step = 'select' | 'added';
 
 export function BookingModal({
@@ -30,91 +28,15 @@ export function BookingModal({
   onClose: () => void;
 }) {
   const router = useRouter();
-  const { addItem } = useCart();
-
-  const languageOptions = useMemo(
-    () =>
-      ticket.languages
-        .split(',')
-        .map((l) => l.trim())
-        .filter(Boolean),
-    [ticket.languages]
-  );
-
-  const today = new Date();
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [language, setLanguage] = useState(languageOptions[0] ?? 'English');
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
   const [step, setStep] = useState<Step>('select');
+  const [added, setAdded] = useState<{ title: string; sub: string } | null>(null);
 
-  // Reset date/time/language whenever the shopper switches ticket options
-  // inside the modal, since availability and languages can differ per ticket.
-  useEffect(() => {
-    setSelectedDate(null);
-    setSelectedSlot(null);
-    setLanguage(languageOptions[0] ?? 'English');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket.id]);
+  const hasSchedule = ticket.availabilitySchedules.length > 0;
 
-  const slots = selectedDate ? getTimeSlotsForDate(selectedDate, ticket.price) : [];
-
-  const pricePerAdult = selectedSlot?.price ?? ticket.price;
-  const pricePerChild = Math.round(pricePerAdult * 0.5);
-  const totalPrice = adults * pricePerAdult + children * pricePerChild;
-
-  function changeMonth(delta: number) {
-    let m = viewMonth + delta;
-    let y = viewYear;
-    if (m < 0) {
-      m = 11;
-      y -= 1;
-    }
-    if (m > 11) {
-      m = 0;
-      y += 1;
-    }
-    setViewMonth(m);
-    setViewYear(y);
-    setSelectedDate(null);
-    setSelectedSlot(null);
-  }
-
-  function selectDate(date: Date) {
-    if (!isDateAvailable(date)) return;
-    setSelectedDate(date);
-    setSelectedSlot(null);
-  }
-
-  function handleAddToCart() {
-    if (!selectedDate || !selectedSlot) return;
-
-    addItem({
-      attractionSlug: attraction.slug,
-      attractionName: attraction.name,
-      imageUrl: ticket.imageUrl,
-      imageAlt: ticket.imageAlt,
-      requiresAllTravelerNames: attraction.requiresAllTravelerNames,
-      ticketOptionId: ticket.id,
-      ticketOptionName: ticket.name,
-      date: selectedDate.toISOString().slice(0, 10),
-      timeSlot: selectedSlot.time,
-      language,
-      adults,
-      children,
-      pricePerAdult,
-      pricePerChild,
-      currency: attraction.currency
-    });
-
+  function handleAdded(info: { title: string; sub: string }) {
+    setAdded(info);
     setStep('added');
   }
-
-  const grid = buildMonthGrid(viewYear, viewMonth);
-  const guestsSummary = `${adults} adult${adults !== 1 ? 's' : ''}${children > 0 ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50">
@@ -130,135 +52,16 @@ export function BookingModal({
         </div>
 
         {step === 'select' ? (
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <button type="button" onClick={() => changeMonth(-1)} className="w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50" aria-label="Previous month">
-                &larr;
-              </button>
-              <p className="text-sm font-semibold">
-                {MONTH_NAMES[viewMonth]} {viewYear}
-              </p>
-              <button type="button" onClick={() => changeMonth(1)} className="w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50" aria-label="Next month">
-                &rarr;
-              </button>
-            </div>
-
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-400 mb-1">
-              {WEEKDAY_LABELS.map((w) => (
-                <div key={w}>{w}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1 mb-5">
-              {grid.map((date, i) => {
-                if (!date) return <div key={`pad-${i}`} />;
-                const available = isDateAvailable(date);
-                const isSelected = selectedDate?.toDateString() === date.toDateString();
-                return (
-                  <button
-                    key={date.toISOString()}
-                    type="button"
-                    disabled={!available}
-                    onClick={() => selectDate(date)}
-                    className={`h-9 rounded-lg text-xs font-medium ${
-                      isSelected
-                        ? 'bg-blue-600 text-white'
-                        : available
-                          ? 'hover:bg-blue-50 text-gray-700'
-                          : 'text-gray-300 cursor-not-allowed'
-                    }`}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedDate ? (
-              <div className="mb-5">
-                <p className="text-xs font-medium text-gray-500 mb-2">Available times</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      type="button"
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`flex items-center justify-between border rounded-lg px-3 py-2.5 text-sm ${
-                        selectedSlot?.time === slot.time ? 'border-blue-600 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="font-medium">
-                        {slot.time}
-                        {slot.popular ? <span className="ml-2 text-[10px] text-amber-600 font-semibold">Popular</span> : null}
-                      </span>
-                      <span className="text-gray-500 text-xs">{slot.spotsLeft} spots left</span>
-                      <span className="font-semibold">{formatPrice(slot.price, ticket.currency)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {languageOptions.length > 1 ? (
-              <div className="mb-5">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Language</label>
-                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                  {languageOptions.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-xs font-medium text-gray-500">Travelers</p>
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <span>Adults</span>
-                  <button type="button" onClick={() => setAdults((a) => Math.max(1, a - 1))} className="w-7 h-7 rounded-full border border-gray-300">
-                    &minus;
-                  </button>
-                  <span className="w-4 text-center">{adults}</span>
-                  <button type="button" onClick={() => setAdults((a) => a + 1)} className="w-7 h-7 rounded-full border border-gray-300">
-                    +
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>Children</span>
-                  <button type="button" onClick={() => setChildren((c) => Math.max(0, c - 1))} className="w-7 h-7 rounded-full border border-gray-300">
-                    &minus;
-                  </button>
-                  <span className="w-4 text-center">{children}</span>
-                  <button type="button" onClick={() => setChildren((c) => c + 1)} className="w-7 h-7 rounded-full border border-gray-300">
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-              <div>
-                <p className="text-[11px] text-gray-400">Total</p>
-                <p className="text-lg font-semibold">{formatPrice(totalPrice, ticket.currency)}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={!selectedDate || !selectedSlot}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-medium px-6 py-2.5 rounded-full"
-              >
-                Add to cart
-              </button>
-            </div>
-          </div>
+          hasSchedule ? (
+            <ScheduledBookingFlow attraction={attraction} ticket={ticket} onAdded={handleAdded} />
+          ) : (
+            <LegacyBookingFlow attraction={attraction} ticket={ticket} onAdded={handleAdded} />
+          )
         ) : (
           <div className="p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4 text-xl">✓</div>
-            <p className="text-sm font-semibold mb-1">Added to your cart</p>
-            <p className="text-xs text-gray-500 mb-5">
-              {ticket.name} · {selectedDate?.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} at {selectedSlot?.time} · {guestsSummary}
-            </p>
+            <p className="text-sm font-semibold mb-1">{added?.title}</p>
+            <p className="text-xs text-gray-500 mb-5">{added?.sub}</p>
             <div className="flex items-center justify-center gap-3">
               <button type="button" onClick={onClose} className="border border-gray-300 text-sm font-medium px-5 py-2.5 rounded-full hover:bg-gray-50">
                 Keep browsing

@@ -12,6 +12,19 @@
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 
+// JS's Date.getDay() is 0=Sunday..6=Saturday and is timezone-sensitive when
+// parsed from a string ("2026-08-10" parses as UTC midnight, so a plain
+// `new Date(str).getDay()` can report the *previous* day in negative-UTC-
+// offset timezones). This instead parses the "YYYY-MM-DD" pieces directly
+// and asks for the UTC weekday of that exact calendar date, which is
+// unambiguous regardless of where the code runs — used to match a booked
+// date against the recurring weekday slots in a language schedule.
+const JS_DAY_TO_WEEKDAY: Weekday[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export function weekdayFromDateString(isoDate: string): Weekday {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return JS_DAY_TO_WEEKDAY[new Date(Date.UTC(y, (m || 1) - 1, d || 1)).getUTCDay()];
+}
+
 export const AGE_UNITS = ['years', 'months'] as const;
 export type AgeUnit = (typeof AGE_UNITS)[number];
 

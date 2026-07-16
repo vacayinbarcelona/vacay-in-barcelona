@@ -2,6 +2,8 @@
 // These are intentionally narrower than the full Prisma model — each page
 // selects only the fields it needs and passes that shape down.
 
+import type { LanguageScheduleDraft } from '@/lib/availabilitySchedule';
+
 export type AttractionCardData = {
   slug: string;
   name: string;
@@ -53,6 +55,11 @@ export type TicketOptionData = {
   imageUrl: string;
   imageAlt: string;
   supplierName: string; // empty = house product, otherwise "Sold by <supplierName>"
+  // Real language -> date range -> weekday -> time slot -> ticket type
+  // availability (see availabilitySchedule.ts) — empty array means this
+  // product hasn't had any set up yet, in which case the booking modal falls
+  // back to the demo calendar generator in lib/availability.ts.
+  availabilitySchedules: LanguageScheduleDraft[];
 };
 
 // Passed into the booking modal/provider so it knows which attraction the
@@ -83,9 +90,34 @@ export type CartItem = {
   date: string; // ISO date, e.g. "2026-08-14"
   timeSlot: string;
   language: string;
+  // For a booking made against a real Availability schedule, adults holds
+  // the *total* traveler count across every ticket type and pricePerAdult is
+  // the blended per-traveler price (totalPrice / adults) — children is
+  // always 0 in that case. This keeps every existing adults/children/
+  // pricePerAdult/pricePerChild-based total (cart subtotal, item count,
+  // order total) correct without special-casing schedule vs. non-schedule
+  // items. ticketBreakdown carries the real per-type detail (name, quantity,
+  // price, age range) for display and for checkout's availability
+  // re-validation — absent/empty for the legacy demo-calendar flow.
   adults: number;
   children: number;
   pricePerAdult: number;
   pricePerChild: number;
   currency: string;
+  ticketBreakdown?: TicketBreakdownEntry[];
+};
+
+// One ticket type's quantity within a schedule-based booking — e.g.
+// "Adult x2 at €45". ageFromUnit/ageToUnit are always "years" | "months" (see
+// AgeUnit in availabilitySchedule.ts) but kept as plain strings here since
+// this shape gets serialized to/from JSON (cart localStorage, Booking.
+// ticketBreakdownJson) rather than passed as live typed objects throughout.
+export type TicketBreakdownEntry = {
+  name: string;
+  quantity: number;
+  price: number;
+  ageFromValue: number;
+  ageFromUnit: string;
+  ageToValue: number;
+  ageToUnit: string;
 };

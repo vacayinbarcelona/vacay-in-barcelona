@@ -28,9 +28,12 @@ export default function CartPage() {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => {
             const itemTotal = item.adults * item.pricePerAdult + item.children * item.pricePerChild;
-            const guestsSummary = `${item.adults} adult${item.adults !== 1 ? 's' : ''}${
-              item.children > 0 ? `, ${item.children} child${item.children !== 1 ? 'ren' : ''}` : ''
-            }`;
+            const guestsSummary =
+              item.ticketBreakdown && item.ticketBreakdown.length > 0
+                ? item.ticketBreakdown.map((t) => `${t.name} ×${t.quantity}`).join(', ')
+                : `${item.adults} adult${item.adults !== 1 ? 's' : ''}${
+                    item.children > 0 ? `, ${item.children} child${item.children !== 1 ? 'ren' : ''}` : ''
+                  }`;
             return (
               <div key={item.id} className="flex gap-4 border border-gray-200 rounded-xl p-4">
                 <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
