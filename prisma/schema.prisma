@@ -207,6 +207,17 @@ model TicketOptionLanguageSchedule {
   // any other slot's.
   defaultAvailability Int @default(0)
 
+  // Default ticket-type configuration (Adult/Child/Infant/Senior — show/hide,
+  // age range, price) auto-copied onto every new time slot added under this
+  // language block, so a supplier doesn't have to re-enter the same prices
+  // and age ranges for every departure. JSON array of { name, enabled,
+  // ageFromValue, ageFromUnit, ageToValue, ageToUnit, price } — see
+  // DefaultTicketTypeConfig in availabilitySchedule.ts. Purely a starting
+  // value, same as defaultAvailability above: editing an individual slot's
+  // ticket types afterward (or changing this default later) never touches
+  // any other slot or this default itself.
+  defaultTicketTypesJson String @default("[]")
+
   slots TicketOptionScheduleSlot[]
 
   sortOrder Int @default(0)

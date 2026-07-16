@@ -81,6 +81,65 @@ export type TicketTypeDraft = {
   price: number;
 };
 
+// One of the 4 fixed ticket types (Adult/Child/Infant/Senior) within a
+// language schedule's Default Ticket Configuration — see
+// LanguageScheduleDraft.defaultTicketTypes below. `enabled: false` means
+// that type won't be copied onto newly-created time slots at all (e.g. a
+// supplier who doesn't offer Senior tickets unchecks it and every generated
+// slot simply has no Senior row).
+export type DefaultTicketTypeConfig = {
+  name: string;
+  enabled: boolean;
+  ageFromValue: number;
+  ageFromUnit: AgeUnit;
+  ageToValue: number;
+  ageToUnit: AgeUnit;
+  price: number;
+};
+
+// Starting Default Ticket Configuration for a brand-new language block —
+// all 4 types enabled with the same age-range suggestions as
+// TICKET_TYPE_PRESETS, price 0 (supplier fills in real prices).
+export function defaultTicketTypeConfigs(): DefaultTicketTypeConfig[] {
+  return TICKET_TYPE_PRESETS.map((p) => ({
+    name: p.name,
+    enabled: true,
+    ageFromValue: p.ageFromValue,
+    ageFromUnit: p.ageFromUnit,
+    ageToValue: p.ageToValue,
+    ageToUnit: p.ageToUnit,
+    price: 0
+  }));
+}
+
+// Defensive shape coercion for a Default Ticket Configuration array, shared
+// by both parseAvailabilityJson (client form submission) and
+// dbSchedulesToDraft (stored JSON column) below — always returns exactly
+// the 4 fixed types in TICKET_TYPE_PRESETS order, falling back to the base
+// preset for any type missing or malformed in the input.
+function coerceDefaultTicketTypes(raw: unknown): DefaultTicketTypeConfig[] {
+  const rawArray = Array.isArray(raw) ? raw : [];
+  const byName = new Map<string, Record<string, unknown>>();
+  for (const item of rawArray) {
+    if (item && typeof item === 'object' && typeof (item as Record<string, unknown>).name === 'string') {
+      byName.set((item as Record<string, unknown>).name as string, item as Record<string, unknown>);
+    }
+  }
+  return TICKET_TYPE_PRESETS.map((preset) => {
+    const t = byName.get(preset.name);
+    if (!t) return { ...preset, enabled: true, price: 0 };
+    return {
+      name: preset.name,
+      enabled: typeof t.enabled === 'boolean' ? t.enabled : true,
+      ageFromValue: Number.isFinite(Number(t.ageFromValue)) ? Math.max(0, Math.round(Number(t.ageFromValue))) : preset.ageFromValue,
+      ageFromUnit: AGE_UNITS.includes(t.ageFromUnit as AgeUnit) ? (t.ageFromUnit as AgeUnit) : preset.ageFromUnit,
+      ageToValue: Number.isFinite(Number(t.ageToValue)) ? Math.max(0, Math.round(Number(t.ageToValue))) : preset.ageToValue,
+      ageToUnit: AGE_UNITS.includes(t.ageToUnit as AgeUnit) ? (t.ageToUnit as AgeUnit) : preset.ageToUnit,
+      price: Number.isFinite(Number(t.price)) ? Math.max(0, Number(t.price)) : 0
+    };
+  });
+}
+
 export type SlotDraft = {
   id: string;
   weekday: Weekday;
@@ -103,6 +162,13 @@ export type LanguageScheduleDraft = {
   // only changes that one slot; changing this default afterward does not
   // retroactively touch slots already created.
   defaultAvailability: number;
+  // Required before the supplier can select/add any time slots below —
+  // auto-copied (only the enabled entries) onto every new slot's
+  // ticketTypes. Always exactly the 4 entries in TICKET_TYPE_PRESETS order.
+  // Same non-retroactive rule as defaultAvailability: editing this list, or
+  // editing a slot's own ticket types afterward, never touches anything
+  // else.
+  defaultTicketTypes: DefaultTicketTypeConfig[];
   slots: SlotDraft[];
 };
 
@@ -121,6 +187,7 @@ export type DbLanguageSchedule = {
   dateFrom: Date;
   dateTo: Date;
   defaultAvailability: number;
+  defaultTicketTypesJson: string;
   slots: {
     id: string;
     weekday: string;
@@ -145,6 +212,13 @@ export function dbSchedulesToDraft(schedules: DbLanguageSchedule[]): LanguageSch
     dateFrom: s.dateFrom.toISOString().slice(0, 10),
     dateTo: s.dateTo.toISOString().slice(0, 10),
     defaultAvailability: s.defaultAvailability,
+    defaultTicketTypes: coerceDefaultTicketTypes((() => {
+      try {
+        return JSON.parse(s.defaultTicketTypesJson || '[]');
+      } catch {
+        return [];
+      }
+    })()),
     slots: s.slots.map((sl) => ({
       id: sl.id,
       weekday: (WEEKDAYS.includes(sl.weekday as Weekday) ? sl.weekday : 'Mon') as Weekday,
@@ -173,6 +247,7 @@ export function draftToPrismaCreate(schedules: LanguageScheduleDraft[]) {
     dateFrom: new Date(s.dateFrom),
     dateTo: new Date(s.dateTo),
     defaultAvailability: s.defaultAvailability,
+    defaultTicketTypesJson: JSON.stringify(s.defaultTicketTypes),
     sortOrder: si,
     slots: {
       create: s.slots.map((sl, sli) => ({
@@ -219,6 +294,7 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
     const defaultAvailability = Number.isFinite(Number(schedule.defaultAvailability))
       ? Math.max(0, Math.round(Number(schedule.defaultAvailability)))
       : 0;
+    const defaultTicketTypes = coerceDefaultTicketTypes(schedule.defaultTicketTypes);
     const rawSlots = Array.isArray(schedule.slots) ? schedule.slots : [];
 
     const slots: SlotDraft[] = [];
@@ -258,6 +334,7 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
       dateFrom,
       dateTo,
       defaultAvailability,
+      defaultTicketTypes,
       slots
     });
   }
@@ -277,6 +354,12 @@ export function validateAvailabilitySchedules(schedules: LanguageScheduleDraft[]
     if (schedule.slots.length === 0) return `Select at least one day and time slot for ${schedule.language}.`;
     if (schedule.defaultAvailability <= 0) {
       return `Set a default number of tickets available per time slot for ${schedule.language}.`;
+    }
+    if (!schedule.defaultTicketTypes.some((t) => t.enabled)) {
+      return `Enable at least one default ticket type (Adult, Child, Infant, or Senior) for ${schedule.language}.`;
+    }
+    for (const t of schedule.defaultTicketTypes) {
+      if (t.enabled && t.price < 0) return `${t.name}'s default price can't be negative for ${schedule.language}.`;
     }
     for (const slot of schedule.slots) {
       if (!slot.time) return `Set a time for every slot on ${slot.weekday} (${schedule.language}).`;

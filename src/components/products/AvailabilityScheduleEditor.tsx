@@ -9,13 +9,40 @@ import {
   TICKET_TYPE_PRESETS,
   newDraftId,
   validateAvailabilitySchedules,
+  defaultTicketTypeConfigs,
   type Weekday,
   type AgeUnit,
   type LanguageScheduleDraft,
-  type TicketTypeDraft
+  type TicketTypeDraft,
+  type DefaultTicketTypeConfig
 } from '@/lib/availabilitySchedule';
 
 const TODAY = new Date().toISOString().slice(0, 10);
+
+// Builds a fresh set of TicketTypeDraft rows (own ids, independent copies)
+// from a schedule's enabled Default Ticket Configuration — used to seed
+// every newly-created time slot so it doesn't have to be entered by hand.
+function ticketTypesFromDefaults(defaults: DefaultTicketTypeConfig[]): TicketTypeDraft[] {
+  return defaults
+    .filter((t) => t.enabled)
+    .map((t) => ({
+      id: newDraftId('tt'),
+      name: t.name,
+      ageFromValue: t.ageFromValue,
+      ageFromUnit: t.ageFromUnit,
+      ageToValue: t.ageToValue,
+      ageToUnit: t.ageToUnit,
+      price: t.price
+    }));
+}
+
+function hasEnabledDefaultTicketType(schedule: LanguageScheduleDraft): boolean {
+  return schedule.defaultTicketTypes.some((t) => t.enabled);
+}
+
+function canGenerateSlots(schedule: LanguageScheduleDraft): boolean {
+  return schedule.defaultAvailability > 0 && hasEnabledDefaultTicketType(schedule);
+}
 
 // Language -> date range -> weekday -> time slot -> ticket type editor for
 // a product's Availability section. Keeps its own tree in React state and
@@ -51,8 +78,26 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     const nextLanguage = LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
     setSchedules((prev) => [
       ...prev,
-      { id: newDraftId('lang'), language: nextLanguage, dateFrom: '', dateTo: '', defaultAvailability: 0, slots: [] }
+      {
+        id: newDraftId('lang'),
+        language: nextLanguage,
+        dateFrom: '',
+        dateTo: '',
+        defaultAvailability: 0,
+        defaultTicketTypes: defaultTicketTypeConfigs(),
+        slots: []
+      }
     ]);
+  }
+
+  function patchDefaultTicketType(scheduleId: string, name: string, patch: Partial<DefaultTicketTypeConfig>) {
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId
+          ? { ...s, defaultTicketTypes: s.defaultTicketTypes.map((t) => (t.name === name ? { ...t, ...patch } : t)) }
+          : s
+      )
+    );
   }
 
   function removeLanguage(id: string) {
@@ -69,10 +114,13 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         if (s.id !== scheduleId) return s;
         const hasDay = s.slots.some((sl) => sl.weekday === weekday);
         if (hasDay) return { ...s, slots: s.slots.filter((sl) => sl.weekday !== weekday) };
-        if (s.defaultAvailability <= 0) return s; // required first — see the field above the day toggles
+        if (!canGenerateSlots(s)) return s; // required first — see the fields above the day toggles
         return {
           ...s,
-          slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: [] }]
+          slots: [
+            ...s.slots,
+            { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: ticketTypesFromDefaults(s.defaultTicketTypes) }
+          ]
         };
       })
     );
@@ -81,10 +129,13 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
   function addSlot(scheduleId: string, weekday: Weekday) {
     setSchedules((prev) =>
       prev.map((s) => {
-        if (s.id !== scheduleId || s.defaultAvailability <= 0) return s;
+        if (s.id !== scheduleId || !canGenerateSlots(s)) return s;
         return {
           ...s,
-          slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: [] }]
+          slots: [
+            ...s.slots,
+            { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: ticketTypesFromDefaults(s.defaultTicketTypes) }
+          ]
         };
       })
     );
@@ -223,9 +274,96 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   </span>
                 </label>
 
+                <div className="mb-3">
+                  <p className="text-xs font-medium text-gray-600 mb-1">Default ticket configuration</p>
+                  <p className="text-[11px] text-gray-400 mb-2">
+                    Copied automatically onto every time slot you select below. Uncheck a type your product doesn&rsquo;t offer (e.g.
+                    Senior) and it won&rsquo;t appear on any generated slot. Editing a slot afterward only changes that slot.
+                  </p>
+                  <div className="space-y-1.5">
+                    {schedule.defaultTicketTypes.map((t) => (
+                      <div
+                        key={t.name}
+                        className={`grid grid-cols-[auto_1fr_1fr_1fr] gap-2 items-end border rounded-lg p-2.5 ${
+                          t.enabled ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'
+                        }`}
+                      >
+                        <label className="flex items-center gap-1.5 pb-1.5">
+                          <input
+                            type="checkbox"
+                            checked={t.enabled}
+                            onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { enabled: e.target.checked })}
+                            className="h-4 w-4"
+                          />
+                          <span className="text-xs font-medium w-12">{t.name}</span>
+                        </label>
+                        <label className="block">
+                          <span className="text-[10px] text-gray-500 block mb-0.5">Age from</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              disabled={!t.enabled}
+                              value={t.ageFromValue}
+                              onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageFromValue: Number(e.target.value) })}
+                              className="input text-xs py-1.5 w-14"
+                            />
+                            <select
+                              disabled={!t.enabled}
+                              value={t.ageFromUnit}
+                              onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageFromUnit: e.target.value as AgeUnit })}
+                              className="input text-xs py-1.5"
+                            >
+                              <option value="years">Yrs</option>
+                              <option value="months">Mos</option>
+                            </select>
+                          </div>
+                        </label>
+                        <label className="block">
+                          <span className="text-[10px] text-gray-500 block mb-0.5">Age to</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              disabled={!t.enabled}
+                              value={t.ageToValue}
+                              onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageToValue: Number(e.target.value) })}
+                              className="input text-xs py-1.5 w-14"
+                            />
+                            <select
+                              disabled={!t.enabled}
+                              value={t.ageToUnit}
+                              onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageToUnit: e.target.value as AgeUnit })}
+                              className="input text-xs py-1.5"
+                            >
+                              <option value="years">Yrs</option>
+                              <option value="months">Mos</option>
+                            </select>
+                          </div>
+                        </label>
+                        <label className="block">
+                          <span className="text-[10px] text-gray-500 block mb-0.5">Default price</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            disabled={!t.enabled}
+                            placeholder="0 = Free"
+                            value={t.price}
+                            onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { price: Number(e.target.value) })}
+                            className="input text-xs py-1.5"
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <p className="text-xs font-medium text-gray-600 mb-2">Available days</p>
-                {schedule.defaultAvailability <= 0 ? (
-                  <p className="text-[11px] text-amber-600 mb-2">Set the default tickets available above before selecting days.</p>
+                {!canGenerateSlots(schedule) ? (
+                  <p className="text-[11px] text-amber-600 mb-2">
+                    Set the default tickets available and enable at least one ticket type above before selecting days.
+                  </p>
                 ) : null}
                 <div className="flex flex-wrap gap-2">
                   {WEEKDAYS.map((day) => {
@@ -234,12 +372,12 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                       <button
                         key={day}
                         type="button"
-                        disabled={!active && schedule.defaultAvailability <= 0}
+                        disabled={!active && !canGenerateSlots(schedule)}
                         onClick={() => toggleWeekday(schedule.id, day)}
                         className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${
                           active
                             ? 'bg-blue-600 border-blue-600 text-white'
-                            : schedule.defaultAvailability <= 0
+                            : !canGenerateSlots(schedule)
                               ? 'border-gray-100 text-gray-300 cursor-not-allowed'
                               : 'border-gray-200 text-gray-600 hover:border-gray-300'
                         }`}
@@ -392,7 +530,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                 <button
                   type="button"
                   onClick={() => addSlot(schedule.id, day)}
-                  disabled={schedule.defaultAvailability <= 0}
+                  disabled={!canGenerateSlots(schedule)}
                   className="text-xs text-blue-600 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
                 >
                   + Add another time slot for {day}
