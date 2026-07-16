@@ -255,6 +255,7 @@ export async function addTicketOption(attractionId: string, slug: string, formDa
       affiliateUrl: '',
       affiliateProvider: 'Direct (Rezdy)',
       sortOrder: num(formData, 'sortOrder', 0),
+      meetingPointAddress: str(formData, 'meetingPointAddress'),
       meetingPoint: str(formData, 'meetingPoint'),
       meetingPointImage,
       includedItems: {
@@ -306,6 +307,7 @@ export async function updateTicketOption(id: string, slug: string, formData: For
         groupType: str(formData, 'groupType'),
         badge: str(formData, 'badge'),
         sortOrder: num(formData, 'sortOrder', 0),
+        meetingPointAddress: str(formData, 'meetingPointAddress'),
         meetingPoint: str(formData, 'meetingPoint'),
         meetingPointImage
       }

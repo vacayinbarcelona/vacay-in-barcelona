@@ -14,6 +14,7 @@ export type ProductFormValues = {
   languages: string;
   groupType: string;
   badge: string;
+  meetingPointAddress: string;
   meetingPoint: string;
   meetingPointImage: string;
   supplierContactEmail: string;
@@ -41,6 +42,7 @@ export const EMPTY_PRODUCT_VALUES: ProductFormValues = {
   languages: '',
   groupType: '',
   badge: '',
+  meetingPointAddress: '',
   meetingPoint: '',
   meetingPointImage: '',
   supplierContactEmail: '',
@@ -157,10 +159,13 @@ export function ProductForm({
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <p className="text-sm font-semibold">Meeting point</p>
-        <Field label="Meeting point address / instructions">
+        <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
+          <input name="meetingPointAddress" defaultValue={values.meetingPointAddress} className="input" placeholder="e.g. Carrer de Mallorca 401, Barcelona" />
+        </Field>
+        <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
           <textarea name="meetingPoint" defaultValue={values.meetingPoint} rows={2} className="input" />
         </Field>
-        <Field label="Meeting point photo" hint="Shown to customers after booking, on their confirmation page and email">
+        <Field label="Meeting point image" hint="Shown to customers after booking, on their confirmation page and email">
           {values.meetingPointImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={values.meetingPointImage} alt="" className="mb-2 h-24 w-40 object-cover rounded-lg border border-gray-200" />

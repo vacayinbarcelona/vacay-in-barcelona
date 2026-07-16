@@ -148,10 +148,12 @@ export default async function BookingConfirmationPage({ params }: { params: { re
         // see checkout/actions.ts) rather than read live from the
         // attraction, so this always reflects exactly what the customer
         // was told when they booked this specific ticket.
-        const meetingPoint = booking.meetingPoint || attraction?.address || '';
+        const meetingPointAddress = booking.meetingPointAddress || attraction?.address || '';
+        const meetingPointInstruction = booking.meetingPoint || '';
+        const hasMeetingPointInfo = Boolean(meetingPointAddress || meetingPointInstruction);
         const mapUrl =
           attraction?.mapUrl ||
-          (meetingPoint ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint)}` : '');
+          (meetingPointAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPointAddress)}` : '');
         const includedBullets = booking.includedSnapshot.split('\n').filter(Boolean);
         const notIncludedBullets = booking.notIncludedSnapshot.split('\n').filter(Boolean);
         const beforeYouGoBullets = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
@@ -233,7 +235,7 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                     </div>
                   ) : null}
 
-                  {meetingPoint ? (
+                  {hasMeetingPointInfo ? (
                     <div className="py-4 border-b border-gray-100">
                       <p className="text-xs font-medium text-gray-600 mb-2">Meeting point</p>
                       <div className="flex items-start gap-3 text-sm">
@@ -251,7 +253,10 @@ export default async function BookingConfirmationPage({ params }: { params: { re
                           <IconPin className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
                         )}
                         <div>
-                          <p className="text-gray-700 whitespace-pre-line">{meetingPoint}</p>
+                          {meetingPointAddress ? <p className="text-gray-700 font-medium">{meetingPointAddress}</p> : null}
+                          {meetingPointInstruction ? (
+                            <p className="text-gray-600 whitespace-pre-line mt-0.5">{meetingPointInstruction}</p>
+                          ) : null}
                           {mapUrl ? (
                             <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 font-medium hover:underline">
                               Open in Google Maps

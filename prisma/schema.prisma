@@ -157,8 +157,14 @@ model TicketOption {
   // in the confirmation email (see Booking's snapshot fields below). These
   // are exactly the fields a future Rezdy sync would populate automatically
   // instead of an admin typing them in.
-  meetingPoint      String @default("")
-  meetingPointImage String @default("") // URL/path shown alongside the meeting point on the confirmation page & email
+  // Street address only — fed straight into the Google Maps search link on
+  // the confirmation page/email (see mapUrl in booking-confirmation and
+  // bookingCardHtml in src/lib/email.ts), kept separate from the free-text
+  // instructions below so the map query isn't polluted with directions like
+  // "look for the blue umbrella".
+  meetingPointAddress String @default("")
+  meetingPoint         String @default("") // free-text instructions/directions, shown alongside the address — label reads "Meeting Point Instruction" in the admin/supplier UI
+  meetingPointImage    String @default("") // URL/path shown alongside the meeting point on the confirmation page & email
 
   includedItems TicketIncludedItem[]
   infoItems     TicketInfoItem[]
@@ -377,6 +383,7 @@ model Booking {
   // Rezdy), past customers' confirmations should still show what was true
   // when they booked, not the updated version. Each is newline-separated,
   // one item per line (empty string = nothing to show).
+  meetingPointAddress String @default("")
   meetingPoint        String @default("")
   meetingPointImage   String @default("")
   includedSnapshot    String @default("")

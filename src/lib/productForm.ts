@@ -51,6 +51,7 @@ export type ProductCoreFields = {
   languages: string;
   groupType: string;
   badge: string;
+  meetingPointAddress: string;
   meetingPoint: string;
   supplierContactEmail: string;
   supplierContactPhone: string;
@@ -75,6 +76,7 @@ export function readProductCoreFields(formData: FormData): ProductCoreFields {
     languages: str(formData, 'languages'),
     groupType: str(formData, 'groupType'),
     badge: str(formData, 'badge'),
+    meetingPointAddress: str(formData, 'meetingPointAddress'),
     meetingPoint: str(formData, 'meetingPoint'),
     supplierContactEmail: str(formData, 'supplierContactEmail').toLowerCase(),
     supplierContactPhone: str(formData, 'supplierContactPhone'),

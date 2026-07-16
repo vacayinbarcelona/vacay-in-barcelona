@@ -70,6 +70,7 @@ export default async function EditSupplierProductPage({
     languages: product.languages,
     groupType: product.groupType,
     badge: product.badge,
+    meetingPointAddress: product.meetingPointAddress,
     meetingPoint: product.meetingPoint,
     meetingPointImage: product.meetingPointImage,
     supplierContactEmail: product.supplierContactEmail,

@@ -146,6 +146,7 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
               attractionName: item.attractionName,
               ticketOptionId: item.ticketOptionId,
               ticketOptionName: item.ticketOptionName,
+              meetingPointAddress: ticketOption?.meetingPointAddress ?? '',
               meetingPoint: ticketOption?.meetingPoint ?? '',
               meetingPointImage: ticketOption?.meetingPointImage ?? '',
               supplierId: ticketOption?.supplier?.id ?? '',

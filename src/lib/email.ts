@@ -99,9 +99,11 @@ function labelHtml(text: string): string {
 // booked this specific ticket, regardless of later product edits.
 function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWithImages | undefined, isCancelled: boolean): string {
   const thumbnail = toAbsoluteImageUrl(attraction?.images[0]?.url ?? attraction?.heroImageUrl);
-  const meetingPoint = booking.meetingPoint || attraction?.address || '';
+  const meetingPointAddress = booking.meetingPointAddress || attraction?.address || '';
+  const meetingPointInstruction = booking.meetingPoint || '';
   const mapUrl =
-    attraction?.mapUrl || (meetingPoint ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPoint)}` : '');
+    attraction?.mapUrl ||
+    (meetingPointAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(meetingPointAddress)}` : '');
   const included = booking.includedSnapshot.split('\n').filter(Boolean);
   const notIncluded = booking.notIncludedSnapshot.split('\n').filter(Boolean);
   const beforeYouGo = booking.beforeYouGoSnapshot.split('\n').filter(Boolean);
@@ -125,8 +127,9 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
         `)
       : '';
 
-  const meetingPointHtml = meetingPoint
-    ? sectionDivider(`
+  const meetingPointHtml =
+    meetingPointAddress || meetingPointInstruction
+      ? sectionDivider(`
         ${labelHtml('Meeting point')}
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           <tr>
@@ -136,13 +139,14 @@ function bookingCardHtml(booking: BookingWithTravelers, attraction: AttractionWi
                 : ''
             }
             <td valign="top">
-              <p style="margin:0;font-size:13px;line-height:1.5;color:#374151;white-space:pre-line;">${escapeHtml(meetingPoint)}</p>
+              ${meetingPointAddress ? `<p style="margin:0;font-size:13px;line-height:1.5;font-weight:600;color:#374151;">${escapeHtml(meetingPointAddress)}</p>` : ''}
+              ${meetingPointInstruction ? `<p style="margin:2px 0 0;font-size:13px;line-height:1.5;color:#4b5563;white-space:pre-line;">${escapeHtml(meetingPointInstruction)}</p>` : ''}
               ${mapUrl ? `<a href="${escapeHtml(mapUrl)}" style="font-size:13px;color:#2563eb;font-weight:600;text-decoration:none;">Open in Google Maps &rarr;</a>` : ''}
             </td>
           </tr>
         </table>
       `)
-    : '';
+      : '';
 
   const supplierContactHtml =
     !isCancelled && (booking.supplierContactEmail || booking.supplierContactPhone)

@@ -267,12 +267,20 @@ export default async function EditAttractionPage({
                   <p className="text-[11px] font-medium text-gray-500">
                     Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
                   </p>
-                  <Field label="Meeting point">
+                  <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
+                    <input
+                      name="meetingPointAddress"
+                      defaultValue={ticket.meetingPointAddress}
+                      placeholder="e.g. Carrer de Mallorca 401, Barcelona"
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
                     <textarea
                       name="meetingPoint"
                       defaultValue={ticket.meetingPoint}
                       rows={2}
-                      placeholder="e.g. Main entrance, Carrer de Mallorca 401 — look for the blue umbrella"
+                      placeholder="e.g. Look for the blue umbrella at the main entrance"
                       className="input"
                     />
                   </Field>
@@ -342,8 +350,11 @@ export default async function EditAttractionPage({
             <p className="text-[11px] font-medium text-gray-500">
               Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
             </p>
-            <Field label="Meeting point">
-              <textarea name="meetingPoint" rows={2} placeholder="e.g. Main entrance, Carrer de Mallorca 401" className="input" />
+            <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
+              <input name="meetingPointAddress" placeholder="e.g. Carrer de Mallorca 401, Barcelona" className="input" />
+            </Field>
+            <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
+              <textarea name="meetingPoint" rows={2} placeholder="e.g. Look for the blue umbrella at the main entrance" className="input" />
             </Field>
             <Field label="Meeting point image" hint="Shown next to the meeting point on the confirmation page & email">
               <input type="file" name="meetingPointImageFile" accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
