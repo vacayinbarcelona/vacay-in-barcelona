@@ -76,6 +76,18 @@ export default async function SupplierReviewPage({ params, searchParams }: { par
             <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-0.5">Website</p>
             <p className="truncate">{supplier.website || '—'}</p>
           </div>
+          <div>
+            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-0.5">Tax ID / registration no.</p>
+            <p>{supplier.taxId || '—'}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-0.5">Registered country</p>
+            <p>{supplier.registeredCountry || '—'}</p>
+          </div>
+          <div>
+            <p className="text-[11px] text-gray-400 uppercase tracking-wide mb-0.5">Terms accepted</p>
+            <p>{supplier.termsAcceptedAt ? formatDate(supplier.termsAcceptedAt) : '—'}</p>
+          </div>
         </div>
         {supplier.message ? (
           <div className="pt-3 border-t border-gray-100">

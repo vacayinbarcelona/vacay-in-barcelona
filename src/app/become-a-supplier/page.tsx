@@ -4,12 +4,13 @@ import { SupplierApplicationForm } from '@/components/supplier/SupplierApplicati
 import { submitSupplierApplication } from './actions';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing: 'Please fill in your company name, contact name, email, and select at least one category.',
+  missing: 'Please fill in your company name, contact name, email, tax ID, registered country, and select at least one category.',
   'invalid-email': 'Please enter a valid email address.',
   'rate-limited': "You've submitted a few applications already — please wait a few minutes and try again.",
   captcha: 'Please complete the captcha and try again.',
   'exists-email': 'An application with this email already exists. Contact us if you need to check its status.',
-  'exists-company': 'A supplier with this company name has already applied. Contact us if you need to check its status.'
+  'exists-company': 'A supplier with this company name has already applied. Contact us if you need to check its status.',
+  terms: 'Please confirm you have read the supplier terms & conditions and privacy policy.'
 };
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;

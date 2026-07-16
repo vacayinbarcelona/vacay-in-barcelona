@@ -19,8 +19,11 @@ export async function submitSupplierApplication(formData: FormData) {
     .toLowerCase();
   const phone = String(formData.get('phone') ?? '').trim();
   const website = String(formData.get('website') ?? '').trim();
+  const taxId = String(formData.get('taxId') ?? '').trim();
+  const registeredCountry = String(formData.get('registeredCountry') ?? '').trim();
   const message = String(formData.get('message') ?? '').trim();
   const categoryIds = formData.getAll('categoryIds').map(String).filter(Boolean);
+  const termsAccepted = formData.get('termsAccepted') === 'on';
   const captchaToken = formData.get('g-recaptcha-response') ? String(formData.get('g-recaptcha-response')) : null;
 
   // Honeypot — hidden from real visitors, but simple bots that auto-fill
@@ -30,8 +33,11 @@ export async function submitSupplierApplication(formData: FormData) {
     redirect('/become-a-supplier?submitted=1');
   }
 
-  if (!companyName || !contactName || !email || categoryIds.length === 0) {
+  if (!companyName || !contactName || !email || !taxId || !registeredCountry || categoryIds.length === 0) {
     redirect('/become-a-supplier?error=missing');
+  }
+  if (!termsAccepted) {
+    redirect('/become-a-supplier?error=terms');
   }
   if (!EMAIL_PATTERN.test(email)) {
     redirect('/become-a-supplier?error=invalid-email');
@@ -76,8 +82,11 @@ export async function submitSupplierApplication(formData: FormData) {
       email,
       phone,
       website,
+      taxId,
+      registeredCountry,
       message,
       status: 'pending',
+      termsAcceptedAt: new Date(),
       categories: { create: validIds.map((attractionId) => ({ attractionId })) }
     }
   });

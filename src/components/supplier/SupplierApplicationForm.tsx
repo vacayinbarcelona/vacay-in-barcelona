@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { RecaptchaWidget } from '@/components/auth/RecaptchaWidget';
 
 // Same validation conventions used across the site (checkout, sign-up):
@@ -238,13 +239,19 @@ export function SupplierApplicationForm({
   // it regardless of which one was actually picked.
   const [selectedCountry, setSelectedCountry] = useState('Spain');
   const [phone, setPhone] = useState('');
+  const [taxId, setTaxId] = useState('');
+  const [registeredCountry, setRegisteredCountry] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [companyTouched, setCompanyTouched] = useState(false);
   const [contactTouched, setContactTouched] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const [taxIdTouched, setTaxIdTouched] = useState(false);
+  const [registeredCountryTouched, setRegisteredCountryTouched] = useState(false);
   const [categoriesTouched, setCategoriesTouched] = useState(false);
+  const [termsTouched, setTermsTouched] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
 
   const companyError = !companyName.trim() ? 'Please enter your company name.' : null;
@@ -255,6 +262,8 @@ export function SupplierApplicationForm({
       ? 'Please enter a valid email address.'
       : null;
   const phoneError = phone.trim() && !isValidPhone(phone) ? 'Please enter a valid phone number.' : null;
+  const taxIdError = !taxId.trim() ? 'Please enter your company tax ID / registration number.' : null;
+  const registeredCountryError = !registeredCountry ? 'Please select where your company is registered.' : null;
   const countryCode = COUNTRY_CODES.find((c) => c.name === selectedCountry)?.code ?? '+34';
 
   function toggleCategory(id: string) {
@@ -266,9 +275,12 @@ export function SupplierApplicationForm({
     setContactTouched(true);
     setEmailTouched(true);
     setPhoneTouched(true);
+    setTaxIdTouched(true);
+    setRegisteredCountryTouched(true);
     setCategoriesTouched(true);
+    setTermsTouched(true);
 
-    if (companyError || contactError || emailError || phoneError) {
+    if (companyError || contactError || emailError || phoneError || taxIdError || registeredCountryError) {
       e.preventDefault();
       setClientError('Please fix the highlighted fields below.');
       return;
@@ -276,6 +288,11 @@ export function SupplierApplicationForm({
     if (selectedCategories.length === 0) {
       e.preventDefault();
       setClientError('Please select at least one category.');
+      return;
+    }
+    if (!termsAccepted) {
+      e.preventDefault();
+      setClientError('Please confirm you have read the supplier terms & conditions and privacy policy.');
       return;
     }
     setClientError(null);
@@ -360,6 +377,41 @@ export function SupplierApplicationForm({
           </div>
           {phoneTouched && phoneError ? <p className="text-[11px] text-red-600 mt-1">{phoneError}</p> : null}
         </div>
+        <div>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Company tax ID / registration no.</label>
+          <input
+            name="taxId"
+            required
+            value={taxId}
+            onChange={(e) => setTaxId(e.target.value)}
+            onBlur={() => setTaxIdTouched(true)}
+            className={`input ${taxIdTouched && taxIdError ? 'border-red-400 focus:border-red-400' : ''}`}
+          />
+          {taxIdTouched && taxIdError ? <p className="text-[11px] text-red-600 mt-1">{taxIdError}</p> : null}
+        </div>
+        <div>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Country where company is registered</label>
+          <select
+            name="registeredCountry"
+            required
+            value={registeredCountry}
+            onChange={(e) => setRegisteredCountry(e.target.value)}
+            onBlur={() => setRegisteredCountryTouched(true)}
+            className={`input ${registeredCountryTouched && registeredCountryError ? 'border-red-400 focus:border-red-400' : ''}`}
+          >
+            <option value="" disabled>
+              Select a country&hellip;
+            </option>
+            {COUNTRY_CODES.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {registeredCountryTouched && registeredCountryError ? (
+            <p className="text-[11px] text-red-600 mt-1">{registeredCountryError}</p>
+          ) : null}
+        </div>
         <div className="sm:col-span-2">
           <label className="text-xs font-medium text-gray-600 mb-1 block">
             Website / social profile <span className="font-normal text-gray-400">(optional)</span>
@@ -403,6 +455,33 @@ export function SupplierApplicationForm({
           className="input"
           placeholder="What tickets/tours do you offer, and what makes them worth listing?"
         />
+      </div>
+
+      <div>
+        <label className="flex items-start gap-2.5 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="termsAccepted"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            onBlur={() => setTermsTouched(true)}
+            className="h-4 w-4 mt-0.5"
+          />
+          <span>
+            I have read the{' '}
+            <Link href="/terms-conditions" target="_blank" className="text-blue-600 font-medium">
+              supplier terms &amp; conditions
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy-policy" target="_blank" className="text-blue-600 font-medium">
+              privacy policy
+            </Link>
+            .
+          </span>
+        </label>
+        {termsTouched && !termsAccepted ? (
+          <p className="text-[11px] text-red-600 mt-1">Please confirm you have read the supplier terms & conditions and privacy policy.</p>
+        ) : null}
       </div>
 
       {recaptchaSiteKey ? <RecaptchaWidget siteKey={recaptchaSiteKey} /> : null}

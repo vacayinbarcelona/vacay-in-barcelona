@@ -438,9 +438,20 @@ model Supplier {
   phone       String @default("")
   website     String @default("")
 
+  // Business verification details, collected on the application form.
+  taxId             String @default("") // company tax ID / business registration number
+  registeredCountry String @default("") // country where the company is legally registered
+
   // Why they want to join / what they offer — filled in on the application
   // form, shown to the Master Admin on the review page.
   message String @default("")
+
+  // Set when the applicant checks "I have read the supplier terms &
+  // conditions and privacy policy" — required to submit the form (see
+  // submitSupplierApplication in src/app/become-a-supplier/actions.ts).
+  // Timestamped rather than a plain boolean so there's a record of *when*
+  // they agreed, not just that they did.
+  termsAcceptedAt DateTime?
 
   // pending (just applied) -> approved | rejected, set by the Master Admin.
   // An approved supplier can later be disabled (blocks login + hides every
