@@ -97,6 +97,12 @@ export type LanguageScheduleDraft = {
   language: string;
   dateFrom: string; // "YYYY-MM-DD"
   dateTo: string;
+  // Required before the supplier can select/add any time slots below — every
+  // new slot starts with this many shared tickets available (see
+  // SlotDraft.availability). Editing a slot's own availability afterward
+  // only changes that one slot; changing this default afterward does not
+  // retroactively touch slots already created.
+  defaultAvailability: number;
   slots: SlotDraft[];
 };
 
@@ -114,6 +120,7 @@ export type DbLanguageSchedule = {
   language: string;
   dateFrom: Date;
   dateTo: Date;
+  defaultAvailability: number;
   slots: {
     id: string;
     weekday: string;
@@ -137,6 +144,7 @@ export function dbSchedulesToDraft(schedules: DbLanguageSchedule[]): LanguageSch
     language: s.language,
     dateFrom: s.dateFrom.toISOString().slice(0, 10),
     dateTo: s.dateTo.toISOString().slice(0, 10),
+    defaultAvailability: s.defaultAvailability,
     slots: s.slots.map((sl) => ({
       id: sl.id,
       weekday: (WEEKDAYS.includes(sl.weekday as Weekday) ? sl.weekday : 'Mon') as Weekday,
@@ -164,6 +172,7 @@ export function draftToPrismaCreate(schedules: LanguageScheduleDraft[]) {
     language: s.language,
     dateFrom: new Date(s.dateFrom),
     dateTo: new Date(s.dateTo),
+    defaultAvailability: s.defaultAvailability,
     sortOrder: si,
     slots: {
       create: s.slots.map((sl, sli) => ({
@@ -207,6 +216,9 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
     const language = typeof schedule.language === 'string' ? schedule.language.trim() : '';
     const dateFrom = typeof schedule.dateFrom === 'string' ? schedule.dateFrom : '';
     const dateTo = typeof schedule.dateTo === 'string' ? schedule.dateTo : '';
+    const defaultAvailability = Number.isFinite(Number(schedule.defaultAvailability))
+      ? Math.max(0, Math.round(Number(schedule.defaultAvailability)))
+      : 0;
     const rawSlots = Array.isArray(schedule.slots) ? schedule.slots : [];
 
     const slots: SlotDraft[] = [];
@@ -240,7 +252,14 @@ export function parseAvailabilityJson(raw: string): LanguageScheduleDraft[] {
     }
 
     if (!language || !dateFrom || !dateTo) continue;
-    schedules.push({ id: typeof schedule.id === 'string' ? schedule.id : newDraftId('lang'), language, dateFrom, dateTo, slots });
+    schedules.push({
+      id: typeof schedule.id === 'string' ? schedule.id : newDraftId('lang'),
+      language,
+      dateFrom,
+      dateTo,
+      defaultAvailability,
+      slots
+    });
   }
 
   return schedules;
@@ -256,6 +275,9 @@ export function validateAvailabilitySchedules(schedules: LanguageScheduleDraft[]
     if (!schedule.dateFrom || !schedule.dateTo) return `Set both a From and To date for ${schedule.language}.`;
     if (schedule.dateFrom > schedule.dateTo) return `${schedule.language}'s To date must be on or after its From date.`;
     if (schedule.slots.length === 0) return `Select at least one day and time slot for ${schedule.language}.`;
+    if (schedule.defaultAvailability <= 0) {
+      return `Set a default number of tickets available per time slot for ${schedule.language}.`;
+    }
     for (const slot of schedule.slots) {
       if (!slot.time) return `Set a time for every slot on ${slot.weekday} (${schedule.language}).`;
       if (slot.availability < 0) return `Total availability can't be negative (${slot.weekday} ${slot.time}, ${schedule.language}).`;

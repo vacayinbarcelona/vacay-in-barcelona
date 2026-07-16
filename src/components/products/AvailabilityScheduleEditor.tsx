@@ -49,7 +49,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
   function addLanguage() {
     const used = new Set(schedules.map((s) => s.language));
     const nextLanguage = LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
-    setSchedules((prev) => [...prev, { id: newDraftId('lang'), language: nextLanguage, dateFrom: '', dateTo: '', slots: [] }]);
+    setSchedules((prev) => [
+      ...prev,
+      { id: newDraftId('lang'), language: nextLanguage, dateFrom: '', dateTo: '', defaultAvailability: 0, slots: [] }
+    ]);
   }
 
   function removeLanguage(id: string) {
@@ -66,18 +69,24 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
         if (s.id !== scheduleId) return s;
         const hasDay = s.slots.some((sl) => sl.weekday === weekday);
         if (hasDay) return { ...s, slots: s.slots.filter((sl) => sl.weekday !== weekday) };
-        return { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: 20, ticketTypes: [] }] };
+        if (s.defaultAvailability <= 0) return s; // required first — see the field above the day toggles
+        return {
+          ...s,
+          slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: [] }]
+        };
       })
     );
   }
 
   function addSlot(scheduleId: string, weekday: Weekday) {
     setSchedules((prev) =>
-      prev.map((s) =>
-        s.id === scheduleId
-          ? { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: 20, ticketTypes: [] }] }
-          : s
-      )
+      prev.map((s) => {
+        if (s.id !== scheduleId || s.defaultAvailability <= 0) return s;
+        return {
+          ...s,
+          slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', availability: s.defaultAvailability, ticketTypes: [] }]
+        };
+      })
     );
   }
 
@@ -198,7 +207,26 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
 
             {schedule.dateFrom && schedule.dateTo ? (
               <div>
+                <label className="block mb-3">
+                  <span className="text-xs font-medium text-gray-600 mb-1 block">Default number of tickets available per time slot</span>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 30"
+                    value={schedule.defaultAvailability || ''}
+                    onChange={(e) => patchLanguage(schedule.id, { defaultAvailability: Math.max(0, Number(e.target.value) || 0) })}
+                    className="input w-32"
+                  />
+                  <span className="text-[11px] text-gray-400 mt-1 block">
+                    Applied automatically to every time slot you select below — you can still raise or lower any individual slot
+                    afterward without affecting the others.
+                  </span>
+                </label>
+
                 <p className="text-xs font-medium text-gray-600 mb-2">Available days</p>
+                {schedule.defaultAvailability <= 0 ? (
+                  <p className="text-[11px] text-amber-600 mb-2">Set the default tickets available above before selecting days.</p>
+                ) : null}
                 <div className="flex flex-wrap gap-2">
                   {WEEKDAYS.map((day) => {
                     const active = schedule.slots.some((sl) => sl.weekday === day);
@@ -206,9 +234,14 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                       <button
                         key={day}
                         type="button"
+                        disabled={!active && schedule.defaultAvailability <= 0}
                         onClick={() => toggleWeekday(schedule.id, day)}
                         className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${
-                          active ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          active
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : schedule.defaultAvailability <= 0
+                              ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
                         }`}
                       >
                         {day}
@@ -356,7 +389,12 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                     </div>
                   ))}
 
-                <button type="button" onClick={() => addSlot(schedule.id, day)} className="text-xs text-blue-600 font-medium">
+                <button
+                  type="button"
+                  onClick={() => addSlot(schedule.id, day)}
+                  disabled={schedule.defaultAvailability <= 0}
+                  className="text-xs text-blue-600 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
+                >
                   + Add another time slot for {day}
                 </button>
               </div>

@@ -198,6 +198,15 @@ model TicketOptionLanguageSchedule {
   dateFrom DateTime
   dateTo   DateTime
 
+  // Default shared inventory auto-assigned to every new time slot added
+  // under this language block (see TicketOptionScheduleSlot.availability) —
+  // required in the editor before a supplier can select/add any time slots,
+  // so every slot starts with a sensible number instead of an arbitrary
+  // hardcoded default. Purely a starting value: editing an individual
+  // slot's availability afterward only changes that slot, never this one or
+  // any other slot's.
+  defaultAvailability Int @default(0)
+
   slots TicketOptionScheduleSlot[]
 
   sortOrder Int @default(0)
