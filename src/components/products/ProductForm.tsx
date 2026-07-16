@@ -1,5 +1,6 @@
 import { WEEKDAYS } from '@/lib/productForm';
 import { SupplierContactFields } from './SupplierContactFields';
+import { AddressAutocompleteInput } from './AddressAutocompleteInput';
 
 export type ProductFormValues = {
   attractionId: string;
@@ -159,8 +160,8 @@ export function ProductForm({
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <p className="text-sm font-semibold">Meeting point</p>
-        <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
-          <input name="meetingPointAddress" defaultValue={values.meetingPointAddress} className="input" placeholder="e.g. Carrer de Mallorca 401, Barcelona" />
+        <Field label="Meeting Point Address" hint="Start typing a place or address — pick a suggestion to fill it in.">
+          <AddressAutocompleteInput name="meetingPointAddress" defaultValue={values.meetingPointAddress} placeholder="e.g. Park Güell, Barcelona" />
         </Field>
         <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
           <textarea name="meetingPoint" defaultValue={values.meetingPoint} rows={2} className="input" />

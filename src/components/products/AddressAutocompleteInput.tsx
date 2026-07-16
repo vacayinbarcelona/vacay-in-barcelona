@@ -1,0 +1,87 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { loadGoogleMapsPlaces } from '@/lib/googleMaps';
+
+// Biases (doesn't hard-restrict) suggestions toward Barcelona, since that's
+// where every current supplier operates — a rough bounding box around the
+// city. A supplier could still type/select an address outside it if needed.
+const BARCELONA_BOUNDS = { north: 41.47, south: 41.32, east: 2.23, west: 2.05 };
+
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+// Google Places Autocomplete attached to a plain text input — used for the
+// "Meeting Point Address" field so typing e.g. "park guell" offers the real
+// place, and picking it fills in the full formatted address that then feeds
+// the Google Maps link on the booking confirmation page/email (see
+// meetingPointAddress in booking-confirmation and src/lib/email.ts).
+//
+// Degrades to a normal text input with no suggestions if
+// NEXT_PUBLIC_GOOGLE_MAPS_API_KEY isn't set — nothing breaks, it just won't
+// autocomplete. See .env.example for how to add the key.
+export function AddressAutocompleteInput({
+  name,
+  defaultValue = '',
+  placeholder,
+  className = 'input'
+}: {
+  name: string;
+  defaultValue?: string;
+  placeholder?: string;
+  className?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!API_KEY || !inputRef.current) return;
+
+    let cancelled = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let autocomplete: any;
+
+    loadGoogleMapsPlaces(API_KEY)
+      .then(() => {
+        if (cancelled || !inputRef.current) return;
+        const w = window as unknown as { google?: any };
+        if (!w.google?.maps?.places) return;
+
+        autocomplete = new w.google.maps.places.Autocomplete(inputRef.current, {
+          fields: ['formatted_address', 'name'],
+          bounds: BARCELONA_BOUNDS
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          const value = place?.formatted_address || place?.name;
+          if (value && inputRef.current) {
+            inputRef.current.value = value;
+          }
+        });
+      })
+      .catch(() => {
+        // Silent — the field just stays a plain text input if the script
+        // fails to load (e.g. bad/missing key, offline, ad blocker).
+      });
+
+    return () => {
+      cancelled = true;
+      const w = window as unknown as { google?: any };
+      if (autocomplete && w.google?.maps?.event) {
+        w.google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, []);
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      name={name}
+      defaultValue={defaultValue}
+      placeholder={placeholder}
+      className={className}
+      autoComplete="off"
+    />
+  );
+}

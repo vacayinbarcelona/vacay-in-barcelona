@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { DeleteButton } from '@/components/admin/DeleteButton';
 import { SavedToast } from '@/components/admin/SavedToast';
+import { AddressAutocompleteInput } from '@/components/products/AddressAutocompleteInput';
 import {
   updateAttraction,
   deleteAttraction,
@@ -267,12 +268,11 @@ export default async function EditAttractionPage({
                   <p className="text-[11px] font-medium text-gray-500">
                     Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
                   </p>
-                  <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
-                    <input
+                  <Field label="Meeting Point Address" hint="Start typing a place or address — pick a suggestion to fill it in.">
+                    <AddressAutocompleteInput
                       name="meetingPointAddress"
                       defaultValue={ticket.meetingPointAddress}
-                      placeholder="e.g. Carrer de Mallorca 401, Barcelona"
-                      className="input"
+                      placeholder="e.g. Park Güell, Barcelona"
                     />
                   </Field>
                   <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
@@ -350,8 +350,8 @@ export default async function EditAttractionPage({
             <p className="text-[11px] font-medium text-gray-500">
               Product-specific details — shown only after booking (confirmation page &amp; email), never on the public page
             </p>
-            <Field label="Meeting Point Address" hint="Full street address — used to generate the Google Maps link shown to customers.">
-              <input name="meetingPointAddress" placeholder="e.g. Carrer de Mallorca 401, Barcelona" className="input" />
+            <Field label="Meeting Point Address" hint="Start typing a place or address — pick a suggestion to fill it in.">
+              <AddressAutocompleteInput name="meetingPointAddress" placeholder="e.g. Park Güell, Barcelona" />
             </Field>
             <Field label="Meeting Point Instruction" hint="Directions or details beyond the address, e.g. 'Look for the blue umbrella'">
               <textarea name="meetingPoint" rows={2} placeholder="e.g. Look for the blue umbrella at the main entrance" className="input" />
