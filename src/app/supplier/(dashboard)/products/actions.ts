@@ -44,6 +44,20 @@ function assertContactInfo(core: { supplierContactEmail: string; supplierContact
   }
 }
 
+// Badge (homepage/listing ribbon) and sort order (cross-attraction display
+// order) are Master-Admin-only merchandising controls — ProductForm hides
+// them on the supplier panel, but that's just UI. This strips them out of
+// the parsed form fields here too, so a crafted request that includes them
+// anyway can't set them, and so re-saving an existing product (which no
+// longer submits these fields at all) doesn't wipe out whatever the Master
+// Admin previously set.
+function omitAdminOnlyFields<T extends { badge: string; sortOrder: number }>(core: T): Omit<T, 'badge' | 'sortOrder'> {
+  const { badge, sortOrder, ...rest } = core;
+  void badge;
+  void sortOrder;
+  return rest;
+}
+
 export async function createSupplierProductAction(formData: FormData) {
   const supplier = await requireSupplier();
 
@@ -88,7 +102,7 @@ export async function createSupplierProductAction(formData: FormData) {
       status: 'pending_review',
       affiliateUrl: '',
       affiliateProvider: `Supplier: ${supplier.companyName}`,
-      ...core,
+      ...omitAdminOnlyFields(core),
       meetingPointImage,
       includedItems: {
         create: [
@@ -142,7 +156,7 @@ export async function updateSupplierProductAction(id: string, formData: FormData
       where: { id },
       data: {
         attractionId,
-        ...core,
+        ...omitAdminOnlyFields(core),
         meetingPointImage,
         // Any supplier edit needs a fresh look from the Master Admin —
         // publishing/keeping-published is their call, not the supplier's.

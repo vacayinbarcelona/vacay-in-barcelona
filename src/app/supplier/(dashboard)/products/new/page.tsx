@@ -44,6 +44,7 @@ export default async function NewSupplierProductPage({ searchParams }: { searchP
           errorMessage={errorMessage}
           showInitialPhotoUpload
           requireContactInfo
+          showBadgeAndSortOrder={false}
         />
       )}
     </div>

@@ -141,6 +141,7 @@ export default async function EditSupplierProductPage({
         values={values}
         errorMessage={errorMessage}
         requireContactInfo
+        showBadgeAndSortOrder={false}
       />
 
       <div className="mt-6 pt-6 border-t border-gray-200">

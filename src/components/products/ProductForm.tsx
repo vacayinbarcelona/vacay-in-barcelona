@@ -73,7 +73,8 @@ export function ProductForm({
   errorMessage,
   showInitialPhotoUpload = false,
   lockCategory = false,
-  requireContactInfo = false
+  requireContactInfo = false,
+  showBadgeAndSortOrder = true
 }: {
   action: (formData: FormData) => void | Promise<void>;
   submitLabel: string;
@@ -86,6 +87,13 @@ export function ProductForm({
   // the product (so customers always have a direct contact), but stay
   // optional for the Master Admin's own house products.
   requireContactInfo?: boolean;
+  // Badge (homepage/listing ribbon) and sort order (cross-attraction display
+  // order) are merchandising controls reserved for the Master Admin — a
+  // supplier shouldn't be able to badge their own product "Best seller" or
+  // reorder it ahead of others. False on the supplier panel; the fields are
+  // also stripped server-side in supplier/products/actions.ts, not just
+  // hidden here.
+  showBadgeAndSortOrder?: boolean;
 }) {
   const selectedDays = new Set(values.availableDays.split(',').filter(Boolean));
 
@@ -223,14 +231,20 @@ export function ProductForm({
             <input name="groupType" defaultValue={values.groupType} className="input" />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        {showBadgeAndSortOrder ? (
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Languages" hint="Comma-separated">
+              <input name="languages" defaultValue={values.languages} className="input" />
+            </Field>
+            <Field label="Badge" hint="Optional — e.g. 'Best seller'">
+              <input name="badge" defaultValue={values.badge} className="input" />
+            </Field>
+          </div>
+        ) : (
           <Field label="Languages" hint="Comma-separated">
             <input name="languages" defaultValue={values.languages} className="input" />
           </Field>
-          <Field label="Badge" hint="Optional — e.g. 'Best seller'">
-            <input name="badge" defaultValue={values.badge} className="input" />
-          </Field>
-        </div>
+        )}
         <div className="flex flex-wrap gap-5 pt-1">
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" name="freeCancellation" defaultChecked={values.freeCancellation} className="h-4 w-4" />
@@ -245,9 +259,11 @@ export function ProductForm({
             Instant confirmation
           </label>
         </div>
-        <Field label="Sort order" hint="Tie-breaker only — lower shows first">
-          <input type="number" name="sortOrder" defaultValue={values.sortOrder} className="input" />
-        </Field>
+        {showBadgeAndSortOrder ? (
+          <Field label="Sort order" hint="Tie-breaker only — lower shows first">
+            <input type="number" name="sortOrder" defaultValue={values.sortOrder} className="input" />
+          </Field>
+        ) : null}
       </div>
 
       <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg">
