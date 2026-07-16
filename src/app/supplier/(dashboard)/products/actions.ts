@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getCurrentSupplier } from '@/lib/supplierAuth';
 import { uploadImageFile, hasUploadedFile } from '@/lib/upload';
-import { readProductCoreFields, lines, EMAIL_PATTERN } from '@/lib/productForm';
+import { readProductCoreFields, lines, str, EMAIL_PATTERN } from '@/lib/productForm';
+import { parseAvailabilityJson, validateAvailabilitySchedules, draftToPrismaCreate } from '@/lib/availabilitySchedule';
 
 // Product CRUD for the supplier panel — every create/edit here is scoped to
 // the signed-in supplier's own products, and only within categories they've
@@ -73,6 +74,10 @@ export async function createSupplierProductAction(formData: FormData) {
   if (!core.name) redirect('/supplier/products/new?error=missing');
   assertContactInfo(core, '/supplier/products/new');
 
+  const availabilitySchedules = parseAvailabilityJson(str(formData, 'availabilityJson'));
+  const availabilityError = validateAvailabilitySchedules(availabilitySchedules);
+  if (availabilityError) redirect(`/supplier/products/new?error=${encodeURIComponent(availabilityError)}`);
+
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
   const beforeYouGo = lines(formData, 'beforeYouGo');
@@ -111,7 +116,8 @@ export async function createSupplierProductAction(formData: FormData) {
         ]
       },
       infoItems: { create: beforeYouGo.map((text, i) => ({ text, sortOrder: i })) },
-      images: photoUrl ? { create: [{ url: photoUrl, sortOrder: 0 }] } : undefined
+      images: photoUrl ? { create: [{ url: photoUrl, sortOrder: 0 }] } : undefined,
+      languageSchedules: { create: draftToPrismaCreate(availabilitySchedules) }
     }
   });
 
@@ -138,6 +144,10 @@ export async function updateSupplierProductAction(id: string, formData: FormData
   if (!core.name) redirect(`/supplier/products/${id}?error=missing`);
   assertContactInfo(core, `/supplier/products/${id}`);
 
+  const availabilitySchedules = parseAvailabilityJson(str(formData, 'availabilityJson'));
+  const availabilityError = validateAvailabilitySchedules(availabilitySchedules);
+  if (availabilityError) redirect(`/supplier/products/${id}?error=${encodeURIComponent(availabilityError)}`);
+
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
   const beforeYouGo = lines(formData, 'beforeYouGo');
@@ -152,12 +162,14 @@ export async function updateSupplierProductAction(id: string, formData: FormData
   }
 
   await prisma.$transaction([
+    prisma.ticketOptionLanguageSchedule.deleteMany({ where: { ticketOptionId: id } }),
     prisma.ticketOption.update({
       where: { id },
       data: {
         attractionId,
         ...omitAdminOnlyFields(core),
         meetingPointImage,
+        languageSchedules: { create: draftToPrismaCreate(availabilitySchedules) },
         // Any supplier edit needs a fresh look from the Master Admin —
         // publishing/keeping-published is their call, not the supplier's.
         status: 'pending_review',

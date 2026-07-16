@@ -1,0 +1,366 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { formatTime12h } from '@/lib/format';
+import {
+  WEEKDAYS,
+  LANGUAGES,
+  TIME_OPTIONS,
+  TICKET_TYPE_PRESETS,
+  newDraftId,
+  validateAvailabilitySchedules,
+  type Weekday,
+  type AgeUnit,
+  type LanguageScheduleDraft,
+  type TicketTypeDraft
+} from '@/lib/availabilitySchedule';
+
+const TODAY = new Date().toISOString().slice(0, 10);
+
+// Language -> date range -> weekday -> time slot -> ticket type editor for
+// a product's Availability section. Keeps its own tree in React state and
+// serializes it into a hidden `availabilityJson` field on submit (see
+// src/lib/availabilitySchedule.ts for the shared shape/parsing, used by
+// both this component and the admin/supplier server actions). Validates on
+// its closest <form>'s submit event — see the effect below — so it can
+// block an incomplete save without ProductForm itself needing to know
+// anything about this structure.
+export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedules: LanguageScheduleDraft[] }) {
+  const [schedules, setSchedules] = useState<LanguageScheduleDraft[]>(initialSchedules);
+  const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const form = containerRef.current?.closest('form');
+    if (!form) return;
+    function handleSubmit(e: Event) {
+      const err = validateAvailabilitySchedules(schedules);
+      if (err) {
+        e.preventDefault();
+        setError(err);
+      } else {
+        setError(null);
+      }
+    }
+    form.addEventListener('submit', handleSubmit);
+    return () => form.removeEventListener('submit', handleSubmit);
+  }, [schedules]);
+
+  function addLanguage() {
+    const used = new Set(schedules.map((s) => s.language));
+    const nextLanguage = LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
+    setSchedules((prev) => [...prev, { id: newDraftId('lang'), language: nextLanguage, dateFrom: '', dateTo: '', slots: [] }]);
+  }
+
+  function removeLanguage(id: string) {
+    setSchedules((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function patchLanguage(id: string, patch: Partial<LanguageScheduleDraft>) {
+    setSchedules((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  }
+
+  function toggleWeekday(scheduleId: string, weekday: Weekday) {
+    setSchedules((prev) =>
+      prev.map((s) => {
+        if (s.id !== scheduleId) return s;
+        const hasDay = s.slots.some((sl) => sl.weekday === weekday);
+        if (hasDay) return { ...s, slots: s.slots.filter((sl) => sl.weekday !== weekday) };
+        return { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', ticketTypes: [] }] };
+      })
+    );
+  }
+
+  function addSlot(scheduleId: string, weekday: Weekday) {
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId ? { ...s, slots: [...s.slots, { id: newDraftId('slot'), weekday, time: '09:00', ticketTypes: [] }] } : s
+      )
+    );
+  }
+
+  function removeSlot(scheduleId: string, slotId: string) {
+    setSchedules((prev) => prev.map((s) => (s.id === scheduleId ? { ...s, slots: s.slots.filter((sl) => sl.id !== slotId) } : s)));
+  }
+
+  function patchSlotTime(scheduleId: string, slotId: string, time: string) {
+    setSchedules((prev) =>
+      prev.map((s) => (s.id === scheduleId ? { ...s, slots: s.slots.map((sl) => (sl.id === slotId ? { ...sl, time } : sl)) } : s))
+    );
+  }
+
+  function addTicketType(scheduleId: string, slotId: string, preset?: (typeof TICKET_TYPE_PRESETS)[number]) {
+    const draft: TicketTypeDraft = preset
+      ? { id: newDraftId('tt'), name: preset.name, ageFromValue: preset.ageFromValue, ageFromUnit: preset.ageFromUnit, ageToValue: preset.ageToValue, ageToUnit: preset.ageToUnit, price: 0, availability: 10 }
+      : { id: newDraftId('tt'), name: '', ageFromValue: 0, ageFromUnit: 'years', ageToValue: 0, ageToUnit: 'years', price: 0, availability: 10 };
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId
+          ? { ...s, slots: s.slots.map((sl) => (sl.id === slotId ? { ...sl, ticketTypes: [...sl.ticketTypes, draft] } : sl)) }
+          : s
+      )
+    );
+  }
+
+  function removeTicketType(scheduleId: string, slotId: string, ticketTypeId: string) {
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              slots: s.slots.map((sl) =>
+                sl.id === slotId ? { ...sl, ticketTypes: sl.ticketTypes.filter((t) => t.id !== ticketTypeId) } : sl
+              )
+            }
+          : s
+      )
+    );
+  }
+
+  function patchTicketType(scheduleId: string, slotId: string, ticketTypeId: string, patch: Partial<TicketTypeDraft>) {
+    setSchedules((prev) =>
+      prev.map((s) =>
+        s.id === scheduleId
+          ? {
+              ...s,
+              slots: s.slots.map((sl) =>
+                sl.id === slotId
+                  ? { ...sl, ticketTypes: sl.ticketTypes.map((t) => (t.id === ticketTypeId ? { ...t, ...patch } : t)) }
+                  : sl
+              )
+            }
+          : s
+      )
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="space-y-4">
+      <input type="hidden" name="availabilityJson" value={JSON.stringify(schedules)} readOnly />
+
+      {error ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p> : null}
+
+      {schedules.length === 0 ? (
+        <p className="text-sm text-gray-400">No availability configured yet — add a language to get started.</p>
+      ) : null}
+
+      {schedules.map((schedule) => {
+        const activeDays = WEEKDAYS.filter((day) => schedule.slots.some((sl) => sl.weekday === day));
+        return (
+          <div key={schedule.id} className="border border-gray-200 rounded-xl p-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <select
+                value={schedule.language}
+                onChange={(e) => patchLanguage(schedule.id, { language: e.target.value })}
+                className="input flex-1"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+              <button type="button" onClick={() => removeLanguage(schedule.id)} className="text-xs text-red-600 font-medium whitespace-nowrap">
+                Remove language
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-xs font-medium text-gray-600 mb-1 block">From date</span>
+                <input
+                  type="date"
+                  min={TODAY}
+                  value={schedule.dateFrom}
+                  onChange={(e) => patchLanguage(schedule.id, { dateFrom: e.target.value })}
+                  className="input"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-gray-600 mb-1 block">To date</span>
+                <input
+                  type="date"
+                  min={schedule.dateFrom || TODAY}
+                  value={schedule.dateTo}
+                  onChange={(e) => patchLanguage(schedule.id, { dateTo: e.target.value })}
+                  className="input"
+                />
+              </label>
+            </div>
+
+            {schedule.dateFrom && schedule.dateTo ? (
+              <div>
+                <p className="text-xs font-medium text-gray-600 mb-2">Available days</p>
+                <div className="flex flex-wrap gap-2">
+                  {WEEKDAYS.map((day) => {
+                    const active = schedule.slots.some((sl) => sl.weekday === day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleWeekday(schedule.id, day)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${
+                          active ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {activeDays.map((day) => (
+              <div key={day} className="border-t border-gray-100 pt-3 space-y-3">
+                <p className="text-xs font-semibold text-gray-700">{day} time slots</p>
+
+                {schedule.slots
+                  .filter((sl) => sl.weekday === day)
+                  .map((slot) => (
+                    <div key={slot.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={slot.time}
+                          onChange={(e) => patchSlotTime(schedule.id, slot.id, e.target.value)}
+                          className="input w-40"
+                        >
+                          {TIME_OPTIONS.map((t) => (
+                            <option key={t} value={t}>
+                              {formatTime12h(t)}
+                            </option>
+                          ))}
+                        </select>
+                        <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium ml-auto">
+                          Remove time slot
+                        </button>
+                      </div>
+
+                      <div className="space-y-2">
+                        {slot.ticketTypes.map((t) => (
+                          <div key={t.id} className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-end bg-white border border-gray-200 rounded-lg p-2.5">
+                            <label className="block col-span-2">
+                              <span className="text-[10px] text-gray-500 block mb-0.5">Name</span>
+                              <input
+                                value={t.name}
+                                onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { name: e.target.value })}
+                                className="input text-xs py-1.5"
+                                placeholder="e.g. Adult"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-[10px] text-gray-500 block mb-0.5">Age from</span>
+                              <div className="flex gap-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={t.ageFromValue}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageFromValue: Number(e.target.value) })}
+                                  className="input text-xs py-1.5 w-14"
+                                />
+                                <select
+                                  value={t.ageFromUnit}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageFromUnit: e.target.value as AgeUnit })}
+                                  className="input text-xs py-1.5"
+                                >
+                                  <option value="years">Yrs</option>
+                                  <option value="months">Mos</option>
+                                </select>
+                              </div>
+                            </label>
+                            <label className="block">
+                              <span className="text-[10px] text-gray-500 block mb-0.5">Age to</span>
+                              <div className="flex gap-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={t.ageToValue}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageToValue: Number(e.target.value) })}
+                                  className="input text-xs py-1.5 w-14"
+                                />
+                                <select
+                                  value={t.ageToUnit}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageToUnit: e.target.value as AgeUnit })}
+                                  className="input text-xs py-1.5"
+                                >
+                                  <option value="years">Yrs</option>
+                                  <option value="months">Mos</option>
+                                </select>
+                              </div>
+                            </label>
+                            <label className="block">
+                              <span className="text-[10px] text-gray-500 block mb-0.5">Price</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={t.price}
+                                onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { price: Number(e.target.value) })}
+                                className="input text-xs py-1.5"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="text-[10px] text-gray-500 block mb-0.5">Availability</span>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={t.availability}
+                                  onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { availability: Number(e.target.value) })}
+                                  className="input text-xs py-1.5 w-16"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeTicketType(schedule.id, slot.id, t.id)}
+                                  aria-label="Remove ticket type"
+                                  className="text-red-500 text-sm px-1"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {TICKET_TYPE_PRESETS.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => addTicketType(schedule.id, slot.id, preset)}
+                            className="text-[11px] border border-gray-200 rounded-full px-2.5 py-1 hover:bg-gray-100"
+                          >
+                            + {preset.name}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addTicketType(schedule.id, slot.id)}
+                          className="text-[11px] border border-dashed border-gray-300 rounded-full px-2.5 py-1 text-gray-500 hover:bg-gray-100"
+                        >
+                          + Custom ticket type
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                <button type="button" onClick={() => addSlot(schedule.id, day)} className="text-xs text-blue-600 font-medium">
+                  + Add another time slot for {day}
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      <button
+        type="button"
+        onClick={addLanguage}
+        className="text-sm font-medium text-blue-600 border border-blue-200 rounded-lg px-4 py-2 hover:bg-blue-50"
+      >
+        + Add language
+      </button>
+    </div>
+  );
+}

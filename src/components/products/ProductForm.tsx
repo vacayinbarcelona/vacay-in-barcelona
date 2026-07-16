@@ -1,6 +1,7 @@
-import { WEEKDAYS } from '@/lib/productForm';
 import { SupplierContactFields } from './SupplierContactFields';
 import { AddressAutocompleteInput } from './AddressAutocompleteInput';
+import { AvailabilityScheduleEditor } from './AvailabilityScheduleEditor';
+import type { LanguageScheduleDraft } from '@/lib/availabilitySchedule';
 
 export type ProductFormValues = {
   attractionId: string;
@@ -22,8 +23,9 @@ export type ProductFormValues = {
   supplierContactPhone: string;
   cancellationPolicy: string;
   maxGroupSize: number | null;
-  availableDays: string; // CSV, e.g. "Mon,Tue,Wed"
-  timeSlots: string; // CSV, e.g. "09:00,12:30,16:00"
+  availableDays: string; // CSV, e.g. "Mon,Tue,Wed" — legacy, no longer editable here (see availabilitySchedules)
+  timeSlots: string; // CSV, e.g. "09:00,12:30,16:00" — legacy, no longer editable here
+  availabilitySchedules: LanguageScheduleDraft[];
   included: string; // newline-separated
   notIncluded: string; // newline-separated
   beforeYouGo: string; // newline-separated
@@ -52,6 +54,7 @@ export const EMPTY_PRODUCT_VALUES: ProductFormValues = {
   maxGroupSize: null,
   availableDays: '',
   timeSlots: '',
+  availabilitySchedules: [],
   included: '',
   notIncluded: '',
   beforeYouGo: '',
@@ -95,8 +98,6 @@ export function ProductForm({
   // hidden here.
   showBadgeAndSortOrder?: boolean;
 }) {
-  const selectedDays = new Set(values.availableDays.split(',').filter(Boolean));
-
   return (
     <form action={action} encType="multipart/form-data" className="space-y-6">
       {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
@@ -132,23 +133,14 @@ export function ProductForm({
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <p className="text-sm font-semibold">Availability</p>
-        <Field label="Available days" hint="Informational for now — shown to customers, doesn't yet drive the live booking calendar.">
-          <div className="flex flex-wrap gap-2">
-            {WEEKDAYS.map((day) => (
-              <label
-                key={day}
-                className="flex items-center gap-1.5 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5"
-              >
-                <input type="checkbox" name="availableDays" value={day} defaultChecked={selectedDays.has(day)} className="h-3.5 w-3.5" />
-                {day}
-              </label>
-            ))}
-          </div>
-        </Field>
-        <Field label="Available time slots" hint="Comma-separated, e.g. 09:00, 12:30, 16:00">
-          <input name="timeSlots" defaultValue={values.timeSlots.split(',').filter(Boolean).join(', ')} className="input" placeholder="09:00, 12:30, 16:00" />
-        </Field>
+        <div>
+          <p className="text-sm font-semibold">Availability</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            For each language you offer, set a date range, which days within it are bookable, one or more time slots per day, and
+            the ticket types (with age range, price, and availability) sold at each slot.
+          </p>
+        </div>
+        <AvailabilityScheduleEditor initialSchedules={values.availabilitySchedules} />
         <Field label="Duration" hint="Optional — e.g. '2 hours', 'Half day'">
           <input name="durationLabel" defaultValue={values.durationLabel} className="input" />
         </Field>

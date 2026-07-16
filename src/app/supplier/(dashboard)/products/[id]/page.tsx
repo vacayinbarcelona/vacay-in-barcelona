@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { getCurrentSupplier } from '@/lib/supplierAuth';
 import { SavedToast } from '@/components/admin/SavedToast';
 import { ProductForm, type ProductFormValues } from '@/components/products/ProductForm';
+import { dbSchedulesToDraft } from '@/lib/availabilitySchedule';
 import {
   updateSupplierProductAction,
   deleteSupplierProductAction,
@@ -41,7 +42,11 @@ export default async function EditSupplierProductPage({
       includedItems: { orderBy: { sortOrder: 'asc' } },
       infoItems: { orderBy: { sortOrder: 'asc' } },
       images: { orderBy: { sortOrder: 'asc' } },
-      attraction: { select: { id: true, name: true } }
+      attraction: { select: { id: true, name: true } },
+      languageSchedules: {
+        orderBy: { sortOrder: 'asc' },
+        include: { slots: { orderBy: { sortOrder: 'asc' }, include: { ticketTypes: { orderBy: { sortOrder: 'asc' } } } } }
+      }
     }
   });
   if (!product || product.supplierId !== supplier.id) notFound();
@@ -79,6 +84,7 @@ export default async function EditSupplierProductPage({
     maxGroupSize: product.maxGroupSize,
     availableDays: product.availableDays,
     timeSlots: product.timeSlots,
+    availabilitySchedules: dbSchedulesToDraft(product.languageSchedules),
     included: product.includedItems.filter((i) => i.included).map((i) => i.text).join('\n'),
     notIncluded: product.includedItems.filter((i) => !i.included).map((i) => i.text).join('\n'),
     beforeYouGo: product.infoItems.map((i) => i.text).join('\n'),

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { SavedToast } from '@/components/admin/SavedToast';
 import { ProductForm, type ProductFormValues } from '@/components/products/ProductForm';
+import { dbSchedulesToDraft } from '@/lib/availabilitySchedule';
 import {
   updateAdminProductAction,
   deleteAdminProductAction,
@@ -44,7 +45,11 @@ export default async function EditAdminProductPage({
       infoItems: { orderBy: { sortOrder: 'asc' } },
       images: { orderBy: { sortOrder: 'asc' } },
       attraction: { select: { id: true, name: true } },
-      supplier: { select: { id: true, companyName: true, email: true } }
+      supplier: { select: { id: true, companyName: true, email: true } },
+      languageSchedules: {
+        orderBy: { sortOrder: 'asc' },
+        include: { slots: { orderBy: { sortOrder: 'asc' }, include: { ticketTypes: { orderBy: { sortOrder: 'asc' } } } } }
+      }
     }
   });
   if (!product) notFound();
@@ -73,6 +78,7 @@ export default async function EditAdminProductPage({
     maxGroupSize: product.maxGroupSize,
     availableDays: product.availableDays,
     timeSlots: product.timeSlots,
+    availabilitySchedules: dbSchedulesToDraft(product.languageSchedules),
     included: product.includedItems.filter((i) => i.included).map((i) => i.text).join('\n'),
     notIncluded: product.includedItems.filter((i) => !i.included).map((i) => i.text).join('\n'),
     beforeYouGo: product.infoItems.map((i) => i.text).join('\n'),

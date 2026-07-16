@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { uploadImageFile, hasUploadedFile } from '@/lib/upload';
 import { readProductCoreFields, lines, str } from '@/lib/productForm';
+import { parseAvailabilityJson, validateAvailabilitySchedules, draftToPrismaCreate } from '@/lib/availabilitySchedule';
 
 // Master Admin's central products dashboard — covers both "house" products
 // (created directly here, supplierId null, published immediately) and
@@ -33,6 +34,10 @@ export async function createAdminProductAction(formData: FormData) {
 
   const core = readProductCoreFields(formData);
   if (!core.name) redirect('/admin/products/new?error=missing');
+
+  const availabilitySchedules = parseAvailabilityJson(str(formData, 'availabilityJson'));
+  const availabilityError = validateAvailabilitySchedules(availabilitySchedules);
+  if (availabilityError) redirect(`/admin/products/new?error=${encodeURIComponent(availabilityError)}`);
 
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
@@ -72,7 +77,8 @@ export async function createAdminProductAction(formData: FormData) {
         ]
       },
       infoItems: { create: beforeYouGo.map((text, i) => ({ text, sortOrder: i })) },
-      images: photoUrl ? { create: [{ url: photoUrl, sortOrder: 0 }] } : undefined
+      images: photoUrl ? { create: [{ url: photoUrl, sortOrder: 0 }] } : undefined,
+      languageSchedules: { create: draftToPrismaCreate(availabilitySchedules) }
     }
   });
 
@@ -93,6 +99,10 @@ export async function updateAdminProductAction(id: string, formData: FormData) {
   const core = readProductCoreFields(formData);
   if (!core.name) redirect(`/admin/products/${id}?error=missing`);
 
+  const availabilitySchedules = parseAvailabilityJson(str(formData, 'availabilityJson'));
+  const availabilityError = validateAvailabilitySchedules(availabilitySchedules);
+  if (availabilityError) redirect(`/admin/products/${id}?error=${encodeURIComponent(availabilityError)}`);
+
   const included = lines(formData, 'included');
   const notIncluded = lines(formData, 'notIncluded');
   const beforeYouGo = lines(formData, 'beforeYouGo');
@@ -107,12 +117,22 @@ export async function updateAdminProductAction(id: string, formData: FormData) {
   }
 
   await prisma.$transaction([
+    // Delete-then-recreate the whole availability tree — same convention as
+    // included/not-included and before-you-go below. Cascades to slots and
+    // ticket types at the DB level (onDelete: Cascade), so this one call
+    // clears the entire nested structure for this product.
+    prisma.ticketOptionLanguageSchedule.deleteMany({ where: { ticketOptionId: id } }),
     // Deliberately doesn't touch `status` — publish/reject/disable are
     // separate explicit actions below, kept independent from editing content
     // so saving a correction doesn't accidentally change moderation state.
     prisma.ticketOption.update({
       where: { id },
-      data: { attractionId, ...core, meetingPointImage }
+      data: {
+        attractionId,
+        ...core,
+        meetingPointImage,
+        languageSchedules: { create: draftToPrismaCreate(availabilitySchedules) }
+      }
     }),
     prisma.ticketIncludedItem.deleteMany({ where: { ticketOptionId: id } }),
     prisma.ticketIncludedItem.createMany({

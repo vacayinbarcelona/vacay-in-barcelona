@@ -169,10 +169,79 @@ model TicketOption {
   includedItems TicketIncludedItem[]
   infoItems     TicketInfoItem[]
 
+  // Rich availability calendar — language -> date range -> weekday -> time
+  // slot -> ticket types (age range/price/inventory). Replaces the legacy
+  // availableDays/timeSlots fields above as the editable UI (see
+  // AvailabilityScheduleEditor.tsx); those legacy fields are left in place,
+  // unused, rather than removed, since nothing reads them today either.
+  // NOTE: as of this schema addition, checkout/the public booking flow does
+  // NOT yet read this data — only the admin/supplier product forms write
+  // it. Wiring it into checkout is a deliberately separate follow-up (see
+  // the phase-2 tasks) so this addition can't break live bookings.
+  languageSchedules TicketOptionLanguageSchedule[]
+
   sortOrder Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// One language's full availability schedule for a product — e.g. "English,
+// bookable Aug 1 - Oct 31". A product can have several of these (one per
+// language it's offered in), each with its own date range and time slots.
+model TicketOptionLanguageSchedule {
+  id             String       @id @default(cuid())
+  ticketOptionId String
+  ticketOption   TicketOption @relation(fields: [ticketOptionId], references: [id], onDelete: Cascade)
+
+  language String
+  dateFrom DateTime
+  dateTo   DateTime
+
+  slots TicketOptionScheduleSlot[]
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+}
+
+// One weekday + time combination within a language schedule — e.g. "Mon,
+// 09:00". Which weekdays are "selected" for a schedule is derived from
+// which weekdays have at least one slot here, rather than stored as its own
+// separate list.
+model TicketOptionScheduleSlot {
+  id                String                       @id @default(cuid())
+  languageScheduleId String
+  languageSchedule   TicketOptionLanguageSchedule @relation(fields: [languageScheduleId], references: [id], onDelete: Cascade)
+
+  weekday String // "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun"
+  time    String // "HH:MM", 15-minute increments
+
+  ticketTypes TicketOptionScheduleTicketType[]
+
+  sortOrder Int @default(0)
+}
+
+// One bookable ticket category within a specific time slot — e.g. "Adult,
+// 18-64 years, €45, 12 available". Fully custom per slot: a supplier can
+// rename/add/remove these freely, the 4 common ones (Adult/Child/Infant/
+// Senior) are just a UI starting suggestion, not enforced by the schema.
+model TicketOptionScheduleTicketType {
+  id     String                    @id @default(cuid())
+  slotId String
+  slot   TicketOptionScheduleSlot  @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  name String
+
+  ageFromValue Int
+  ageFromUnit  String @default("years") // "years" | "months"
+  ageToValue   Int
+  ageToUnit    String @default("years") // "years" | "months"
+
+  price        Float
+  availability Int    @default(0) // inventory count for this ticket type at this slot
+
+  sortOrder Int @default(0)
 }
 
 // Per-ticket-option "what's included" / "not included" — see meetingPoint
