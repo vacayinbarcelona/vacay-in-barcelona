@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { RecaptchaWidget } from '@/components/auth/RecaptchaWidget';
+import { capitalizeWords } from '@/lib/format';
 
 // Same validation conventions used across the site (checkout, sign-up):
 // requires an @, a non-empty local/domain part, and an alphabetic TLD of
@@ -222,11 +223,9 @@ const COUNTRY_CODES = [
 
 export function SupplierApplicationForm({
   action,
-  categories,
   recaptchaSiteKey
 }: {
   action: (formData: FormData) => void | Promise<void>;
-  categories: { id: string; name: string; categoryLabel: string }[];
   recaptchaSiteKey?: string;
 }) {
   const [companyName, setCompanyName] = useState('');
@@ -241,7 +240,6 @@ export function SupplierApplicationForm({
   const [phone, setPhone] = useState('');
   const [taxId, setTaxId] = useState('');
   const [registeredCountry, setRegisteredCountry] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [companyTouched, setCompanyTouched] = useState(false);
@@ -250,7 +248,6 @@ export function SupplierApplicationForm({
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [taxIdTouched, setTaxIdTouched] = useState(false);
   const [registeredCountryTouched, setRegisteredCountryTouched] = useState(false);
-  const [categoriesTouched, setCategoriesTouched] = useState(false);
   const [termsTouched, setTermsTouched] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -266,10 +263,6 @@ export function SupplierApplicationForm({
   const registeredCountryError = !registeredCountry ? 'Please select where your company is registered.' : null;
   const countryCode = COUNTRY_CODES.find((c) => c.name === selectedCountry)?.code ?? '+34';
 
-  function toggleCategory(id: string) {
-    setSelectedCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]));
-  }
-
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     setCompanyTouched(true);
     setContactTouched(true);
@@ -277,17 +270,11 @@ export function SupplierApplicationForm({
     setPhoneTouched(true);
     setTaxIdTouched(true);
     setRegisteredCountryTouched(true);
-    setCategoriesTouched(true);
     setTermsTouched(true);
 
     if (companyError || contactError || emailError || phoneError || taxIdError || registeredCountryError) {
       e.preventDefault();
       setClientError('Please fix the highlighted fields below.');
-      return;
-    }
-    if (selectedCategories.length === 0) {
-      e.preventDefault();
-      setClientError('Please select at least one category.');
       return;
     }
     if (!termsAccepted) {
@@ -320,7 +307,7 @@ export function SupplierApplicationForm({
             name="companyName"
             required
             value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
+            onChange={(e) => setCompanyName(capitalizeWords(e.target.value))}
             onBlur={() => setCompanyTouched(true)}
             className={`input ${companyTouched && companyError ? 'border-red-400 focus:border-red-400' : ''}`}
           />
@@ -332,7 +319,7 @@ export function SupplierApplicationForm({
             name="contactName"
             required
             value={contactName}
-            onChange={(e) => setContactName(e.target.value)}
+            onChange={(e) => setContactName(capitalizeWords(e.target.value))}
             onBlur={() => setContactTouched(true)}
             className={`input ${contactTouched && contactError ? 'border-red-400 focus:border-red-400' : ''}`}
           />
@@ -421,31 +408,6 @@ export function SupplierApplicationForm({
       </div>
 
       <div>
-        <label className="text-xs font-medium text-gray-600 mb-2 block">Which categories would you like to sell in?</label>
-        <div className="space-y-2">
-          {categories.map((c) => (
-            <label key={c.id} className="flex items-center gap-2.5 text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2.5">
-              <input
-                type="checkbox"
-                name="categoryIds"
-                value={c.id}
-                checked={selectedCategories.includes(c.id)}
-                onChange={() => toggleCategory(c.id)}
-                className="h-4 w-4"
-              />
-              <span>
-                {c.name}
-                {c.categoryLabel ? <span className="text-gray-400"> — {c.categoryLabel}</span> : null}
-              </span>
-            </label>
-          ))}
-        </div>
-        {categoriesTouched && selectedCategories.length === 0 ? (
-          <p className="text-[11px] text-red-600 mt-1">Please select at least one category.</p>
-        ) : null}
-      </div>
-
-      <div>
         <label className="text-xs font-medium text-gray-600 mb-1 block">
           Tell us about your business <span className="font-normal text-gray-400">(optional)</span>
         </label>
@@ -453,7 +415,7 @@ export function SupplierApplicationForm({
           name="message"
           rows={4}
           className="input"
-          placeholder="What tickets/tours do you offer, and what makes them worth listing?"
+          placeholder="What tickets/tours do you offer, and which categories would you like to sell in?"
         />
       </div>
 

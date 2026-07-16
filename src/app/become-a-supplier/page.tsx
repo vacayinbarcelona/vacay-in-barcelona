@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { prisma } from '@/lib/db';
 import { SupplierApplicationForm } from '@/components/supplier/SupplierApplicationForm';
 import { submitSupplierApplication } from './actions';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing: 'Please fill in your company name, contact name, email, tax ID, registered country, and select at least one category.',
+  missing: 'Please fill in your company name, contact name, email, tax ID, and registered country.',
   'invalid-email': 'Please enter a valid email address.',
   'rate-limited': "You've submitted a few applications already — please wait a few minutes and try again.",
   captcha: 'Please complete the captcha and try again.',
@@ -26,14 +25,6 @@ export default async function BecomeASupplierPage({ searchParams }: { searchPara
   const submitted = searchParams?.submitted === '1';
   const errorMessage = searchParams?.error ? ERROR_MESSAGES[searchParams.error] : null;
 
-  // Every category (Attraction) is offered here, published or not — the
-  // Master Admin controls what's actually live separately, and may want to
-  // start lining up suppliers for a category before it launches.
-  const categories = await prisma.attraction.findMany({
-    orderBy: { sortOrder: 'asc' },
-    select: { id: true, name: true, categoryLabel: true }
-  });
-
   return (
     <div className="max-w-3xl mx-auto px-6 py-14">
       <h1 className="text-2xl font-semibold mb-2">Become a supplier</h1>
@@ -52,7 +43,7 @@ export default async function BecomeASupplierPage({ searchParams }: { searchPara
           {errorMessage ? (
             <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-5">{errorMessage}</p>
           ) : null}
-          <SupplierApplicationForm action={submitSupplierApplication} categories={categories} recaptchaSiteKey={RECAPTCHA_SITE_KEY} />
+          <SupplierApplicationForm action={submitSupplierApplication} recaptchaSiteKey={RECAPTCHA_SITE_KEY} />
         </>
       )}
     </div>

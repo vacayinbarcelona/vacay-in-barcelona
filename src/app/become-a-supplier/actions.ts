@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { verifyRecaptcha } from '@/lib/recaptcha';
 import { isRateLimited, getClientIp } from '@/lib/rateLimit';
+import { capitalizeWords } from '@/lib/format';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
@@ -12,8 +13,11 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 // so it gets the full honeypot + rate limit + captcha stack, not the lighter
 // honeypot-only treatment used for the newsletter signup).
 export async function submitSupplierApplication(formData: FormData) {
-  const companyName = String(formData.get('companyName') ?? '').trim();
-  const contactName = String(formData.get('contactName') ?? '').trim();
+  // The form already capitalizes these live as the applicant types; this is
+  // a server-side backstop in case JS is disabled or the request is crafted
+  // directly.
+  const companyName = capitalizeWords(String(formData.get('companyName') ?? '').trim());
+  const contactName = capitalizeWords(String(formData.get('contactName') ?? '').trim());
   const email = String(formData.get('email') ?? '')
     .trim()
     .toLowerCase();
@@ -22,7 +26,6 @@ export async function submitSupplierApplication(formData: FormData) {
   const taxId = String(formData.get('taxId') ?? '').trim();
   const registeredCountry = String(formData.get('registeredCountry') ?? '').trim();
   const message = String(formData.get('message') ?? '').trim();
-  const categoryIds = formData.getAll('categoryIds').map(String).filter(Boolean);
   const termsAccepted = formData.get('termsAccepted') === 'on';
   const captchaToken = formData.get('g-recaptcha-response') ? String(formData.get('g-recaptcha-response')) : null;
 
@@ -33,7 +36,7 @@ export async function submitSupplierApplication(formData: FormData) {
     redirect('/become-a-supplier?submitted=1');
   }
 
-  if (!companyName || !contactName || !email || !taxId || !registeredCountry || categoryIds.length === 0) {
+  if (!companyName || !contactName || !email || !taxId || !registeredCountry) {
     redirect('/become-a-supplier?error=missing');
   }
   if (!termsAccepted) {
@@ -63,18 +66,8 @@ export async function submitSupplierApplication(formData: FormData) {
     redirect('/become-a-supplier?error=exists-company');
   }
 
-  // Only offer categories that actually exist — a crafted request with a
-  // stale/invalid attraction id shouldn't create a dangling SupplierCategory
-  // row.
-  const validAttractions = await prisma.attraction.findMany({
-    where: { id: { in: categoryIds } },
-    select: { id: true }
-  });
-  const validIds = validAttractions.map((a) => a.id);
-  if (validIds.length === 0) {
-    redirect('/become-a-supplier?error=missing');
-  }
-
+  // Categories are no longer picked by the applicant — the Master Admin
+  // assigns them at approval time (see approveSupplierAction).
   await prisma.supplier.create({
     data: {
       companyName,
@@ -86,8 +79,7 @@ export async function submitSupplierApplication(formData: FormData) {
       registeredCountry,
       message,
       status: 'pending',
-      termsAcceptedAt: new Date(),
-      categories: { create: validIds.map((attractionId) => ({ attractionId })) }
+      termsAcceptedAt: new Date()
     }
   });
 

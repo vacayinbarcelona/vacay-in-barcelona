@@ -34,3 +34,10 @@ export function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
   return text.slice(0, max - 1).trimEnd() + '…';
 }
+
+// Capitalizes the first letter of every word, leaving the rest of each
+// word's casing untouched (so "McDonald" or "O'Brien" typed as-is don't get
+// mangled). Used for name-style fields like company/contact names.
+export function capitalizeWords(text: string): string {
+  return text.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+}
