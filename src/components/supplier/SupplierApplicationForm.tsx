@@ -302,7 +302,7 @@ export function SupplierApplicationForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Company name</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Company Name</label>
           <input
             name="companyName"
             required
@@ -314,7 +314,7 @@ export function SupplierApplicationForm({
           {companyTouched && companyError ? <p className="text-[11px] text-red-600 mt-1">{companyError}</p> : null}
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Contact name</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Contact Name</label>
           <input
             name="contactName"
             required
@@ -365,7 +365,7 @@ export function SupplierApplicationForm({
           {phoneTouched && phoneError ? <p className="text-[11px] text-red-600 mt-1">{phoneError}</p> : null}
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-600 mb-1 block">Company tax ID / registration no.</label>
+          <label className="text-xs font-medium text-gray-600 mb-1 block">Company Tax ID / Registration No.</label>
           <input
             name="taxId"
             required
@@ -401,7 +401,7 @@ export function SupplierApplicationForm({
         </div>
         <div className="sm:col-span-2">
           <label className="text-xs font-medium text-gray-600 mb-1 block">
-            Website / social profile <span className="font-normal text-gray-400">(optional)</span>
+            Website / Social Profile <span className="font-normal text-gray-400">(optional)</span>
           </label>
           <input name="website" className="input" placeholder="https://" />
         </div>
