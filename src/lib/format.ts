@@ -41,3 +41,12 @@ export function truncate(text: string, max: number): string {
 export function capitalizeWords(text: string): string {
   return text.replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
 }
+
+// Formats a Supplier's sequential supplierNumber (assigned automatically at
+// signup, see Supplier.supplierNumber in schema.prisma) into the
+// human-readable ID shown to Master Admin and to the supplier themselves,
+// e.g. 7 -> "SUP-0007". Not used as a lookup key anywhere — Supplier.id
+// (the cuid) remains the real primary key/foreign key everywhere in the DB.
+export function formatSupplierId(supplierNumber: number): string {
+  return `SUP-${String(supplierNumber).padStart(4, '0')}`;
+}

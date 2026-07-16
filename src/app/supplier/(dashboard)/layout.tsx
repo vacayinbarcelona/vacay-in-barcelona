@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentSupplier } from '@/lib/supplierAuth';
 import { supplierLogoutAction } from '@/app/supplier/actions';
+import { formatSupplierId } from '@/lib/format';
 
 const NAV = [
   { href: '/supplier', label: 'Dashboard' },
@@ -36,7 +37,8 @@ export default async function SupplierDashboardLayout({ children }: { children: 
 
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
           <p className="px-3 text-[11px] text-gray-400 mb-0.5 truncate">{supplier.companyName}</p>
-          <p className="px-3 text-[10px] text-gray-400 mb-1 truncate">{supplier.email}</p>
+          <p className="px-3 text-[10px] text-gray-400 truncate">{supplier.email}</p>
+          <p className="px-3 text-[10px] font-mono text-gray-300 mb-1">{formatSupplierId(supplier.supplierNumber)}</p>
           <Link href="/" target="_blank" className="block px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100">
             View site &rarr;
           </Link>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatSupplierId } from '@/lib/format';
 import { SavedToast } from '@/components/admin/SavedToast';
 import {
   approveSupplierAction,
@@ -46,6 +46,7 @@ export default async function SupplierReviewPage({ params, searchParams }: { par
 
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-xl font-semibold">{supplier.companyName}</h1>
+        <span className="text-xs font-mono text-gray-400">{formatSupplierId(supplier.supplierNumber)}</span>
         <span className={`text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border ${STATUS_STYLES[supplier.status]}`}>
           {supplier.status}
         </span>

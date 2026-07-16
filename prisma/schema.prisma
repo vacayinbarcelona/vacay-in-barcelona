@@ -570,6 +570,13 @@ model BookingTraveler {
 model Supplier {
   id String @id @default(cuid())
 
+  // Human-readable, sequential ID assigned automatically the moment a
+  // supplier applies (auto-incrementing, so it's guaranteed unique and never
+  // reused) — shown to the Master Admin and to the supplier themselves as
+  // e.g. "SUP-0007" (see formatSupplierId in src/lib/format.ts). Distinct
+  // from `id` above, which stays the real DB primary/foreign key everywhere.
+  supplierNumber Int @unique @default(autoincrement())
+
   companyName String
   contactName String
   email       String @unique

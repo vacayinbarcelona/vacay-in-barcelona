@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatSupplierId } from '@/lib/format';
 import { SavedToast } from '@/components/admin/SavedToast';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -72,6 +72,7 @@ export default async function AdminSuppliersPage({ searchParams }: { searchParam
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-semibold truncate">{s.companyName}</p>
+                  <span className="text-[10px] font-mono text-gray-400 whitespace-nowrap">{formatSupplierId(s.supplierNumber)}</span>
                   <span className={`text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border ${STATUS_STYLES[s.status]}`}>
                     {s.status}
                   </span>
