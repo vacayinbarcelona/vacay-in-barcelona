@@ -36,6 +36,47 @@ function ticketTypesFromDefaults(defaults: DefaultTicketTypeConfig[]): TicketTyp
     }));
 }
 
+// Plain numeric text input (no browser spinner arrows) used for the Default
+// price field. Keeps its own local text so a trailing decimal point (e.g.
+// while typing "12.5") isn't stripped mid-keystroke by the numeric value
+// round-tripping back through props — only fully-typed valid numbers (up to
+// 2 decimals) are ever pushed up via onChange. Local state is intentional:
+// each row remounts fresh whenever its schedule/name key changes, which is
+// the only time the starting price should be picked up from outside.
+function PriceTextInput({
+  value,
+  disabled,
+  onChange
+}: {
+  value: number;
+  disabled?: boolean;
+  onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(value === 0 ? '' : String(value));
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      disabled={disabled}
+      placeholder="0 = Free"
+      value={text}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (raw !== '' && !/^\d*\.?\d{0,2}$/.test(raw)) return;
+        setText(raw);
+        if (raw === '' || raw === '.') {
+          onChange(0);
+        } else {
+          const parsed = Number(raw);
+          if (!Number.isNaN(parsed)) onChange(parsed);
+        }
+      }}
+      className="input text-xs py-1.5"
+    />
+  );
+}
+
 function hasEnabledDefaultTicketType(schedule: LanguageScheduleDraft): boolean {
   return schedule.defaultTicketTypes.some((t) => t.enabled);
 }
@@ -346,15 +387,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         </label>
                         <label className="block">
                           <span className="text-[10px] text-gray-500 block mb-0.5">Default price</span>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            disabled={!t.enabled}
-                            placeholder="0 = Free"
+                          <PriceTextInput
                             value={t.price}
-                            onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { price: Number(e.target.value) })}
-                            className="input text-xs py-1.5"
+                            disabled={!t.enabled}
+                            onChange={(price) => patchDefaultTicketType(schedule.id, t.name, { price })}
                           />
                         </label>
                       </div>
