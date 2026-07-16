@@ -75,7 +75,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
 
   function addLanguage() {
     const used = new Set(schedules.map((s) => s.language));
-    const nextLanguage = LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
+    // English first by default (most common case) — only fall back to the
+    // next unused language alphabetically once English is already taken by
+    // another block.
+    const nextLanguage = !used.has('English') ? 'English' : LANGUAGES.find((l) => !used.has(l)) ?? LANGUAGES[0];
     setSchedules((prev) => [
       ...prev,
       {
