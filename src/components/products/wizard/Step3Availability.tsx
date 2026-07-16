@@ -23,12 +23,12 @@ export function Step3Availability({
 
   return (
     <form action={saveAsDraft} className="space-y-6">
-      {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-base text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
         <div>
-          <p className="text-sm font-semibold">Availability &amp; pricing</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-base font-semibold">Availability &amp; pricing</p>
+          <p className="text-sm text-gray-500 mt-0.5">
             For each language you offer, set a date range, a default number of tickets available and default ticket configuration
             (Adult/Child/Infant/Senior — age ranges, prices, and which types to offer), then select the days and times you&rsquo;re
             open — every generated time slot inherits those defaults automatically, and you can still fine-tune the availability,
@@ -39,19 +39,19 @@ export function Step3Availability({
       </div>
 
       <div className="flex items-center justify-between">
-        <button type="submit" formAction={saveAndPrevious} className="border border-gray-300 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
+        <button type="submit" formAction={saveAndPrevious} className="border border-gray-300 text-base font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
           Previous
         </button>
         <div className="flex items-center gap-3">
-          <button type="submit" className="border border-gray-300 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
+          <button type="submit" className="border border-gray-300 text-base font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
             Save as Draft
           </button>
-          <button type="submit" formAction={publish} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg">
+          <button type="submit" formAction={publish} className="bg-blue-600 hover:bg-blue-700 text-white text-base font-medium px-6 py-2.5 rounded-lg">
             Publish Product
           </button>
         </div>
       </div>
-      <p className="text-[11px] text-gray-400 -mt-4">
+      <p className="text-xs text-gray-400 -mt-4">
         Publishing sends this product to our team for review before it goes live — it won&rsquo;t appear on the site immediately.
       </p>
     </form>

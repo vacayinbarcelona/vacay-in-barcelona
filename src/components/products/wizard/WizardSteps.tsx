@@ -24,15 +24,15 @@ export function WizardSteps({ productId, current }: { productId: string | null; 
             ? 'text-gray-600 hover:bg-gray-100'
             : 'text-gray-300 cursor-not-allowed';
         const content = (
-          <span className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg ${pillClass}`}>
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-semibold ${badgeClass}`}>{s.n}</span>
+          <span className={`flex items-center gap-2 text-base font-medium px-3 py-2 rounded-lg ${pillClass}`}>
+            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${badgeClass}`}>{s.n}</span>
             {s.label}
           </span>
         );
         return (
           <div key={s.n} className="flex items-center gap-1.5">
             {clickable ? <Link href={`/supplier/products/${productId}?step=${s.n}`}>{content}</Link> : content}
-            {i < STEPS.length - 1 ? <span className="text-gray-300 text-sm px-0.5">&rarr;</span> : null}
+            {i < STEPS.length - 1 ? <span className="text-gray-300 text-base px-0.5">&rarr;</span> : null}
           </div>
         );
       })}

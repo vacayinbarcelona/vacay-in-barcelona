@@ -57,12 +57,12 @@ export function Step1BasicInfo({
 
   return (
     <form action={saveAndList} encType="multipart/form-data" className="space-y-6">
-      {errorMessage ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
+      {errorMessage ? <p className="text-base text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{errorMessage}</p> : null}
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <p className="text-sm font-semibold">Basic product information</p>
+        <p className="text-base font-semibold">Basic product information</p>
         <Field label="Product category">
-          <select name="attractionId" required defaultValue={values.attractionId} className="input">
+          <select name="attractionId" required defaultValue={values.attractionId} className="input text-base">
             <option value="" disabled>
               Select a category&hellip;
             </option>
@@ -74,13 +74,13 @@ export function Step1BasicInfo({
           </select>
         </Field>
         <Field label="Product title">
-          <input name="name" defaultValue={values.name} required className="input" placeholder="e.g. Skip-the-Line Entry Ticket" />
+          <input name="name" defaultValue={values.name} required className="input text-base" placeholder="e.g. Skip-the-Line Entry Ticket" />
         </Field>
         <Field label="Product description">
-          <textarea name="description" defaultValue={values.description} rows={4} className="input" />
+          <textarea name="description" defaultValue={values.description} rows={4} className="input text-base" />
         </Field>
         <Field label="Duration" hint="Optional — e.g. '2 hours', 'Half day'">
-          <input name="durationLabel" defaultValue={values.durationLabel} className="input" />
+          <input name="durationLabel" defaultValue={values.durationLabel} className="input text-base" />
         </Field>
       </div>
 
@@ -97,20 +97,20 @@ export function Step1BasicInfo({
       {values.instantConfirmation ? <input type="hidden" name="instantConfirmation" value="on" /> : null}
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <p className="text-sm font-semibold">What&rsquo;s included</p>
+        <p className="text-base font-semibold">What&rsquo;s included</p>
         <Field label="What's included" hint="One item per line">
-          <textarea name="included" defaultValue={values.included} rows={4} className="input" />
+          <textarea name="included" defaultValue={values.included} rows={4} className="input text-base" />
         </Field>
         <Field label="What's not included" hint="One item per line">
-          <textarea name="notIncluded" defaultValue={values.notIncluded} rows={3} className="input" />
+          <textarea name="notIncluded" defaultValue={values.notIncluded} rows={3} className="input text-base" />
         </Field>
         <Field label="Before you go" hint="One item per line">
-          <textarea name="beforeYouGo" defaultValue={values.beforeYouGo} rows={3} className="input" />
+          <textarea name="beforeYouGo" defaultValue={values.beforeYouGo} rows={3} className="input text-base" />
         </Field>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-        <p className="text-sm font-semibold">Product photos</p>
+        <p className="text-base font-semibold">Product photos</p>
         {photos.length > 0 ? (
           <div className="grid grid-cols-3 gap-3">
             {photos.map((img) => (
@@ -119,7 +119,7 @@ export function Step1BasicInfo({
                 <img src={img.url} alt={img.altText} className="h-24 w-full object-cover rounded-lg border border-gray-200" />
                 {productId ? (
                   <form action={deleteSupplierProductImageAction.bind(null, img.id, productId)} className="absolute top-1 right-1">
-                    <button type="submit" className="bg-white/90 text-red-600 text-[10px] font-medium px-1.5 py-0.5 rounded">
+                    <button type="submit" className="bg-white/90 text-red-600 text-xs font-medium px-1.5 py-0.5 rounded">
                       Remove
                     </button>
                   </form>
@@ -128,20 +128,20 @@ export function Step1BasicInfo({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-400">No photos yet.</p>
+          <p className="text-base text-gray-400">No photos yet.</p>
         )}
         <Field label="Add photos" hint="You can select multiple files at once">
-          <input type="file" name="photoFiles" multiple accept="image/jpeg,image/png,image/webp,image/gif" className="input" />
+          <input type="file" name="photoFiles" multiple accept="image/jpeg,image/png,image/webp,image/gif" className="input text-base" />
         </Field>
       </div>
 
       <div className="flex items-center justify-between">
         <span />
         <div className="flex items-center gap-3">
-          <button type="submit" className="border border-gray-300 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
+          <button type="submit" className="border border-gray-300 text-base font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50">
             Save as Draft
           </button>
-          <button type="submit" formAction={saveAndNext} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2.5 rounded-lg">
+          <button type="submit" formAction={saveAndNext} className="bg-blue-600 hover:bg-blue-700 text-white text-base font-medium px-6 py-2.5 rounded-lg">
             Next
           </button>
         </div>
@@ -153,9 +153,9 @@ export function Step1BasicInfo({
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-gray-600 mb-1 block">{label}</span>
+      <span className="text-sm font-medium text-gray-600 mb-1 block">{label}</span>
       {children}
-      {hint ? <span className="text-[11px] text-gray-400 mt-1 block">{hint}</span> : null}
+      {hint ? <span className="text-xs text-gray-400 mt-1 block">{hint}</span> : null}
     </label>
   );
 }

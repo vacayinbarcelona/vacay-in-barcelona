@@ -27,18 +27,18 @@ export default async function NewSupplierProductPage({ searchParams }: { searchP
   const errorMessage = searchParams?.error ? ERROR_MESSAGES[searchParams.error] ?? decodeURIComponent(searchParams.error) : undefined;
 
   return (
-    <div className="max-w-4xl">
-      <Link href="/supplier/products" className="text-sm text-blue-600 mb-4 inline-block">
+    <div className="max-w-6xl">
+      <Link href="/supplier/products" className="text-base text-blue-600 mb-4 inline-block">
         &larr; Back to products
       </Link>
       <h1 className="text-xl font-semibold mb-1">Add a new product</h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-base text-gray-500 mb-6">
         Your progress is saved automatically as you go, so you can leave and pick up where you left off. It&rsquo;s reviewed by our
         team once you publish.
       </p>
 
       {categories.length === 0 ? (
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 text-sm text-amber-800">
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 text-base text-amber-800">
           You don&rsquo;t have any assigned categories yet — contact the Vacay in Barcelona team.
         </div>
       ) : (

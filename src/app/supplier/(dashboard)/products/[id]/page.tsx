@@ -112,24 +112,24 @@ export default async function SupplierProductWizardPage({
   };
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <SavedToast />
-      <Link href="/supplier/products" className="text-sm text-blue-600 mb-4 inline-block">
+      <Link href="/supplier/products" className="text-base text-blue-600 mb-4 inline-block">
         &larr; Back to products
       </Link>
 
       <div className="flex items-center gap-3 mb-1">
         <h1 className="text-xl font-semibold">{product.name || 'Untitled product'}</h1>
-        <span className={`text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border ${STATUS_STYLES[product.status] ?? STATUS_STYLES.draft}`}>
+        <span className={`text-xs font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border ${STATUS_STYLES[product.status] ?? STATUS_STYLES.draft}`}>
           {STATUS_LABELS[product.status] ?? product.status}
         </span>
       </div>
       {product.status === 'rejected' && product.rejectionReason ? (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4 mt-3">
+        <p className="text-base text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4 mt-3">
           Rejected: {product.rejectionReason}
         </p>
       ) : null}
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-base text-gray-500 mb-6">
         {product.status === 'draft'
           ? "Your progress is saved automatically as you go — click Publish Product on the last step when you're ready to submit it for review."
           : 'Saving progress here does not resubmit this product for review — only Publish Product does.'}
@@ -147,7 +147,7 @@ export default async function SupplierProductWizardPage({
 
       <div className="mt-6 pt-6 border-t border-gray-200">
         <form action={deleteSupplierProductAction.bind(null, product.id)}>
-          <button type="submit" className="text-sm text-red-600 font-medium">
+          <button type="submit" className="text-base text-red-600 font-medium">
             Delete this product
           </button>
         </form>

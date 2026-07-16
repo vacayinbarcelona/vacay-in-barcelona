@@ -80,7 +80,7 @@ function NumberTextInput({
           if (!Number.isNaN(parsed)) onChange(parsed);
         }
       }}
-      className={className ?? 'input text-xs py-1.5'}
+      className={className ?? 'input text-sm py-1.5'}
     />
   );
 }
@@ -354,10 +354,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     <div ref={containerRef} className="space-y-4">
       <input type="hidden" name="availabilityJson" value={JSON.stringify(schedules)} readOnly />
 
-      {error ? <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p> : null}
+      {error ? <p className="text-base text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p> : null}
 
       {schedules.length === 0 ? (
-        <p className="text-sm text-gray-400">No availability configured yet — add a language to get started.</p>
+        <p className="text-base text-gray-400">No availability configured yet — add a language to get started.</p>
       ) : null}
 
       {schedules.map((schedule) => {
@@ -368,7 +368,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
               <select
                 value={schedule.language}
                 onChange={(e) => patchLanguage(schedule.id, { language: e.target.value })}
-                className="input flex-1"
+                className="input flex-1 text-base"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l} value={l}>
@@ -376,30 +376,30 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   </option>
                 ))}
               </select>
-              <button type="button" onClick={() => removeLanguage(schedule.id)} className="text-xs text-red-600 font-medium whitespace-nowrap">
+              <button type="button" onClick={() => removeLanguage(schedule.id)} className="text-sm text-red-600 font-medium whitespace-nowrap">
                 Remove language
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-xs font-medium text-gray-600 mb-1 block">From date</span>
+                <span className="text-sm font-medium text-gray-600 mb-1 block">From date</span>
                 <input
                   type="date"
                   min={TODAY}
                   value={schedule.dateFrom}
                   onChange={(e) => patchLanguage(schedule.id, { dateFrom: e.target.value })}
-                  className="input"
+                  className="input text-base"
                 />
               </label>
               <label className="block">
-                <span className="text-xs font-medium text-gray-600 mb-1 block">To date</span>
+                <span className="text-sm font-medium text-gray-600 mb-1 block">To date</span>
                 <input
                   type="date"
                   min={schedule.dateFrom || TODAY}
                   value={schedule.dateTo}
                   onChange={(e) => patchLanguage(schedule.id, { dateTo: e.target.value })}
-                  className="input"
+                  className="input text-base"
                 />
               </label>
             </div>
@@ -407,16 +407,16 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
             {schedule.dateFrom && schedule.dateTo ? (
               <div>
                 <label className="block mb-3">
-                  <span className="text-xs font-medium text-gray-600 mb-1 block">Default number of tickets available per time slot</span>
+                  <span className="text-sm font-medium text-gray-600 mb-1 block">Default number of tickets available per time slot</span>
                   <input
                     type="number"
                     min="1"
                     placeholder="e.g. 30"
                     value={schedule.defaultAvailability || ''}
                     onChange={(e) => patchLanguage(schedule.id, { defaultAvailability: Math.max(0, Number(e.target.value) || 0) })}
-                    className="input w-32"
+                    className="input w-32 text-base"
                   />
-                  <span className="text-[11px] text-gray-400 mt-1 block">
+                  <span className="text-xs text-gray-400 mt-1 block">
                     Applied automatically to every time slot you select below — you can still raise or lower any individual slot
                     afterward without affecting the others.
                   </span>
@@ -426,7 +426,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   <button
                     type="button"
                     onClick={() => toggleDefaultsExpanded(schedule.id)}
-                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 mb-1"
+                    className="flex items-center gap-1.5 text-sm font-medium text-gray-600 mb-1"
                     aria-expanded={expandedDefaults.has(schedule.id)}
                   >
                     <span className={`inline-block transition-transform ${expandedDefaults.has(schedule.id) ? 'rotate-90' : ''}`}>
@@ -440,7 +440,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
 
                   {expandedDefaults.has(schedule.id) ? (
                     <>
-                  <p className="text-[11px] text-gray-400 mb-2">
+                  <p className="text-xs text-gray-400 mb-2">
                     Copied automatically onto every time slot you select below. Uncheck a type your product doesn&rsquo;t offer (e.g.
                     Senior) and it won&rsquo;t appear on any generated slot. Editing a slot afterward only changes that slot.
                   </p>
@@ -459,10 +459,10 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { enabled: e.target.checked })}
                             className="h-4 w-4"
                           />
-                          <span className="text-xs font-medium w-12">{t.name}</span>
+                          <span className="text-sm font-medium w-12">{t.name}</span>
                         </label>
                         <label className="block">
-                          <span className="text-[10px] text-gray-500 block mb-0.5">Age from</span>
+                          <span className="text-xs text-gray-500 block mb-0.5">Age from</span>
                           <div className="flex gap-1">
                             <input
                               type="number"
@@ -470,13 +470,13 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                               disabled={!t.enabled}
                               value={t.ageFromValue}
                               onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageFromValue: Number(e.target.value) })}
-                              className="input text-xs py-1.5 w-14"
+                              className="input text-sm py-1.5 w-14"
                             />
                             <select
                               disabled={!t.enabled}
                               value={t.ageFromUnit}
                               onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageFromUnit: e.target.value as AgeUnit })}
-                              className="input text-xs py-1.5"
+                              className="input text-sm py-1.5"
                             >
                               <option value="years">Yrs</option>
                               <option value="months">Mos</option>
@@ -484,7 +484,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                           </div>
                         </label>
                         <label className="block">
-                          <span className="text-[10px] text-gray-500 block mb-0.5">Age to</span>
+                          <span className="text-xs text-gray-500 block mb-0.5">Age to</span>
                           <div className="flex gap-1">
                             <input
                               type="number"
@@ -492,13 +492,13 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                               disabled={!t.enabled}
                               value={t.ageToValue}
                               onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageToValue: Number(e.target.value) })}
-                              className="input text-xs py-1.5 w-14"
+                              className="input text-sm py-1.5 w-14"
                             />
                             <select
                               disabled={!t.enabled}
                               value={t.ageToUnit}
                               onChange={(e) => patchDefaultTicketType(schedule.id, t.name, { ageToUnit: e.target.value as AgeUnit })}
-                              className="input text-xs py-1.5"
+                              className="input text-sm py-1.5"
                             >
                               <option value="years">Yrs</option>
                               <option value="months">Mos</option>
@@ -506,7 +506,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                           </div>
                         </label>
                         <label className="block">
-                          <span className="text-[10px] text-gray-500 block mb-0.5">Default price</span>
+                          <span className="text-xs text-gray-500 block mb-0.5">Default price</span>
                           <NumberTextInput
                             value={t.price}
                             decimal
@@ -522,9 +522,9 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   ) : null}
                 </div>
 
-                <p className="text-xs font-medium text-gray-600 mb-2">Available days</p>
+                <p className="text-sm font-medium text-gray-600 mb-2">Available days</p>
                 {!canGenerateSlots(schedule) ? (
-                  <p className="text-[11px] text-amber-600 mb-2">
+                  <p className="text-xs text-amber-600 mb-2">
                     Set the default tickets available and enable at least one ticket type above before selecting days.
                   </p>
                 ) : null}
@@ -537,7 +537,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         type="button"
                         disabled={!active && !canGenerateSlots(schedule)}
                         onClick={() => toggleWeekday(schedule.id, day)}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${
+                        className={`text-sm font-medium px-3 py-1.5 rounded-lg border ${
                           active
                             ? 'bg-blue-600 border-blue-600 text-white'
                             : !canGenerateSlots(schedule)
@@ -563,7 +563,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         copyMondayToOtherDays(schedule.id);
                       }
                     }}
-                    className="text-xs text-blue-600 font-medium mt-2"
+                    className="text-sm text-blue-600 font-medium mt-2"
                   >
                     Apply Monday schedule to all remaining days
                   </button>
@@ -579,7 +579,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                 <button
                   type="button"
                   onClick={() => toggleDayExpanded(schedule.id, day)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-gray-700"
+                  className="flex items-center gap-1.5 text-sm font-semibold text-gray-700"
                   aria-expanded={isExpanded}
                 >
                   <span className={`inline-block transition-transform ${isExpanded ? 'rotate-90' : ''}`}>&#9656;</span>
@@ -599,7 +599,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         <select
                           value={slot.time}
                           onChange={(e) => patchSlotTime(schedule.id, slot.id, e.target.value)}
-                          className="input w-40"
+                          className="input w-40 text-base"
                         >
                           {TIME_OPTIONS.map((t) => (
                             <option key={t} value={t}>
@@ -608,30 +608,30 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                           ))}
                         </select>
                         <label className="flex items-center gap-1.5">
-                          <span className="text-xs text-gray-500 whitespace-nowrap">Total availability</span>
+                          <span className="text-sm text-gray-500 whitespace-nowrap">Total availability</span>
                           <NumberTextInput
                             value={slot.availability}
                             onChange={(availability) => patchSlotAvailability(schedule.id, slot.id, availability)}
-                            className="input w-20 text-sm py-1.5"
+                            className="input w-20 text-base py-1.5"
                           />
                         </label>
                         <button
                           type="button"
                           onClick={() => toggleSlotEditing(slot.id)}
-                          className={`text-xs font-medium px-2.5 py-1 rounded-lg border ml-auto ${
+                          className={`text-sm font-medium px-2.5 py-1 rounded-lg border ml-auto ${
                             isEditingSlot ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'
                           }`}
                         >
                           {isEditingSlot ? 'Done editing' : 'Edit price'}
                         </button>
-                        <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium">
+                        <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-sm text-red-600 font-medium">
                           Remove time slot
                         </button>
                       </div>
 
                       {isEditingSlot ? (
                         <>
-                      <p className="text-[11px] text-gray-400 -mt-1">
+                      <p className="text-xs text-gray-400 -mt-1">
                         Shared inventory for this departure — every ticket type below books against this same pool.
                       </p>
 
@@ -639,26 +639,26 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         {slot.ticketTypes.map((t) => (
                           <div key={t.id} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end bg-white border border-gray-200 rounded-lg p-2.5">
                             <label className="block col-span-2">
-                              <span className="text-[10px] text-gray-500 block mb-0.5">Name</span>
+                              <span className="text-xs text-gray-500 block mb-0.5">Name</span>
                               <input
                                 value={t.name}
                                 onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { name: e.target.value })}
-                                className="input text-xs py-1.5"
+                                className="input text-sm py-1.5"
                                 placeholder="e.g. Adult"
                               />
                             </label>
                             <label className="block">
-                              <span className="text-[10px] text-gray-500 block mb-0.5">Age from</span>
+                              <span className="text-xs text-gray-500 block mb-0.5">Age from</span>
                               <div className="flex gap-1">
                                 <NumberTextInput
                                   value={t.ageFromValue}
                                   onChange={(ageFromValue) => patchTicketType(schedule.id, slot.id, t.id, { ageFromValue })}
-                                  className="input text-xs py-1.5 w-14"
+                                  className="input text-sm py-1.5 w-14"
                                 />
                                 <select
                                   value={t.ageFromUnit}
                                   onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageFromUnit: e.target.value as AgeUnit })}
-                                  className="input text-xs py-1.5"
+                                  className="input text-sm py-1.5"
                                 >
                                   <option value="years">Yrs</option>
                                   <option value="months">Mos</option>
@@ -666,17 +666,17 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                               </div>
                             </label>
                             <label className="block">
-                              <span className="text-[10px] text-gray-500 block mb-0.5">Age to</span>
+                              <span className="text-xs text-gray-500 block mb-0.5">Age to</span>
                               <div className="flex gap-1">
                                 <NumberTextInput
                                   value={t.ageToValue}
                                   onChange={(ageToValue) => patchTicketType(schedule.id, slot.id, t.id, { ageToValue })}
-                                  className="input text-xs py-1.5 w-14"
+                                  className="input text-sm py-1.5 w-14"
                                 />
                                 <select
                                   value={t.ageToUnit}
                                   onChange={(e) => patchTicketType(schedule.id, slot.id, t.id, { ageToUnit: e.target.value as AgeUnit })}
-                                  className="input text-xs py-1.5"
+                                  className="input text-sm py-1.5"
                                 >
                                   <option value="years">Yrs</option>
                                   <option value="months">Mos</option>
@@ -684,19 +684,19 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                               </div>
                             </label>
                             <label className="block">
-                              <span className="text-[10px] text-gray-500 block mb-0.5">Price</span>
+                              <span className="text-xs text-gray-500 block mb-0.5">Price</span>
                               <div className="flex items-center gap-1">
                                 <NumberTextInput
                                   value={t.price}
                                   decimal
                                   onChange={(price) => patchTicketType(schedule.id, slot.id, t.id, { price })}
-                                  className="input text-xs py-1.5"
+                                  className="input text-sm py-1.5"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => removeTicketType(schedule.id, slot.id, t.id)}
                                   aria-label="Remove ticket type"
-                                  className="text-red-500 text-sm px-1"
+                                  className="text-red-500 text-base px-1"
                                 >
                                   &times;
                                 </button>
@@ -712,7 +712,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             key={preset.name}
                             type="button"
                             onClick={() => addTicketType(schedule.id, slot.id, preset)}
-                            className="text-[11px] border border-gray-200 rounded-full px-2.5 py-1 hover:bg-gray-100"
+                            className="text-xs border border-gray-200 rounded-full px-2.5 py-1 hover:bg-gray-100"
                           >
                             + {preset.name}
                           </button>
@@ -720,7 +720,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                         <button
                           type="button"
                           onClick={() => addTicketType(schedule.id, slot.id)}
-                          className="text-[11px] border border-dashed border-gray-300 rounded-full px-2.5 py-1 text-gray-500 hover:bg-gray-100"
+                          className="text-xs border border-dashed border-gray-300 rounded-full px-2.5 py-1 text-gray-500 hover:bg-gray-100"
                         >
                           + Custom ticket type
                         </button>
@@ -735,7 +735,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                   type="button"
                   onClick={() => addSlot(schedule.id, day)}
                   disabled={!canGenerateSlots(schedule)}
-                  className="text-xs text-blue-600 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-sm text-blue-600 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
                 >
                   + Add another time slot for {day}
                 </button>
@@ -751,7 +751,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
       <button
         type="button"
         onClick={addLanguage}
-        className="text-sm font-medium text-blue-600 border border-blue-200 rounded-lg px-4 py-2 hover:bg-blue-50"
+        className="text-base font-medium text-blue-600 border border-blue-200 rounded-lg px-4 py-2 hover:bg-blue-50"
       >
         + Add language
       </button>

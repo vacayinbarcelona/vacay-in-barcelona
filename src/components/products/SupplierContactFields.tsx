@@ -67,7 +67,7 @@ export function SupplierContactFields({
 
       {showName ? (
         <label className="block sm:col-span-2">
-          <span className="text-xs font-medium text-gray-600 mb-1 block">Supplier name</span>
+          <span className="text-sm font-medium text-gray-600 mb-1 block">Supplier name</span>
           <input
             name="supplierContactName"
             required={required}
@@ -75,16 +75,16 @@ export function SupplierContactFields({
             onChange={(e) => setName(e.target.value)}
             onBlur={() => setNameTouched(true)}
             placeholder="Who should the customer ask for?"
-            className={`input ${nameTouched && nameError ? 'border-red-400 focus:border-red-400' : ''}`}
+            className={`input text-base ${nameTouched && nameError ? 'border-red-400 focus:border-red-400' : ''}`}
           />
-          {nameTouched && nameError ? <p className="text-[11px] text-red-600 mt-1">{nameError}</p> : null}
+          {nameTouched && nameError ? <p className="text-xs text-red-600 mt-1">{nameError}</p> : null}
         </label>
       ) : (
         <input type="hidden" name="supplierContactName" value={defaultName} />
       )}
 
       <label className="block">
-        <span className="text-xs font-medium text-gray-600 mb-1 block">Supplier email address</span>
+        <span className="text-sm font-medium text-gray-600 mb-1 block">Supplier email address</span>
         <input
           type="email"
           name="supplierContactEmail"
@@ -92,18 +92,18 @@ export function SupplierContactFields({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setEmailTouched(true)}
-          className={`input ${emailTouched && emailError ? 'border-red-400 focus:border-red-400' : ''}`}
+          className={`input text-base ${emailTouched && emailError ? 'border-red-400 focus:border-red-400' : ''}`}
         />
-        {emailTouched && emailError ? <p className="text-[11px] text-red-600 mt-1">{emailError}</p> : null}
+        {emailTouched && emailError ? <p className="text-xs text-red-600 mt-1">{emailError}</p> : null}
       </label>
 
       <label className="block">
-        <span className="text-xs font-medium text-gray-600 mb-1 block">Supplier contact number</span>
+        <span className="text-sm font-medium text-gray-600 mb-1 block">Supplier contact number</span>
         <div className="flex gap-2">
           <select
             value={selectedCountry}
             onChange={(e) => setSelectedCountry(e.target.value)}
-            className="input w-[168px] flex-shrink-0"
+            className="input w-[168px] flex-shrink-0 text-base"
             aria-label="Country"
           >
             {COUNTRY_CODES.map((c) => (
@@ -118,10 +118,10 @@ export function SupplierContactFields({
             onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s()-]/g, ''))}
             onBlur={() => setPhoneTouched(true)}
             placeholder="123 456 789"
-            className={`input flex-1 ${phoneTouched && phoneError ? 'border-red-400 focus:border-red-400' : ''}`}
+            className={`input flex-1 text-base ${phoneTouched && phoneError ? 'border-red-400 focus:border-red-400' : ''}`}
           />
         </div>
-        {phoneTouched && phoneError ? <p className="text-[11px] text-red-600 mt-1">{phoneError}</p> : null}
+        {phoneTouched && phoneError ? <p className="text-xs text-red-600 mt-1">{phoneError}</p> : null}
       </label>
     </div>
   );
