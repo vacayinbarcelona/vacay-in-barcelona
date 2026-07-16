@@ -256,6 +256,43 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     setEditingSlotId((prev) => (prev === slotId ? null : prev));
   }
 
+  // "Apply Monday schedule to All Remaining Days" — clones every one of
+  // Monday's time slots (time, total availability, and every ticket type's
+  // name/age range/price/enabled-ness) onto Tue–Sun, replacing whatever
+  // those days had before. Every cloned slot and ticket type gets a brand
+  // new id (deep copy, no shared references back to Monday's rows), so
+  // editing Tuesday afterward never touches Monday or any other day.
+  function copyMondayToOtherDays(scheduleId: string) {
+    setSchedules((prev) =>
+      prev.map((s) => {
+        if (s.id !== scheduleId) return s;
+        const mondaySlots = s.slots.filter((sl) => sl.weekday === 'Mon');
+        if (mondaySlots.length === 0) return s;
+        const otherDays = WEEKDAYS.filter((day) => day !== 'Mon');
+        const clonedSlots: typeof s.slots = otherDays.flatMap((day) =>
+          mondaySlots.map((slot) => ({
+            ...slot,
+            id: newDraftId('slot'),
+            weekday: day,
+            ticketTypes: slot.ticketTypes.map((t) => ({ ...t, id: newDraftId('tt') }))
+          }))
+        );
+        return { ...s, slots: [...mondaySlots, ...clonedSlots] };
+      })
+    );
+    // Collapse every non-Monday day's section back to closed (consistent
+    // with "collapsed by default everywhere") and drop out of slot-editing
+    // mode, since the ids being edited/expanded no longer exist post-copy.
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      for (const key of next) {
+        if (key.startsWith(`${scheduleId}:`) && !key.endsWith(':Mon')) next.delete(key);
+      }
+      return next;
+    });
+    setEditingSlotId(null);
+  }
+
   function patchSlotTime(scheduleId: string, slotId: string, time: string) {
     setSchedules((prev) =>
       prev.map((s) => (s.id === scheduleId ? { ...s, slots: s.slots.map((sl) => (sl.id === slotId ? { ...sl, time } : sl)) } : s))
@@ -513,6 +550,24 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                     );
                   })}
                 </div>
+
+                {schedule.slots.some((sl) => sl.weekday === 'Mon') ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Apply Monday's schedule to all other days? This replaces every other day's time slots, availability, ticket types, ages, and prices with a copy of Monday's — this can't be undone (short of leaving without saving)."
+                        )
+                      ) {
+                        copyMondayToOtherDays(schedule.id);
+                      }
+                    }}
+                    className="text-xs text-blue-600 font-medium mt-2"
+                  >
+                    Apply Monday schedule to all remaining days
+                  </button>
+                ) : null}
               </div>
             ) : null}
 
@@ -567,7 +622,7 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                             isEditingSlot ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'
                           }`}
                         >
-                          {isEditingSlot ? 'Done editing' : 'Edit'}
+                          {isEditingSlot ? 'Done editing' : 'Edit price'}
                         </button>
                         <button type="button" onClick={() => removeSlot(schedule.id, slot.id)} className="text-xs text-red-600 font-medium">
                           Remove time slot

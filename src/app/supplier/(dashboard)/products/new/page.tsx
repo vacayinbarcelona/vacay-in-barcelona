@@ -27,7 +27,7 @@ export default async function NewSupplierProductPage({ searchParams }: { searchP
   const errorMessage = searchParams?.error ? ERROR_MESSAGES[searchParams.error] ?? decodeURIComponent(searchParams.error) : undefined;
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       <Link href="/supplier/products" className="text-sm text-blue-600 mb-4 inline-block">
         &larr; Back to products
       </Link>
