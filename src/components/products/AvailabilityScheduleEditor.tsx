@@ -123,6 +123,18 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
     });
   }
 
+  // Same collapsed-by-default toggle, for the "Default ticket configuration"
+  // block (keyed by schedule id — only one per language schedule).
+  const [expandedDefaults, setExpandedDefaults] = useState<Set<string>>(new Set());
+  function toggleDefaultsExpanded(scheduleId: string) {
+    setExpandedDefaults((prev) => {
+      const next = new Set(prev);
+      if (next.has(scheduleId)) next.delete(scheduleId);
+      else next.add(scheduleId);
+      return next;
+    });
+  }
+
   useEffect(() => {
     const form = containerRef.current?.closest('form');
     if (!form) return;
@@ -353,7 +365,23 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                 </label>
 
                 <div className="mb-3">
-                  <p className="text-xs font-medium text-gray-600 mb-1">Default ticket configuration</p>
+                  <button
+                    type="button"
+                    onClick={() => toggleDefaultsExpanded(schedule.id)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 mb-1"
+                    aria-expanded={expandedDefaults.has(schedule.id)}
+                  >
+                    <span className={`inline-block transition-transform ${expandedDefaults.has(schedule.id) ? 'rotate-90' : ''}`}>
+                      &#9656;
+                    </span>
+                    Default ticket configuration
+                    <span className="text-gray-400 font-normal">
+                      ({schedule.defaultTicketTypes.filter((t) => t.enabled).length} enabled)
+                    </span>
+                  </button>
+
+                  {expandedDefaults.has(schedule.id) ? (
+                    <>
                   <p className="text-[11px] text-gray-400 mb-2">
                     Copied automatically onto every time slot you select below. Uncheck a type your product doesn&rsquo;t offer (e.g.
                     Senior) and it won&rsquo;t appear on any generated slot. Editing a slot afterward only changes that slot.
@@ -432,6 +460,8 @@ export function AvailabilityScheduleEditor({ initialSchedules }: { initialSchedu
                       </div>
                     ))}
                   </div>
+                    </>
+                  ) : null}
                 </div>
 
                 <p className="text-xs font-medium text-gray-600 mb-2">Available days</p>
